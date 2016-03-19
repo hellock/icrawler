@@ -41,9 +41,10 @@ class GoogleImageCrawler(ImageCrawler):
             page_step=100
         )
         downloader_kwargs = dict(max_num=max_num)
-        super(GoogleImageCrawler, self).crawl(feeder_num, parser_num, downloader_num,
-                                              feeder_kwargs=feeder_kwargs,
-                                              downloader_kwargs=downloader_kwargs)
+        super(GoogleImageCrawler, self).crawl(
+            feeder_num, parser_num, downloader_num,
+            feeder_kwargs=feeder_kwargs,
+            downloader_kwargs=downloader_kwargs)
 
 
 class BingParser(Parser):
@@ -62,8 +63,9 @@ class BingParser(Parser):
 
 class BingImageCrawler(ImageCrawler):
 
-    def __init__(self, img_dir='images', parser_cls=BingParser):
-        ImageCrawler.__init__(self, img_dir, parser_cls)
+    def __init__(self, img_dir='images', log_level=logging.INFO):
+        ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+                              parser_cls=BingParser, log_level=log_level)
 
     def prepare(self, max_num, keyword):
         self.max_num = max_num
@@ -73,6 +75,21 @@ class BingImageCrawler(ImageCrawler):
                 'http://www.bing.com/images/search?q={}&count'
                 '=35&first={}'.format(keyword, i)
             )
+
+    def crawl(self, keyword, max_num, feeder_num=1, parser_num=1,
+              downloader_num=1, offset=0):
+        feeder_kwargs = dict(
+            url_template='http://www.bing.com/images/search?q={}&count=35&first={}',
+            keyword=keyword,
+            offset=offset,
+            max_num=max_num,
+            page_step=35
+        )
+        downloader_kwargs = dict(max_num=max_num)
+        super(BingImageCrawler, self).crawl(
+            feeder_num, parser_num, downloader_num,
+            feeder_kwargs=feeder_kwargs,
+            downloader_kwargs=downloader_kwargs)
 
 
 class BaiduParser(Parser):
@@ -110,14 +127,22 @@ class BaiduParser(Parser):
 
 class BaiduImageCrawler(ImageCrawler):
 
-    def __init__(self, img_dir='images', parser_cls=BaiduParser):
-        ImageCrawler.__init__(self, img_dir, parser_cls)
+    def __init__(self, img_dir='images', log_level=logging.INFO):
+        ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+                              parser_cls=BaiduParser, log_level=log_level)
 
-    def prepare(self, max_num, keyword):
-        self.max_num = max_num
-        self.start_urls = []
-        for i in range(0, self.max_num, 30):
-            self.start_urls.append(
-                'http://image.baidu.com/search/acjson?tn=resultjson_com'
-                '&ipn=rj&word={}&pn={}&rn=30'.format(keyword, i + 30)
-            )
+    def crawl(self, keyword, max_num, feeder_num=1, parser_num=1,
+              downloader_num=1, offset=0):
+        feeder_kwargs = dict(
+            url_template='http://image.baidu.com/search/acjson?'
+                         'tn=resultjson_com&ipn=rj&word={}&pn={}&rn=30',
+            keyword=keyword,
+            offset=30,
+            max_num=max_num,
+            page_step=30
+        )
+        downloader_kwargs = dict(max_num=max_num)
+        super(BaiduImageCrawler, self).crawl(
+            feeder_num, parser_num, downloader_num,
+            feeder_kwargs=feeder_kwargs,
+            downloader_kwargs=downloader_kwargs)

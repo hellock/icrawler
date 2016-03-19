@@ -8,17 +8,17 @@ from image_crawler.examples import BaiduImageCrawler
 
 def test_google():
     google_crawler = GoogleImageCrawler('images/google')
-    google_crawler.crawl('sunny', 1000, 1, 1, 4)
+    google_crawler.crawl('sunny', 10, 1, 1, 4)
 
 
 def test_bing():
     bing_crawler = BingImageCrawler('images/bing')
-    bing_crawler.crawl(2, 4, max_num=10, keyword='cat')
+    bing_crawler.crawl('sunny', 10, 1, 1, 4)
 
 
 def test_baidu():
     baidu_crawler = BaiduImageCrawler('images/baidu')
-    baidu_crawler.crawl(1, 4, max_num=10, keyword='cat')
+    baidu_crawler.crawl('sunny', 10, 1, 1, 4)
 
 
 def main():
