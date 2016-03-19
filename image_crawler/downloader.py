@@ -41,16 +41,16 @@ class Downloader(object):
             response = self.session.get(img_url, timeout=request_timeout)
         except requests.exceptions.ConnectionError:
             self.logger.error('Connection error when downloading '
-                              'image {}'.format(img_url))
+                              'image %s', img_url)
         except requests.exceptions.HTTPError:
             self.logger.error('HTTP error when downloading '
-                              'image {}'.format(img_url))
+                              'image %s', img_url)
         except requests.exceptions.Timeout:
             self.logger.error('Timeout when downloading '
-                              'image {}'.format(img_url))
+                              'image %s', img_url)
         except:
             self.logger.error('Other error catched when downloading '
-                              'image {}'.format(img_url))
+                              'image %s', img_url)
         else:
             if self.reach_max_num():
                 with self.lock:
@@ -88,12 +88,12 @@ class Downloader(object):
             try:
                 task = self.task_queue.get(timeout=queue_timeout)
             except queue.Empty:
-                with self.lock:
-                    self.logger.error('timeout, thread %s exit' % self.name)
+                self.logger.error('timeout, thread %s exit',
+                                  threading.current_thread().name)
                 break
             except:
-                with self.lock:
-                    self.logger.error('exception in thread %s' % (self.name))
+                self.logger.error('exception in thread %s',
+                                  threading.current_thread().name)
             else:
                 self.download(task, request_timeout)
                 self.task_queue.task_done()

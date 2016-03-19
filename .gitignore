@@ -20,3 +20,6 @@ __pycache__
 # Requirements
 requirements.in
 requirements.txt
+
+# Readme of markdown version
+README.md

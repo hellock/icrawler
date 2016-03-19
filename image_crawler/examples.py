@@ -137,7 +137,7 @@ class BaiduImageCrawler(ImageCrawler):
             url_template='http://image.baidu.com/search/acjson?'
                          'tn=resultjson_com&ipn=rj&word={}&pn={}&rn=30',
             keyword=keyword,
-            offset=30,
+            offset=offset+30,
             max_num=max_num,
             page_step=30
         )
