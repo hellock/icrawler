@@ -8,7 +8,7 @@ from image_crawler.examples import BaiduImageCrawler
 
 def test_google():
     google_crawler = GoogleImageCrawler('images/google')
-    google_crawler.crawl(1, 4, max_num=10, keyword='cat')
+    google_crawler.crawl('sunny', 1000, 1, 1, 4)
 
 
 def test_bing():

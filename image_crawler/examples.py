@@ -4,7 +4,10 @@ from bs4 import BeautifulSoup
 import html
 from image_crawler.crawler import ImageCrawler
 import json
+import logging
 import re
+# from image_crawler.downloader import Downloader
+from image_crawler.feeder import SimpleSEFeeder
 from image_crawler.parser import Parser
 
 
@@ -24,17 +27,23 @@ class GoogleParser(Parser):
 
 class GoogleImageCrawler(ImageCrawler):
 
-    def __init__(self, img_dir='images', parser_cls=GoogleParser):
-        ImageCrawler.__init__(self, img_dir, parser_cls)
+    def __init__(self, img_dir='images', log_level=logging.INFO):
+        ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+                              parser_cls=GoogleParser, log_level=log_level)
 
-    def prepare(self, max_num, keyword):
-        self.max_num = max_num
-        self.start_urls = []
-        for i in range(0, self.max_num, 100):
-            self.start_urls.append(
-                'https://www.google.com/search?q={}&tbm'
-                '=isch&start={}'.format(keyword, i)
-            )
+    def crawl(self, keyword, max_num, feeder_num=1, parser_num=1,
+              downloader_num=1, offset=0):
+        feeder_kwargs = dict(
+            url_template='https://www.google.com/search?q={}&tbm=isch&start={}',
+            keyword=keyword,
+            offset=offset,
+            max_num=max_num,
+            page_step=100
+        )
+        downloader_kwargs = dict(max_num=max_num)
+        super(GoogleImageCrawler, self).crawl(feeder_num, parser_num, downloader_num,
+                                              feeder_kwargs=feeder_kwargs,
+                                              downloader_kwargs=downloader_kwargs)
 
 
 class BingParser(Parser):

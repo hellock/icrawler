@@ -1,46 +1,44 @@
 # -*- encoding: utf-8 -*-
 
+import logging
 import os
 import queue
 import requests
 import threading
 
 
-class Downloader(threading.Thread):
+class Downloader(object):
 
-    fetched_num = 0
-    max_num = 0
-    signal_term = False
-
-    def __init__(self, name, task_queue, lock, img_dir, session, logger):
-        threading.Thread.__init__(self, name=name, daemon=True)
+    def __init__(self, img_dir, task_queue, session):
         self.task_queue = task_queue
-        self.lock = lock
         self.img_dir = img_dir
         self.session = session
-        self.logger = logger
+        self.threads = []
+        self.clear_status()
+        self.set_logger()
 
-    @classmethod
-    def clear_status(cls):
-        cls.fetched_num = 0
-        cls.signal_term = False
+    def clear_status(self):
+        self.fetched_num = 0
+        self.signal_term = False
+
+    def set_logger(self):
+        self.logger = logging.getLogger(__name__)
 
     def set_file_path(self, img_task):
         filename = os.path.join(self.img_dir,
-                                '{:0>6d}.jpg'.format(self.__class__.fetched_num))
+                                '{:0>6d}.jpg'.format(self.fetched_num))
         return filename
 
-    def _reach_max_num(self):
-        if (self.__class__.max_num > 0 and
-           self.__class__.fetched_num >= self.__class__.max_num):
+    def reach_max_num(self):
+        if (self.max_num > 0 and self.fetched_num >= self.max_num):
             return True
         else:
             return False
 
-    def download(self, img_task):
+    def download(self, img_task, request_timeout):
         img_url = img_task['img_url']
         try:
-            response = self.session.get(img_url, timeout=10)
+            response = self.session.get(img_url, timeout=request_timeout)
         except requests.exceptions.ConnectionError:
             self.logger.error('Connection error when downloading '
                               'image {}'.format(img_url))
@@ -54,24 +52,41 @@ class Downloader(threading.Thread):
             self.logger.error('Other error catched when downloading '
                               'image {}'.format(img_url))
         else:
-            if self._reach_max_num():
+            if self.reach_max_num():
                 with self.lock:
-                    self.__class__.signal_term = True
+                    self.signal_term = True
                 return
             with self.lock:
-                self.__class__.fetched_num += 1
-            self.logger.info('image #{}\t{}'.format(self.__class__.fetched_num,
-                                                    img_url))
+                self.fetched_num += 1
+            self.logger.info('image #%s\t%s', self.fetched_num, img_url)
             filename = self.set_file_path(img_task)
             with open(filename, 'wb') as fout:
                 fout.write(response.content)
 
-    def run(self):
+    def create_threads(self, **kwargs):
+        self.threads = []
+        for i in range(self.thread_num):
+            name = 'downloader-{:0>2d}'.format(i+1)
+            t = threading.Thread(name=name, target=self.thread_run, kwargs=kwargs)
+            t.daemon = True
+            self.threads.append(t)
+
+    def start(self, thread_num, **kwargs):
+        self.thread_num = thread_num
+        self.clear_status()
+        self.create_threads(**kwargs)
+        self.lock = threading.Lock()
+        for t in self.threads:
+            t.start()
+            self.logger.info('thread %s started', t.name)
+
+    def thread_run(self, max_num, queue_timeout=10, request_timeout=5):
+        self.max_num = max_num
         while True:
-            if self.__class__.signal_term:
+            if self.signal_term:
                 break
             try:
-                task = self.task_queue.get(timeout=10)
+                task = self.task_queue.get(timeout=queue_timeout)
             except queue.Empty:
                 with self.lock:
                     self.logger.error('timeout, thread %s exit' % self.name)
@@ -80,5 +95,8 @@ class Downloader(threading.Thread):
                 with self.lock:
                     self.logger.error('exception in thread %s' % (self.name))
             else:
-                self.download(task)
+                self.download(task, request_timeout)
                 self.task_queue.task_done()
+
+    def __exit__(self):
+        self.logger.info('all downloader threads exited')
