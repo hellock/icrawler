@@ -7,6 +7,7 @@ import os
 from .parser import Parser
 import queue
 import requests
+import sys
 import threading
 
 
@@ -50,7 +51,7 @@ class ImageCrawler(object):
 
     def set_logger(self, log_level):
         logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s',
-                            level=log_level)
+                            level=log_level, stream=sys.stderr)
         self.logger = logging.getLogger(__name__)
 
     def crawl(self, feeder_thread_num=1, parser_thread_num=1,
