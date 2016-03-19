@@ -1,9 +1,9 @@
-#image_crawler
+# image_crawler
 
-##Introduction
+## Introduction
 This python package is a mini framework of image crawlers. 
 
-##Stucture
+## Stucture
 It consists of 3 main components (Feeder, Parser and Downloader) and 2 FIFO queues (url_queue and task_queue).
  The workflow is as follows.
 
@@ -17,22 +17,21 @@ It consists of 3 main components (Feeder, Parser and Downloader) and 2 FIFO queu
 
 Feeder, parser and downloader all supports multi-thread, you can specify the number of threads they use respectively.
 
-##Basic usage
+## Basic usage
 
-###Built-in crawlers
+### Built-in crawlers
 The framework has 3 built-in crawlers and all of them are search engine crawlers. They are Google, Bing and Baidu. Here is an example of how to use the built-in crawlers.
 
-```python
+```
 from image_crawler.examples import GoogleImageCrawler
 
 google_crawler = GoogleImageCrawler('images/google')
 google_crawler.crawl(keyword='sunny', max_num=1000, feeder_thr_num=1,
 					 parser_thr_num=1, downloader_thr_num=4)
-
 ```
 Run this code and the crawler will download the images in the search result page using 1 thread to feed urls, 1 thread to parse the page and 4 threads to download the images.
 
 You can see the complete examples in *test.py*
 
-###Other crawlers
+### Other crawlers
 You will have to write your own classes or overwrite some methods. See *examples.py* for example and more infomation will be supplemented
