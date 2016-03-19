@@ -53,15 +53,17 @@ class ImageCrawler(object):
         logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s',
                             level=log_level, stream=sys.stderr)
         self.logger = logging.getLogger(__name__)
+        logging.getLogger('requests').setLevel(logging.WARNING)
 
     def crawl(self, feeder_thread_num=1, parser_thread_num=1,
               downloader_thread_num=1, feeder_kwargs={}, parser_kwargs={},
               downloader_kwargs={}):
         self.logger.info('start crawling...')
+        self.logger.info('starting feeder... %s threads in total', feeder_thread_num)
         self.feeder.start(feeder_thread_num, **feeder_kwargs)
-        self.logger.info('feeder started')
+        self.logger.info('starting parser... %s threads in total', parser_thread_num)
         self.parser.start(parser_thread_num, **parser_kwargs)
-        self.logger.info('parser started')
+        self.logger.info('starting downloader... %s threads in total', downloader_thread_num)
         self.downloader.start(downloader_thread_num, **downloader_kwargs)
         while True:
             if threading.active_count() > 1:

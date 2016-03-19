@@ -41,7 +41,6 @@ class Feeder(object):
 class SimpleSEFeeder(Feeder):
 
     def feed(self, url_template, keyword, offset, max_num, page_step):
-        print('simple')
         for i in range(offset, offset + max_num, page_step):
             url = url_template.format(keyword, i)
             self.url_queue.put(url)
