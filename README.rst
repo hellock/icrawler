@@ -23,12 +23,12 @@ FIFO queues (url\_queue and task\_queue). The workflow is as follows.
    like, each element in the queue is a dictionary and must contain the
    field ``img_url``
 -  Feeder puts page urls to ``url_queue``
--  Parse request and parse the page, then extract the image urls and
+-  Parser requests and parses the page, then extracts the image urls and
    puts them into ``task_queue``
 -  Downloader gets tasks from ``task_queue`` and requests the images,
    then saves them in the given path.
 
-Feeder, parser and downloader all supports multi-thread, you can specify
+Feeder, parser and downloader supports multi-thread, so you can specify
 the number of threads they use respectively.
 
 Basic usage
@@ -81,123 +81,132 @@ Downloader class.
 
 1. Feeder The method you need to overwrite is
 
-   ::
+::
 
-       feed(self, **kwargs)
+    feed(self, **kwargs)
 
-   If you want to offer the start urls at one time, for example
-   'http://example.com/page\_url/1' up to
-   'http://example.com/page\_url/10' \`\`\` from image\_crawler.feeder
-   import Feeder
-
-class MyFeeder(Feeder): def feed(self): for i in range(10): url =
-'http://example.com/page\_url/{}'.format(i + 1) self.url\_queue.put(url)
+If you want to offer the start urls at one time, for example
+'http://example.com/page\_url/1' up to 'http://example.com/page\_url/10'
 
 ::
 
-    If the page urls is like search engine result urls, you can also use the simple search engine feeder `SimpleSEFeeder`, the api is like this 
+    from image_crawler.feeder import Feeder
 
-feed(self, url\_template, keyword, offset, max\_num, page\_step)
+    class MyFeeder(Feeder):
+        def feed(self):
+            for i in range(10):
+                url = 'http://example.com/page_url/{}'.format(i + 1)
+                self.url_queue.put(url)
 
-::
-
-    Built-in crawlers are using `SimpleSEFeeder` as the feeder component.
-
-    2. Parser
-    The method you need to overwrite is
-
-parse(self, response)
+If the page urls is like search engine result urls, you can also use the
+simple search engine feeder ``SimpleSEFeeder``, the api is like this
 
 ::
 
-    `response` is the page content of the url from `url_queue`, what you need to do is to parse the page and find image urls, then put it to the `task_queue`. Beautiful Soup package is suggested to be used for parsing. Taking `GoogleParser` for example,
+    feed(self, url_template, keyword, offset, max_num, page_step)
 
-class GoogleParser(Parser):
+Built-in crawlers are using ``SimpleSEFeeder`` as the feeder component.
 
-::
-
-    def parse(self, response):
-        soup = BeautifulSoup(response, 'lxml')
-        image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
-        pattern = re.compile(r'imgurl=(.*?)\.jpg')
-        for div in image_divs:
-            href_str = div.a['href']
-            match = pattern.search(href_str)
-            if match:
-                img_url = '{}.jpg'.format(match.group(1))
-                self.task_queue.put(dict(img_url=img_url))
+2. Parser The method you need to overwrite is
 
 ::
 
+    parse(self, response)
 
-    3. Downloader
-    If you just want to change the filename of downloaded images, you can overwrite the `set_file_path()` method:
-
-set\_file\_path(self, img\_task)
-
-::
-
-    The default names of images are counting numbers, from 000001 to 999999.
-    If you want to do more with the downloader, you can also overwrite the method:
-
-def download(self, img\_task, request\_timeout)
+``response`` is the page content of the url from ``url_queue``, what you
+need to do is to parse the page and find image urls, then put it to the
+``task_queue``. Beautiful Soup package is suggested to be used for
+parsing. Taking ``GoogleParser`` for example,
 
 ::
 
-    You can retrive tasks from `task_queue` and then do what you want to do.
+    class GoogleParser(Parser):
 
-    4. Crawler
-    You can either use the base class `ImageCrawler` or inherit from it. Two main apis are:
+        def parse(self, response):
+            soup = BeautifulSoup(response, 'lxml')
+            image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
+            pattern = re.compile(r'imgurl=(.*?)\.jpg')
+            for div in image_divs:
+                href_str = div.a['href']
+                match = pattern.search(href_str)
+                if match:
+                    img_url = '{}.jpg'.format(match.group(1))
+                    self.task_queue.put(dict(img_url=img_url))
 
-**init**\ (self, img\_dir='images', feeder\_cls=Feeder,
-parser\_cls=Parser, downloader\_cls=Downloader, log\_level=logging.INFO)
-
-::
-
-    and
-
-crawl(self, feeder\_thread\_num=1, parser\_thread\_num=1,
-downloader\_thread\_num=1, feeder\_kwargs={}, parser\_kwargs={},
-downloader\_kwargs={})
-
-::
-
-    So you can use your crawler like this
-
-crawler = Crawler(feeder\_cls=SimpleSEFeeder, parser\_cls=MyParser)
-crawler.crawl(feeder\_thr\_num=1, parser\_thr\_num=1,
-downloader\_thr\_num=4, feeder\_kwargs=dict(
-url\_template='https://www.some\_search\_engine.com/search?keyword={}&start={}',
-keyword='cat', offset=0, max\_num=1000, page\_step=50 ),
-downloader\_kwargs=dict(max\_num=1000))
+3. Downloader If you just want to change the filename of downloaded
+   images, you can overwrite the ``set_file_path()`` method:
 
 ::
 
-    Or define a class to simplify the arguments.
+    set_file_path(self, img_task)
 
-class MySECrawler(ImageCrawler):
+The default names of images are counting numbers, from 000001 to 999999.
+If you want to do more with the downloader, you can also overwrite the
+method:
 
 ::
 
-    def __init__(self, img_dir='images', log_level=logging.INFO):
-        ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
-                              parser_cls=MyParser, log_level=log_level)
+    def download(self, img_task, request_timeout)
 
-    def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
-              downloader_thr_num=1, offset=0):
-        feeder_kwargs = dict(
-            url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
-            keyword=keyword,
-            offset=offset,
-            max_num=max_num,
-            page_step=50
-        )
-        downloader_kwargs = dict(max_num=max_num)
-        super(MySECrawler, self).crawl(
-            feeder_thr_num, parser_thr_num, downloader_thr_num,
-            feeder_kwargs=feeder_kwargs,
-            downloader_kwargs=downloader_kwargs)
+You can retrive tasks from ``task_queue`` and then do what you want to
+do.
 
-crawler = MySECrawler() crawler.crawl(keyword='cat', max\_num=1000,
-feeder\_thr\_num=1, parser\_thr\_num=1, downloader\_thr\_num=4,
-offset=0) \`\`\`
+4. Crawler You can either use the base class ``ImageCrawler`` or inherit
+   from it. Two main apis are:
+
+::
+
+    __init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
+                     downloader_cls=Downloader, log_level=logging.INFO)
+
+and
+
+::
+
+    crawl(self, feeder_thread_num=1, parser_thread_num=1,
+                  downloader_thread_num=1, feeder_kwargs={},
+                  parser_kwargs={}, downloader_kwargs={})
+
+So you can use your crawler like this
+
+::
+
+    crawler = Crawler(feeder_cls=SimpleSEFeeder, parser_cls=MyParser)
+    crawler.crawl(feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
+                  feeder_kwargs=dict(
+                      url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
+                      keyword='cat',
+                      offset=0,
+                      max_num=1000,
+                      page_step=50
+                  ),
+                  downloader_kwargs=dict(max_num=1000))
+
+Or define a class to simplify the arguments.
+
+::
+
+    class MySECrawler(ImageCrawler):
+
+        def __init__(self, img_dir='images', log_level=logging.INFO):
+            ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+                                  parser_cls=MyParser, log_level=log_level)
+
+        def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
+                  downloader_thr_num=1, offset=0):
+            feeder_kwargs = dict(
+                url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
+                keyword=keyword,
+                offset=offset,
+                max_num=max_num,
+                page_step=50
+            )
+            downloader_kwargs = dict(max_num=max_num)
+            super(MySECrawler, self).crawl(
+                feeder_thr_num, parser_thr_num, downloader_thr_num,
+                feeder_kwargs=feeder_kwargs,
+                downloader_kwargs=downloader_kwargs)
+
+    crawler = MySECrawler()
+    crawler.crawl(keyword='cat', max_num=1000, feeder_thr_num=1,
+                  parser_thr_num=1, downloader_thr_num=4, offset=0)
