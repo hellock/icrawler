@@ -12,13 +12,6 @@ import threading
 
 
 class ImageCrawler(object):
-    """
-    Base class for image crawlers
-
-    This class contains basic interfaces for image crawls
-    and can only be inherited.
-
-    """
 
     def __init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
                  downloader_cls=Downloader, log_level=logging.INFO):
@@ -56,8 +49,8 @@ class ImageCrawler(object):
         logging.getLogger('requests').setLevel(logging.WARNING)
 
     def crawl(self, feeder_thread_num=1, parser_thread_num=1,
-              downloader_thread_num=1, feeder_kwargs={}, parser_kwargs={},
-              downloader_kwargs={}):
+              downloader_thread_num=1, feeder_kwargs={},
+              parser_kwargs={}, downloader_kwargs={}):
         self.logger.info('start crawling...')
         self.logger.info('starting feeder... %s threads in total', feeder_thread_num)
         self.feeder.start(feeder_thread_num, **feeder_kwargs)

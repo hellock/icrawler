@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from bs4 import BeautifulSoup
 import html
-from image_crawler.crawler import ImageCrawler
 import json
 import logging
 import re
-# from image_crawler.downloader import Downloader
+from bs4 import BeautifulSoup
+from image_crawler.crawler import ImageCrawler
 from image_crawler.feeder import SimpleSEFeeder
 from image_crawler.parser import Parser
 

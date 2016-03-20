@@ -22,9 +22,12 @@ class Feeder(object):
         self.threads = []
         for i in range(self.thread_num):
             name = 'feeder-{:0>2d}'.format(i+1)
-            t = threading.Thread(name=name, target=self.feed, kwargs=kwargs)
+            t = threading.Thread(name=name, target=self.thread_run, kwargs=kwargs)
             t.daemon = True
             self.threads.append(t)
+
+    def thread_run(self, **kwargs):
+        self.feed(**kwargs)
 
     def start(self, thread_num, **kwargs):
         self.thread_num = thread_num
