@@ -6,8 +6,18 @@ import logging
 import re
 from bs4 import BeautifulSoup
 from image_crawler.crawler import ImageCrawler
+from image_crawler.feeder import Feeder
 from image_crawler.feeder import SimpleSEFeeder
 from image_crawler.parser import Parser
+
+
+class GoogleFeeder(Feeder):
+
+    def feed(self, keyword, offset, max_num):
+        for i in range(offset, offset + max_num, 100):
+            url = 'https://www.google.com/search?q={}&tbm=isch&ijn={}&start={}'.format(keyword, int(i/100), i)
+            self.url_queue.put(url)
+            self.logger.debug('put url to url_queue: {}'.format(url))
 
 
 class GoogleParser(Parser):
@@ -27,7 +37,7 @@ class GoogleParser(Parser):
 class GoogleImageCrawler(ImageCrawler):
 
     def __init__(self, img_dir='images', log_level=logging.INFO):
-        ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+        ImageCrawler.__init__(self, img_dir, feeder_cls=GoogleFeeder,
                               parser_cls=GoogleParser, log_level=log_level)
 
     def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
@@ -38,17 +48,16 @@ class GoogleImageCrawler(ImageCrawler):
                                   'will get duplicated searching results.')
                 return
             elif max_num > 1000:
+                max_num = 1000 - offset
                 self.logger.warning('Due to Google\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
                                     'been automatically set to %d', 1000-offset)
         else:
             pass
         feeder_kwargs = dict(
-            url_template='https://www.google.com/search?q={}&tbm=isch&start={}',
             keyword=keyword,
             offset=offset,
             max_num=max_num,
-            page_step=100
         )
         downloader_kwargs = dict(max_num=max_num)
         super(GoogleImageCrawler, self).crawl(
@@ -85,6 +94,7 @@ class BingImageCrawler(ImageCrawler):
                                   'will get duplicated searching results.')
                 return
             elif max_num > 1000:
+                max_num = 1000 - offset
                 self.logger.warning('Due to Bing\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
                                     'been automatically set to %d', 1000-offset)
@@ -151,6 +161,7 @@ class BaiduImageCrawler(ImageCrawler):
                                   'will get duplicated searching results.')
                 return
             elif max_num > 1000:
+                max_num = 1000 - offset
                 self.logger.warning('Due to Baidu\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
                                     'been automatically set to %d', 1000-offset)

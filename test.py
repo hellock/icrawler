@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import logging
 from image_crawler.examples import GoogleImageCrawler
 from image_crawler.examples import BingImageCrawler
 from image_crawler.examples import BaiduImageCrawler
 
 
 def test_google():
-    google_crawler = GoogleImageCrawler('images/google')
-    google_crawler.crawl('sunny', 10, 1, 1, 4)
+    google_crawler = GoogleImageCrawler('images/cloudy/google', log_level=logging.INFO)
+    google_crawler.crawl('cloudy', 1000, 1, 1, 8)
 
 
 def test_bing():

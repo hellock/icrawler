@@ -80,7 +80,7 @@ class Downloader(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, max_num, queue_timeout=10, request_timeout=5):
+    def thread_run(self, max_num, queue_timeout=20, request_timeout=10):
         self.max_num = max_num
         while True:
             if self.signal_term:
