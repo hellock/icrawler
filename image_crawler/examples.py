@@ -32,6 +32,17 @@ class GoogleImageCrawler(ImageCrawler):
 
     def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
               downloader_thr_num=1, offset=0):
+        if offset + max_num > 1000:
+            if offset > 1000:
+                self.logger.error('Offset cannot exceed 1000, otherwise you '
+                                  'will get duplicated searching results.')
+                return
+            elif max_num > 1000:
+                self.logger.warning('Due to Google\'s limitation, you can only '
+                                    'get the first 1000 result. "max_num" has '
+                                    'been automatically set to %d', 1000-offset)
+        else:
+            pass
         feeder_kwargs = dict(
             url_template='https://www.google.com/search?q={}&tbm=isch&start={}',
             keyword=keyword,
@@ -66,17 +77,19 @@ class BingImageCrawler(ImageCrawler):
         ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
                               parser_cls=BingParser, log_level=log_level)
 
-    def prepare(self, max_num, keyword):
-        self.max_num = max_num
-        self.start_urls = []
-        for i in range(0, self.max_num, 35):
-            self.start_urls.append(
-                'http://www.bing.com/images/search?q={}&count'
-                '=35&first={}'.format(keyword, i)
-            )
-
     def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
               downloader_thr_num=1, offset=0):
+        if offset + max_num > 1000:
+            if offset > 1000:
+                self.logger.error('Offset cannot exceed 1000, otherwise you '
+                                  'will get duplicated searching results.')
+                return
+            elif max_num > 1000:
+                self.logger.warning('Due to Bing\'s limitation, you can only '
+                                    'get the first 1000 result. "max_num" has '
+                                    'been automatically set to %d', 1000-offset)
+        else:
+            pass
         feeder_kwargs = dict(
             url_template='http://www.bing.com/images/search?q={}&count=35&first={}',
             keyword=keyword,
@@ -132,6 +145,17 @@ class BaiduImageCrawler(ImageCrawler):
 
     def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
               downloader_thr_num=1, offset=0):
+        if offset + max_num > 1000:
+            if offset > 1000:
+                self.logger.error('Offset cannot exceed 1000, otherwise you '
+                                  'will get duplicated searching results.')
+                return
+            elif max_num > 1000:
+                self.logger.warning('Due to Baidu\'s limitation, you can only '
+                                    'get the first 1000 result. "max_num" has '
+                                    'been automatically set to %d', 1000-offset)
+        else:
+            pass
         feeder_kwargs = dict(
             url_template='http://image.baidu.com/search/acjson?'
                          'tn=resultjson_com&ipn=rj&word={}&pn={}&rn=30',
