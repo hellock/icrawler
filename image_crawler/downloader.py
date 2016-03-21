@@ -63,6 +63,9 @@ class Downloader(object):
             with open(filename, 'wb') as fout:
                 fout.write(response.content)
 
+    def process_meta(self, img_task):
+        pass
+
     def create_threads(self, **kwargs):
         self.threads = []
         for i in range(self.thread_num):
@@ -96,6 +99,7 @@ class Downloader(object):
                                   threading.current_thread().name)
             else:
                 self.download(task, request_timeout)
+                self.process_meta(task)
                 self.task_queue.task_done()
 
     def __exit__(self):
