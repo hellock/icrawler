@@ -2,16 +2,16 @@
 
 from .downloader import Downloader
 from .feeder import Feeder
+from .parser import Parser
 import logging
 import os
-from .parser import Parser
 import queue
 import requests
 import sys
 import threading
 
 
-class ImageCrawler(object):
+class Crawler(object):
 
     def __init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
                  downloader_cls=Downloader, log_level=logging.INFO):
