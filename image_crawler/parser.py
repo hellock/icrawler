@@ -18,7 +18,7 @@ class Parser(object):
     def set_logger(self):
         self.logger = logging.getLogger(__name__)
 
-    def parse(self, response):
+    def parse(self, response, **kwargs):
         task = {}
         self.task_queue.put(task)
 
@@ -38,7 +38,7 @@ class Parser(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, queue_timeout=1, request_timeout=5):
+    def thread_run(self, queue_timeout=1, request_timeout=5, **kwargs):
         while not self.url_queue.empty():
             # get the page url
             try:
@@ -70,7 +70,7 @@ class Parser(object):
                                   'page %s', url)
             else:
                 self.logger.info('parsing result page {}'.format(url))
-                self.parse(response.content)
+                self.parse(response.content, **kwargs)
 
     def __exit__(self):
         logging.info('all parser threads exited')

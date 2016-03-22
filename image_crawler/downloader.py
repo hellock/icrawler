@@ -35,7 +35,7 @@ class Downloader(object):
         else:
             return False
 
-    def download(self, img_task, request_timeout):
+    def download(self, img_task, request_timeout, **kwargs):
         img_url = img_task['img_url']
         try:
             response = self.session.get(img_url, timeout=request_timeout)
@@ -83,7 +83,7 @@ class Downloader(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, max_num, queue_timeout=20, request_timeout=10):
+    def thread_run(self, max_num, queue_timeout=20, request_timeout=10, **kwargs):
         self.max_num = max_num
         while True:
             if self.signal_term:
@@ -98,7 +98,7 @@ class Downloader(object):
                 self.logger.error('exception in thread %s',
                                   threading.current_thread().name)
             else:
-                self.download(task, request_timeout)
+                self.download(task, request_timeout, **kwargs)
                 self.process_meta(task)
                 self.task_queue.task_done()
 
