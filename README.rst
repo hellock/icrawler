@@ -37,9 +37,9 @@ Basic usage
 Dependency installation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-This framework use the HTTP library *requests* for sending requests and
-the the parsing library *beautifulsoup4* for parsing HTML pages. To
-install all the dependency using pip:
+This framework use the HTTP library ``*requests*`` for sending requests
+and the the parsing library ``*beautifulsoup4*`` for parsing HTML pages.
+To install all the dependency using pip:
 
 ::
 
@@ -52,7 +52,7 @@ The framework has 3 built-in crawlers and all of them are search engine
 crawlers (Google, Bing and Baidu). Here is an example of how to use the
 built-in crawlers.
 
-::
+.. code:: python
 
     from image_crawler.examples import GoogleImageCrawler
 
@@ -79,18 +79,20 @@ Other crawlers
 The simplest way is to overwrite some methods of the Feeder, Parser and
 Downloader class.
 
-1. Feeder The method you need to overwrite is
+1. Feeder
 
-::
+The method you need to overwrite is
+
+.. code:: python
 
     feed(self, **kwargs)
 
 If you want to offer the start urls at one time, for example
 'http://example.com/page\_url/1' up to 'http://example.com/page\_url/10'
 
-::
+.. code:: python
 
-    from image_crawler.feeder import Feeder
+    from image_crawler import Feeder
 
     class MyFeeder(Feeder):
         def feed(self):
@@ -101,24 +103,26 @@ If you want to offer the start urls at one time, for example
 If the page urls is like search engine result urls, you can also use the
 simple search engine feeder ``SimpleSEFeeder``, the api is like this
 
-::
+.. code:: python
 
     feed(self, url_template, keyword, offset, max_num, page_step)
 
 Built-in crawlers are using ``SimpleSEFeeder`` as the feeder component.
 
-2. Parser The method you need to overwrite is
+2. Parser
 
-::
+The method you need to overwrite is
 
-    parse(self, response)
+.. code:: python
+
+    parse(self, response, **kwargs)
 
 ``response`` is the page content of the url from ``url_queue``, what you
 need to do is to parse the page and find image urls, then put it to the
 ``task_queue``. Beautiful Soup package is suggested to be used for
 parsing. Taking ``GoogleParser`` for example,
 
-::
+.. code:: python
 
     class GoogleParser(Parser):
 
@@ -133,10 +137,12 @@ parsing. Taking ``GoogleParser`` for example,
                     img_url = '{}.jpg'.format(match.group(1))
                     self.task_queue.put(dict(img_url=img_url))
 
-3. Downloader If you just want to change the filename of downloaded
-   images, you can overwrite the ``set_file_path()`` method:
+3. Downloader
 
-::
+If you just want to change the filename of downloaded images, you can
+overwrite the ``set_file_path()`` method:
+
+.. code:: python
 
     set_file_path(self, img_task)
 
@@ -144,24 +150,26 @@ The default names of images are counting numbers, from 000001 to 999999.
 If you want to do more with the downloader, you can also overwrite the
 method:
 
-::
+.. code:: python
 
-    def download(self, img_task, request_timeout)
+    def download(self, img_task, request_timeout, **kwargs)
 
 You can retrive tasks from ``task_queue`` and then do what you want to
 do.
 
-4. Crawler You can either use the base class ``ImageCrawler`` or inherit
-   from it. Two main apis are:
+4. Crawler
 
-::
+You can either use the base class ``ImageCrawler`` or inherit from it.
+Two main apis are:
+
+.. code:: python
 
     __init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
                      downloader_cls=Downloader, log_level=logging.INFO)
 
 and
 
-::
+.. code:: python
 
     crawl(self, feeder_thread_num=1, parser_thread_num=1,
                   downloader_thread_num=1, feeder_kwargs={},
@@ -169,7 +177,7 @@ and
 
 So you can use your crawler like this
 
-::
+.. code:: python
 
     crawler = Crawler(feeder_cls=SimpleSEFeeder, parser_cls=MyParser)
     crawler.crawl(feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
@@ -184,9 +192,9 @@ So you can use your crawler like this
 
 Or define a class to simplify the arguments.
 
-::
+.. code:: python
 
-    class MySECrawler(ImageCrawler):
+    class MySECrawler(Crawler):
 
         def __init__(self, img_dir='images', log_level=logging.INFO):
             ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
