@@ -1,7 +1,7 @@
-from bs4 import BeautifulSoup
 from .. import Feeder
 from .. import Parser
 from .. import Crawler
+from bs4 import BeautifulSoup
 import logging
 import re
 

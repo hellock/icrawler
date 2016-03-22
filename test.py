@@ -8,8 +8,8 @@ from image_crawler.examples import BaiduImageCrawler
 
 
 def test_google():
-    google_crawler = GoogleImageCrawler('images/cloudy/google', log_level=logging.INFO)
-    google_crawler.crawl('cloudy', 1000, 1, 1, 8)
+    google_crawler = GoogleImageCrawler('images/google', log_level=logging.INFO)
+    google_crawler.crawl('cloudy', 10, 1, 1, 4)
 
 
 def test_bing():

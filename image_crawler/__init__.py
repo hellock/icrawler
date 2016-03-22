@@ -4,6 +4,4 @@ from .parser import Parser
 from .downloader import Downloader
 from .crawler import Crawler
 
-import logging
-
 __all__ = ['crawler', 'feeder', 'parser', 'downloader', 'examples']
