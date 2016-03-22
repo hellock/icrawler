@@ -11,12 +11,11 @@ Stucture
 --------
 
 It consists of 3 main components (Feeder, Parser and Downloader) and 2
-FIFO queues (url\_queue and task\_queue). The workflow is as follows.
+FIFO queues (url\_queue and task\_queue). The workflow is shown in the
+following figure.
 
 .. figure:: http://7xopqn.com1.z0.glb.clouddn.com/workflow.png
-   :alt: workflow
-
-   workflow
+   :alt: 
 
 -  ``url_queue`` stores the url of pages which may contain images
 -  ``task_queue`` stores the image url as well as any meta data you
