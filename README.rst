@@ -56,8 +56,9 @@ built-in crawlers.
     from image_crawler.examples import GoogleImageCrawler
 
     google_crawler = GoogleImageCrawler('images/google')
-    google_crawler.crawl(keyword='sunny', max_num=1000, feeder_thr_num=1,
-                         parser_thr_num=1, downloader_thr_num=4, offset=0)
+    google_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
+                         date_min=None, date_max=None, feeder_thr_num=1,
+                         parser_thr_num=1, downloader_thr_num=4)
 
 Run this code and the crawler will download the images in the search
 result page using 1 thread to feed urls, 1 thread to parse the page and

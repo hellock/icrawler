@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from datetime import date
 import sys
 import logging
 from image_crawler.examples import GoogleImageCrawler
@@ -9,7 +10,8 @@ from image_crawler.examples import BaiduImageCrawler
 
 def test_google():
     google_crawler = GoogleImageCrawler('images/google', log_level=logging.INFO)
-    google_crawler.crawl('cloudy', 10, 1, 1, 4)
+    google_crawler.crawl('cloudy', 0, 10, date(2016, 2, 1),
+                         date(2016, 3, 15), 1, 1, 4)
 
 
 def test_bing():

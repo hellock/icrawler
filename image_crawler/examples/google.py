@@ -2,16 +2,35 @@ from .. import Feeder
 from .. import Parser
 from .. import Crawler
 from bs4 import BeautifulSoup
+from urllib.parse import urlencode
 import logging
 import re
 
 
 class GoogleFeeder(Feeder):
 
-    def feed(self, keyword, offset, max_num):
-        templ_url = 'https://www.google.com/search?q={}&tbm=isch&ijn={}&start={}'
+    def feed(self, keyword, offset, max_num, date_min, date_max):
+        base_url = 'https://www.google.com/search?'
         for i in range(offset, offset + max_num, 100):
-            url = templ_url.format(keyword, int(i/100), i)
+            if date_min is not None:
+                dmin = date_min.strftime('%d/%m/%Y')
+            else:
+                dmin = ''
+            if date_max is not None:
+                dmax = date_max.strftime('%d/%m/%Y')
+            else:
+                dmax = ''
+            tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
+            params = dict(q=keyword, ijn=int(i/100), start=i, tbs=tbs, tbm='isch')
+            # if date_min is not None:
+            #     dmin = date_min.strftime('%d/%m/%Y')
+            #     if date_max is not None:
+            #         dmax = date_max.strftime('%d/%m/%Y')
+            #         tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
+            #     else:
+            #         tbs = 'cdr:1,cd_min:{}'.format(dmin)
+            #     params['tbs'] = tbs
+            url = base_url + urlencode(params)
             self.url_queue.put(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
 
@@ -37,8 +56,9 @@ class GoogleImageCrawler(Crawler):
             img_dir, feeder_cls=GoogleFeeder,
             parser_cls=GoogleParser, log_level=log_level)
 
-    def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
-              downloader_thr_num=1, offset=0):
+    def crawl(self, keyword, offset=0, max_num=1000,
+              date_min=None, date_max=None, feeder_thr_num=1,
+              parser_thr_num=1, downloader_thr_num=1):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '
@@ -55,6 +75,8 @@ class GoogleImageCrawler(Crawler):
             keyword=keyword,
             offset=offset,
             max_num=max_num,
+            date_min=date_min,
+            date_max=date_max
         )
         downloader_kwargs = dict(max_num=max_num)
         super(GoogleImageCrawler, self).crawl(
