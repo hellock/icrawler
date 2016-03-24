@@ -152,7 +152,7 @@ method:
 
 .. code:: python
 
-    def download(self, img_task, request_timeout, **kwargs)
+    download(self, img_task, request_timeout, **kwargs)
 
 You can retrive tasks from ``task_queue`` and then do what you want to
 do.

@@ -22,14 +22,6 @@ class GoogleFeeder(Feeder):
                 dmax = ''
             tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
             params = dict(q=keyword, ijn=int(i/100), start=i, tbs=tbs, tbm='isch')
-            # if date_min is not None:
-            #     dmin = date_min.strftime('%d/%m/%Y')
-            #     if date_max is not None:
-            #         dmax = date_max.strftime('%d/%m/%Y')
-            #         tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
-            #     else:
-            #         tbs = 'cdr:1,cd_min:{}'.format(dmin)
-            #     params['tbs'] = tbs
             url = base_url + urlencode(params)
             self.url_queue.put(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
