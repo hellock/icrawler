@@ -7,10 +7,9 @@ from .dup_filter import DupFilter
 
 class Feeder(object):
 
-    def __init__(self, url_queue, session, dup_filter_size=0):
+    def __init__(self, url_queue, session):
         self.url_queue = url_queue
         self.session = session
-        self.dup_filter = DupFilter(dup_filter_size)
         self.threads = []
         self.set_logger()
 
@@ -38,7 +37,8 @@ class Feeder(object):
     def thread_run(self, **kwargs):
         self.feed(**kwargs)
 
-    def start(self, thread_num, **kwargs):
+    def start(self, thread_num, dup_filter_size=0, **kwargs):
+        self.dup_filter = DupFilter(dup_filter_size)
         self.thread_num = thread_num
         self.create_threads(**kwargs)
         self.lock = threading.Lock()

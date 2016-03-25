@@ -39,7 +39,8 @@ class Parser(object):
             t.daemon = True
             self.threads.append(t)
 
-    def start(self, thread_num, **kwargs):
+    def start(self, thread_num, dup_filter_size=0, **kwargs):
+        self.dup_filter = DupFilter(dup_filter_size)
         self.thread_num = thread_num
         self.create_threads(**kwargs)
         self.lock = threading.Lock()
