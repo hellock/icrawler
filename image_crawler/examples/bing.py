@@ -18,7 +18,7 @@ class BingParser(Parser):
             match = pattern.search(href_str)
             if match:
                 img_url = '{}.jpg'.format(match.group(1))
-                self.task_queue.put(dict(img_url=img_url))
+                self.put_task_into_queue(dict(img_url=img_url))
 
 
 class BingImageCrawler(Crawler):

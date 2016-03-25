@@ -2,13 +2,15 @@
 
 import logging
 import threading
+from .dup_filter import DupFilter
 
 
 class Feeder(object):
 
-    def __init__(self, url_queue, session):
+    def __init__(self, url_queue, session, dup_filter_size=0):
         self.url_queue = url_queue
         self.session = session
+        self.dup_filter = DupFilter(dup_filter_size)
         self.threads = []
         self.set_logger()
 
@@ -17,6 +19,13 @@ class Feeder(object):
 
     def feed(self, **kwargs):
         pass
+
+    def put_url_into_queue(self, url):
+        if self.dup_filter.check_dup(url):
+            self.logger.debug('duplicated url: %s', url)
+            pass
+        else:
+            self.url_queue.put(url)
 
     def create_threads(self, **kwargs):
         self.threads = []

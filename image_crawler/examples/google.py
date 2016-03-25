@@ -23,7 +23,7 @@ class GoogleFeeder(Feeder):
             tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
             params = dict(q=keyword, ijn=int(i/100), start=i, tbs=tbs, tbm='isch')
             url = base_url + urlencode(params)
-            self.url_queue.put(url)
+            self.put_url_into_queue(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
 
 
@@ -38,7 +38,7 @@ class GoogleParser(Parser):
             match = pattern.search(href_str)
             if match:
                 img_url = '{}.jpg'.format(match.group(1))
-                self.task_queue.put(dict(img_url=img_url))
+                self.put_task_into_queue(dict(img_url=img_url))
 
 
 class GoogleImageCrawler(Crawler):

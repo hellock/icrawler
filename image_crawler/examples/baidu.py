@@ -35,7 +35,7 @@ class BaiduParser(Parser):
                 img_url = item['hoverURL']
             else:
                 continue
-            self.task_queue.put(dict(img_url=img_url))
+            self.put_task_into_queue(dict(img_url=img_url))
 
 
 class BaiduImageCrawler(Crawler):

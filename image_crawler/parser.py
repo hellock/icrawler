@@ -1,17 +1,19 @@
 # -*- encoding: utf-8 -*-
 
 import logging
-import threading
-from requests import exceptions
 import queue
+import threading
+from .dup_filter import DupFilter
+from requests import exceptions
 
 
 class Parser(object):
 
-    def __init__(self, url_queue, task_queue, session):
+    def __init__(self, url_queue, task_queue, session, dup_filter_size=0):
         self.url_queue = url_queue
         self.task_queue = task_queue
         self.session = session
+        self.dup_filter = DupFilter(dup_filter_size)
         self.threads = []
         self.set_logger()
 
@@ -20,7 +22,14 @@ class Parser(object):
 
     def parse(self, response, **kwargs):
         task = {}
-        self.task_queue.put(task)
+        self.put_task_into_queue(task)
+
+    def put_task_into_queue(self, task):
+        if self.dup_filter.check_dup(task):
+            self.logger.debug('duplicated task: %s', task['img_url'])
+            pass
+        else:
+            self.task_queue.put(task)
 
     def create_threads(self, **kwargs):
         self.threads = []
