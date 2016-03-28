@@ -45,8 +45,8 @@ class BaiduImageCrawler(Crawler):
             img_dir, feeder_cls=SimpleSEFeeder,
             parser_cls=BaiduParser, log_level=log_level)
 
-    def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
-              downloader_thr_num=1, offset=0):
+    def crawl(self, keyword, offset=0, max_num=1000, feeder_thr_num=1,
+              parser_thr_num=1, downloader_thr_num=1):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '

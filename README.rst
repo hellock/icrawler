@@ -27,194 +27,226 @@ following figure.
 -  Downloader gets tasks from ``task_queue`` and requests the images,
    then saves them in the given path.
 
-Feeder, parser and downloader supports multi-thread, so you can specify
-the number of threads they use respectively.
+Feeder, parser and downloader are all thread managers, which means they
+start threads to finish corresponding tasks, so you can specify the
+number of threads they use.
 
-Basic usage
+Quick start
 -----------
 
-Dependency installation
-~~~~~~~~~~~~~~~~~~~~~~~
+Installation
+~~~~~~~~~~~~
 
-This framework use the HTTP library ``*requests*`` for sending requests
-and the the parsing library ``*beautifulsoup4*`` for parsing HTML pages.
-To install all the dependency using pip:
+This package is under development and not available at PyPI currently,
+so you cannot install it using the command
+``pip install image_crawler``. Instead, you can install it by
+
+::
+
+    python setup.py develop
+
+Then you should have all the dependency installed. If there is any
+problem with it, you can install the dependency manually.
 
 ::
 
     pip install -r requirements.txt
 
-Built-in crawlers
-~~~~~~~~~~~~~~~~~
+This framework uses the HTTP library **requests** for sending requests
+and the the parsing library **beautifulsoup4** for parsing HTML pages.
 
-The framework has 3 built-in crawlers and all of them are search engine
-crawlers (Google, Bing and Baidu). Here is an example of how to use the
-built-in crawlers.
+Use built-in crawlers
+~~~~~~~~~~~~~~~~~~~~~
+
+This framework contains 3 built-in crawlers, all of which are search
+engine crawlers.
+
+-  Google
+-  Bing
+-  Baidu
+
+Here is an example of how to use the built-in crawlers.
 
 .. code:: python
 
     from image_crawler.examples import GoogleImageCrawler
+    from image_crawler.examples import BingImageCrawler
+    from image_crawler.examples import BaiduImageCrawler
 
-    google_crawler = GoogleImageCrawler('images/google')
+    google_crawler = GoogleImageCrawler('your_image_dir')
     google_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
                          date_min=None, date_max=None, feeder_thr_num=1,
                          parser_thr_num=1, downloader_thr_num=4)
+    bing_crawler = BingImageCrawler('your_image_dir')
+    bing_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
+                       feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4)
+    baidu_crawler = BaiduImageCrawler('your_image_dir')
+    baidu_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
+                        feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4)
 
-Run this code and the crawler will download the images in the search
-result page using 1 thread to feed urls, 1 thread to parse the page and
-4 threads to download the images.
+**Note:** Only google image crawler supports date range parameters.
 
-You can see the complete example in *test.py*, to run it, simply
+You can see the complete example in *test.py*, to run it
 
 ::
 
     python test.py [option]
 
-``option`` can be ``google``, ``bing`` , ``baidu`` or ``all``, if not
-specifed, ``all`` is used.
+``option`` can be ``google``, ``bing`` , ``baidu`` or ``all``, using
+``all`` by default.
 
-Other crawlers
-~~~~~~~~~~~~~~
+Write your own crawler
+~~~~~~~~~~~~~~~~~~~~~~
 
-The simplest way is to overwrite some methods of the Feeder, Parser and
+The simplest way is to override some methods of Feeder, Parser and
 Downloader class.
 
-1. Feeder
+1. **Feeder**
 
-The method you need to overwrite is
+   The method you need to override is
 
-.. code:: python
+   .. code:: python
 
-    feed(self, **kwargs)
+       feeder.feed(**kwargs)
 
-If you want to offer the start urls at one time, for example
-'http://example.com/page\_url/1' up to 'http://example.com/page\_url/10'
+   If you want to offer the start urls at one time, for example from
+   'http://example.com/page\_url/1' up to
+   'http://example.com/page\_url/10'
 
-.. code:: python
+   .. code:: python
 
-    from image_crawler import Feeder
+       from image_crawler import Feeder
 
-    class MyFeeder(Feeder):
-        def feed(self):
-            for i in range(10):
-                url = 'http://example.com/page_url/{}'.format(i + 1)
-                self.url_queue.put(url)
+       class MyFeeder(Feeder):
+           def feed(self):
+               for i in range(10):
+                   url = 'http://example.com/page_url/{}'.format(i + 1)
+                   self.url_queue.put(url)
 
-If the page urls is like search engine result urls, you can also use the
-simple search engine feeder ``SimpleSEFeeder``, the api is like this
+2. **Parser**
 
-.. code:: python
+   The method you need to override is
 
-    feed(self, url_template, keyword, offset, max_num, page_step)
+   .. code:: python
 
-Built-in crawlers are using ``SimpleSEFeeder`` as the feeder component.
+       parser.parse(response, **kwargs)
 
-2. Parser
+   ``response`` is the page content of the url from ``url_queue``, what
+   you need to do is to parse the page and extract image urls, and then
+   put them into ``task_queue``. Beautiful Soup package is recommended
+   for parsing html pages. Taking ``GoogleParser`` for example,
 
-The method you need to overwrite is
+   .. code:: python
 
-.. code:: python
+       class GoogleParser(Parser):
 
-    parse(self, response, **kwargs)
+           def parse(self, response):
+               soup = BeautifulSoup(response, 'lxml')
+               image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
+               pattern = re.compile(r'imgurl=(.*?)\.jpg')
+               for div in image_divs:
+                   href_str = div.a['href']
+                   match = pattern.search(href_str)
+                   if match:
+                       img_url = '{}.jpg'.format(match.group(1))
+                       self.put_task_into_queue(dict(img_url=img_url))
 
-``response`` is the page content of the url from ``url_queue``, what you
-need to do is to parse the page and find image urls, then put it to the
-``task_queue``. Beautiful Soup package is suggested to be used for
-parsing. Taking ``GoogleParser`` for example,
+3. **Downloader**
 
-.. code:: python
+   If you just want to change the filename of downloaded images, you can
+   override the method
 
-    class GoogleParser(Parser):
+   .. code:: python
 
-        def parse(self, response):
-            soup = BeautifulSoup(response, 'lxml')
-            image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
-            pattern = re.compile(r'imgurl=(.*?)\.jpg')
-            for div in image_divs:
-                href_str = div.a['href']
-                match = pattern.search(href_str)
-                if match:
-                    img_url = '{}.jpg'.format(match.group(1))
-                    self.task_queue.put(dict(img_url=img_url))
+       downloader.set_file_path(img_task)
 
-3. Downloader
+   The default names of downloaded images are counting numbers, from
+   000001 to 999999.
 
-If you just want to change the filename of downloaded images, you can
-overwrite the ``set_file_path()`` method:
+   If you want to process meta data, for example save some annotations
+   of the images, you can override the method
 
-.. code:: python
+   .. code:: python
 
-    set_file_path(self, img_task)
+       downloader.process_meta(img_task):
 
-The default names of images are counting numbers, from 000001 to 999999.
-If you want to do more with the downloader, you can also overwrite the
-method:
+   Note that your parser need to put meta data as well as image urls
+   into ``task_queue``.
 
-.. code:: python
+   If you want to do more with the downloader, you can also override the
+   method
 
-    download(self, img_task, request_timeout, **kwargs)
+   .. code:: python
 
-You can retrive tasks from ``task_queue`` and then do what you want to
-do.
+       downloader.download(self, img_task, request_timeout, **kwargs)
 
-4. Crawler
+   You can retrive tasks from ``task_queue`` and then do what you want
+   to do.
 
-You can either use the base class ``ImageCrawler`` or inherit from it.
-Two main apis are:
+4. **Crawler**
 
-.. code:: python
+   You can either use the base class ``ImageCrawler`` or inherit from
+   it. Two main apis are
 
-    __init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
-                     downloader_cls=Downloader, log_level=logging.INFO)
+   .. code:: python
 
-and
+       crawler.__init__(self, img_dir='images', feeder_cls=Feeder, parser_cls=Parser,
+                        downloader_cls=Downloader, log_level=logging.INFO)
 
-.. code:: python
+   and
 
-    crawl(self, feeder_thread_num=1, parser_thread_num=1,
-                  downloader_thread_num=1, feeder_kwargs={},
-                  parser_kwargs={}, downloader_kwargs={})
+   .. code:: python
 
-So you can use your crawler like this
+       crawler.crawl(self, feeder_thread_num=1, parser_thread_num=1,
+                     downloader_thread_num=1, feeder_kwargs={},
+                     parser_kwargs={}, downloader_kwargs={})
 
-.. code:: python
+   So you can use your crawler like this
 
-    crawler = Crawler(feeder_cls=SimpleSEFeeder, parser_cls=MyParser)
-    crawler.crawl(feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
-                  feeder_kwargs=dict(
-                      url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
-                      keyword='cat',
-                      offset=0,
-                      max_num=1000,
-                      page_step=50
-                  ),
-                  downloader_kwargs=dict(max_num=1000))
+   .. code:: python
 
-Or define a class to simplify the arguments.
+       crawler = Crawler(feeder_cls=SimpleSEFeeder, parser_cls=MyParser)
+       crawler.crawl(feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
+                     feeder_kwargs=dict(
+                         url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
+                         keyword='cat',
+                         offset=0,
+                         max_num=1000,
+                         page_step=50
+                     ),
+                     downloader_kwargs=dict(max_num=1000))
 
-.. code:: python
+   Or define a class to avoid using complex and ugly dictionaries as
+   arguments.
 
-    class MySECrawler(Crawler):
+   .. code:: python
 
-        def __init__(self, img_dir='images', log_level=logging.INFO):
-            ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
-                                  parser_cls=MyParser, log_level=log_level)
+       class MyCrawler(Crawler):
 
-        def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
-                  downloader_thr_num=1, offset=0):
-            feeder_kwargs = dict(
-                url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
-                keyword=keyword,
-                offset=offset,
-                max_num=max_num,
-                page_step=50
-            )
-            downloader_kwargs = dict(max_num=max_num)
-            super(MySECrawler, self).crawl(
-                feeder_thr_num, parser_thr_num, downloader_thr_num,
-                feeder_kwargs=feeder_kwargs,
-                downloader_kwargs=downloader_kwargs)
+           def __init__(self, img_dir='images', log_level=logging.INFO):
+               ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
+                                     parser_cls=MyParser, log_level=log_level)
 
-    crawler = MySECrawler()
-    crawler.crawl(keyword='cat', max_num=1000, feeder_thr_num=1,
-                  parser_thr_num=1, downloader_thr_num=4, offset=0)
+           def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
+                     downloader_thr_num=1, offset=0):
+               feeder_kwargs = dict(
+                   url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
+                   keyword=keyword,
+                   offset=offset,
+                   max_num=max_num,
+                   page_step=50
+               )
+               downloader_kwargs = dict(max_num=max_num)
+               super(MyCrawler, self).crawl(
+                   feeder_thr_num, parser_thr_num, downloader_thr_num,
+                   feeder_kwargs=feeder_kwargs,
+                   downloader_kwargs=downloader_kwargs)
+
+       crawler = MyCrawler()
+       crawler.crawl(keyword='cat', offset=0, max_num=1000, feeder_thr_num=1,
+                     parser_thr_num=1, downloader_thr_num=4)
+
+API reference
+-------------
+
+To be continued.
