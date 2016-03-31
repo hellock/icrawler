@@ -48,7 +48,6 @@ class FlickrParser(Parser):
 
     def parse(self, response):
         content = json.loads(response.decode())
-        print(content)
         if content['stat'] != 'ok':
             return
         photos = content['photos']['photo']

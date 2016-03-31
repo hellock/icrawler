@@ -3,6 +3,7 @@
 import logging
 import queue
 import threading
+import time
 from .dup_filter import DupFilter
 from requests import exceptions
 
@@ -48,8 +49,11 @@ class Parser(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, queue_timeout=1, request_timeout=5, **kwargs):
+    def thread_run(self, queue_timeout=1, request_timeout=5, task_threshold=50, **kwargs):
         while not self.url_queue.empty():
+            if self.task_queue.qsize() > task_threshold:
+                time.sleep(1)
+                continue
             # get the page url
             try:
                 url = self.url_queue.get(timeout=queue_timeout)

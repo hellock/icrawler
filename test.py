@@ -28,7 +28,8 @@ def test_baidu():
 def test_flickr():
     flickr_crawler = FlickrImageCrawler('bc59c93a0c89a500f2ebe67d750219a8',
                                         'images/flickr')
-    flickr_crawler.crawl(max_num=100, group_id='68012010@N00')
+    flickr_crawler.crawl(max_num=200, downloader_thr_num=4,
+                         group_id='68012010@N00')
 
 
 def main():
@@ -40,6 +41,7 @@ def main():
         test_google()
         test_bing()
         test_baidu()
+        test_flickr()
     elif dest == 'google':
         test_google()
     elif dest == 'bing':
