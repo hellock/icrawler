@@ -6,6 +6,7 @@ import logging
 from image_crawler.examples import GoogleImageCrawler
 from image_crawler.examples import BingImageCrawler
 from image_crawler.examples import BaiduImageCrawler
+from image_crawler.examples import FlickrImageCrawler
 
 
 def test_google():
@@ -24,6 +25,12 @@ def test_baidu():
     baidu_crawler.crawl('sunny', 10, 1, 1, 4)
 
 
+def test_flickr():
+    flickr_crawler = FlickrImageCrawler('bc59c93a0c89a500f2ebe67d750219a8',
+                                        'images/flickr')
+    flickr_crawler.crawl(max_num=100, group_id='68012010@N00')
+
+
 def main():
     if len(sys.argv) > 1:
         dest = sys.argv[1]
@@ -39,6 +46,8 @@ def main():
         test_bing()
     elif dest == 'baidu':
         test_baidu()
+    elif dest == 'flickr':
+        test_flickr()
 
 
 if __name__ == '__main__':
