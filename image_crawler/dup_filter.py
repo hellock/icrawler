@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+import json
 
 
 class DupFilter(object):
@@ -10,7 +11,7 @@ class DupFilter(object):
 
     def check_dup(self, elem):
         if isinstance(elem, dict):
-            hashable_item = frozenset(elem.items())
+            hashable_item = json.dumps(elem, sort_keys=True)
         elif isinstance(elem, list):
             hashable_item = frozenset(elem)
         else:

@@ -55,7 +55,7 @@ class Crawler(object):
         self.logger.info('starting feeder... %s threads in total', feeder_thread_num)
         self.feeder.start(feeder_thread_num, **feeder_kwargs)
         self.logger.info('starting parser... %s threads in total', parser_thread_num)
-        self.parser.start(parser_thread_num, task_thr=10*downloader_thread_num,
+        self.parser.start(parser_thread_num, task_threshold=10*downloader_thread_num,
                           **parser_kwargs)
         self.logger.info('starting downloader... %s threads in total', downloader_thread_num)
         self.downloader.start(downloader_thread_num, **downloader_kwargs)

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date
-import sys
-import logging
 from image_crawler.examples import GoogleImageCrawler
 from image_crawler.examples import BingImageCrawler
 from image_crawler.examples import BaiduImageCrawler
 from image_crawler.examples import FlickrImageCrawler
+import logging
+import sys
 
 
 def test_google():
@@ -26,10 +26,10 @@ def test_baidu():
 
 
 def test_flickr():
-    flickr_crawler = FlickrImageCrawler('bc59c93a0c89a500f2ebe67d750219a8',
+    flickr_crawler = FlickrImageCrawler('your_own_apikey',
                                         'images/flickr')
-    flickr_crawler.crawl(max_num=200, downloader_thr_num=4,
-                         group_id='68012010@N00')
+    flickr_crawler.crawl(max_num=200, downloader_thr_num=4, tags='family,child',
+                         tag_mode='all', group_id='68012010@N00')
 
 
 def main():

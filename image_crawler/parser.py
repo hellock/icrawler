@@ -51,6 +51,7 @@ class Parser(object):
 
     def thread_run(self, queue_timeout=1, request_timeout=5, task_threshold=50, **kwargs):
         while not self.url_queue.empty():
+            # if there is still lots of tasks in the queue, stop parsing
             if self.task_queue.qsize() > task_threshold:
                 time.sleep(1)
                 continue

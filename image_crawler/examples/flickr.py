@@ -2,6 +2,7 @@ from .. import Feeder
 from .. import Parser
 from .. import Crawler
 from urllib.parse import urlencode
+import datetime
 import json
 import logging
 import math
@@ -28,9 +29,19 @@ class FlickrFeeder(Feeder):
         if text is not None:
             params['text'] = text
         if min_upload_date is not None:
-            params['min_upload_date'] = min_upload_date
+            if isinstance(min_upload_date, datetime.date):
+                params['min_upload_date'] = min_upload_date.strftime('%Y-%m-%d')
+            elif isinstance(min_upload_date, (int, str)):
+                params['min_upload_date'] = min_upload_date
+            else:
+                self.logger.error('min_upload_date is invalid')
         if max_upload_date is not None:
-            params['max_upload_date'] = max_upload_date
+            if isinstance(min_upload_date, datetime.date):
+                params['max_upload_date'] = max_upload_date.strftime('%Y-%m-%d')
+            elif isinstance(min_upload_date, (int, str)):
+                params['max_upload_date'] = max_upload_date
+            else:
+                self.logger.error('min_upload_date is invalid')
         if group_id is not None:
             params['group_id'] = group_id
         if extras is not None:
@@ -58,7 +69,7 @@ class FlickrParser(Parser):
             secret = photo['secret']
             img_url = 'https://farm{0}.staticflickr.com/{1}/{2}_{3}.jpg'.format(
                 farm_id, server_id, photo_id, secret)
-            self.put_task_into_queue(dict(img_url=img_url, **photo))
+            self.put_task_into_queue(dict(img_url=img_url, meta=photo))
 
 
 class FlickrImageCrawler(Crawler):

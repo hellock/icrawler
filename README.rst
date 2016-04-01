@@ -4,7 +4,7 @@ image\_crawler
 Introduction
 ------------
 
-This python package is a mini framework of image crawlers. Python 2 is
+This python package is a mini framework of image crawlers. Python 2.x is
 not supported for the moment.
 
 Stucture
@@ -58,14 +58,15 @@ and the the parsing library **beautifulsoup4** for parsing HTML pages.
 Use built-in crawlers
 ~~~~~~~~~~~~~~~~~~~~~
 
-This framework contains 3 built-in crawlers, all of which are search
-engine crawlers.
+This framework contains 4 built-in crawlers.
 
 -  Google
 -  Bing
 -  Baidu
+-  Flickr
 
-Here is an example of how to use the built-in crawlers.
+Here is an example of how to use the built-in crawlers. The search
+engine crawlers have similar interfaces.
 
 .. code:: python
 
@@ -86,14 +87,45 @@ Here is an example of how to use the built-in crawlers.
 
 **Note:** Only google image crawler supports date range parameters.
 
+Flickr crawler is a little different.
+
+.. code:: python
+
+    from image_crawler.examples import FlickrImageCrawler
+    from datetime import date
+
+    flickr_crawler = FlickrImageCrawler('your_apikey', 'your_image_dir')
+    flickr_crawler.crawl(max_num=1000, feeder_thr_num=1, parser_thr_num=1,
+                         downloader_thr_num=1, tags='child,baby',
+                         group_id='68012010@N00', min_upload_date=date(2015, 5, 1))
+
+Supported optional searching auguments are
+
+-  ``user_id`` -- The NSID of the user who's photo to search.
+-  ``tags`` -- A comma-delimited list of tags.
+-  ``tag_mode`` -- Either 'any' for an OR combination of tags, or 'all'
+   for an AND combination.
+-  ``text`` -- A free text search. Photos who's title, description or
+   tags contain the text will be returned.
+-  ``min_upload_date`` -- Minimum upload date. The date can be in the
+   form of ``datetime.date`` object, a unix timestamp or a string.
+-  ``max_upload_date`` -- Maximum upload date. Same form as
+   ``min_upload_date``.
+-  ``group_id`` -- The id of a group who's pool to search.
+-  ``extras`` -- A comma-delimited list of extra information to fetch
+   for each returned record. See
+   https://www.flickr.com/services/api/flickr.photos.search.html for
+   more details.
+-  ``per_page`` -- Number of photos to return per page.
+
 You can see the complete example in *test.py*, to run it
 
 ::
 
     python test.py [option]
 
-``option`` can be ``google``, ``bing`` , ``baidu`` or ``all``, using
-``all`` by default.
+``option`` can be ``google``, ``bing`` , ``baidu``, ``flickr`` or
+``all``, using ``all`` by default.
 
 Write your own crawler
 ~~~~~~~~~~~~~~~~~~~~~~
