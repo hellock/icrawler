@@ -5,6 +5,7 @@ from image_crawler.examples import GoogleImageCrawler
 from image_crawler.examples import BingImageCrawler
 from image_crawler.examples import BaiduImageCrawler
 from image_crawler.examples import FlickrImageCrawler
+from image_crawler.examples import GreedyImageCrawler
 import logging
 import sys
 
@@ -32,24 +33,32 @@ def test_flickr():
                          tag_mode='all', group_id='68012010@N00')
 
 
+def test_greedy():
+    greedy_crawler = GreedyImageCrawler('images/greedy')
+    greedy_crawler.crawl('gzhplus.com')
+
+
 def main():
     if len(sys.argv) > 1:
-        dest = sys.argv[1]
+        dst = sys.argv[1]
     else:
-        dest = 'all'
-    if dest == 'all':
+        dst = 'all'
+    if dst == 'all':
         test_google()
         test_bing()
         test_baidu()
         test_flickr()
-    elif dest == 'google':
+        test_greedy()
+    elif dst == 'google':
         test_google()
-    elif dest == 'bing':
+    elif dst == 'bing':
         test_bing()
-    elif dest == 'baidu':
+    elif dst == 'baidu':
         test_baidu()
-    elif dest == 'flickr':
+    elif dst == 'flickr':
         test_flickr()
+    elif dst == 'greedy':
+        test_greedy()
 
 
 if __name__ == '__main__':
