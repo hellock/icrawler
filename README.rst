@@ -38,8 +38,8 @@ Installation
 ~~~~~~~~~~~~
 
 This package is under development and not available at PyPI currently,
-so you cannot install it using the command
-``pip install image_crawler``. Instead, you can install it by
+so you cannot install it using the command ``pip install icrawler``.
+Instead, you can install it by
 
 ::
 
@@ -70,9 +70,9 @@ engine crawlers have similar interfaces.
 
 .. code:: python
 
-    from image_crawler.examples import GoogleImageCrawler
-    from image_crawler.examples import BingImageCrawler
-    from image_crawler.examples import BaiduImageCrawler
+    from icrawler.examples import GoogleImageCrawler
+    from icrawler.examples import BingImageCrawler
+    from icrawler.examples import BaiduImageCrawler
 
     google_crawler = GoogleImageCrawler('your_image_dir')
     google_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
@@ -91,7 +91,7 @@ Flickr crawler is a little different.
 
 .. code:: python
 
-    from image_crawler.examples import FlickrImageCrawler
+    from icrawler.examples import FlickrImageCrawler
     from datetime import date
 
     flickr_crawler = FlickrImageCrawler('your_apikey', 'your_image_dir')
@@ -123,7 +123,7 @@ If you just want to crawl all the images from some website, then
 
 .. code:: python
 
-    from image_crawler.examples import GreedyImageCrawler
+    from icrawler.examples import GreedyImageCrawler
 
     greedy_crawler = GreedyImageCrawler('images/greedy')
     greedy_crawler.crawl(domains='gzhplus.com', max_num=0, 
@@ -162,7 +162,7 @@ Downloader class.
 
    .. code:: python
 
-       from image_crawler import Feeder
+       from icrawler import Feeder
 
        class MyFeeder(Feeder):
            def feed(self):
