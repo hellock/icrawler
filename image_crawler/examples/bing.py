@@ -10,7 +10,7 @@ import re
 class BingParser(Parser):
 
     def parse(self, response):
-        soup = BeautifulSoup(response, 'lxml')
+        soup = BeautifulSoup(response.content, 'lxml')
         image_divs = soup.find_all('div', class_='dg_u')
         pattern = re.compile(r'imgurl:\"(.*?)\.jpg')
         for div in image_divs:

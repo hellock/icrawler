@@ -85,7 +85,7 @@ class Parser(object):
                                   'page %s', url)
             else:
                 self.logger.info('parsing result page {}'.format(url))
-                self.parse(response.content, **kwargs)
+                self.parse(response, **kwargs)
 
     def __exit__(self):
         logging.info('all parser threads exited')
