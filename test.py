@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date
-from image_crawler.examples import GoogleImageCrawler
-from image_crawler.examples import BingImageCrawler
-from image_crawler.examples import BaiduImageCrawler
-from image_crawler.examples import FlickrImageCrawler
-from image_crawler.examples import GreedyImageCrawler
+from icrawler.examples import GoogleImageCrawler
+from icrawler.examples import BingImageCrawler
+from icrawler.examples import BaiduImageCrawler
+from icrawler.examples import FlickrImageCrawler
+from icrawler.examples import GreedyImageCrawler
 import logging
 import sys
 
@@ -34,8 +34,8 @@ def test_flickr():
 
 
 def test_greedy():
-    greedy_crawler = GreedyImageCrawler('images/greedy')
-    greedy_crawler.crawl('gzhplus.com')
+    greedy_crawler = GreedyImageCrawler('images/iplaysoft')
+    greedy_crawler.crawl('iplaysoft.com', 1000, 8, 2)
 
 
 def main():

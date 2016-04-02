@@ -3,7 +3,6 @@ from .. import Parser
 from .. import Crawler
 from bs4 import BeautifulSoup
 from urllib.parse import urlsplit
-from urllib.parse import urljoin
 import logging
 import re
 
@@ -13,7 +12,6 @@ class GreedyFeeder(Feeder):
     def feed(self, domains):
         if isinstance(domains, str):
             self.domains = [domains]
-            # self.domains.append(object)
         elif isinstance(domains, list):
             self.domains = domains
         else:
@@ -31,7 +29,7 @@ class GreedyParser(Parser):
 
     def is_in_domain(self, url, domains):
         for domain in domains:
-            if url in domain:
+            if domain in url:
                 return True
         return False
 
@@ -43,12 +41,17 @@ class GreedyParser(Parser):
                 self.put_task_into_queue(dict(img_url=tag['src']))
         tags = soup.find_all(href=True)
         for tag in tags:
-            if re.match(self.pattern, tag['href']):
-                self.put_task_into_queue(dict(img_url=tag['href']))
-            elif self.is_in_domain(tag['href'], feeder.domains):
-                feeder.put_url_into_queue(tag['href'])
-            elif tag['href'][0:4] != 'http':
-                feeder.put_url_into_queue(urljoin(response.url, tag['href']))
+            href = tag['href']
+            if re.match(self.pattern, href):
+                self.put_task_into_queue(dict(img_url=href))
+            elif href[0:10] == 'javascript':
+                continue
+            elif href.split('.')[-1] in ['xml', 'css', 'js', 'txt', 'json']:
+                continue
+            elif self.is_in_domain(href, feeder.domains):
+                if href[0:2] == '//':
+                    href = 'http:' + href
+                feeder.put_url_into_queue(href)
 
 
 class GreedyImageCrawler(Crawler):
