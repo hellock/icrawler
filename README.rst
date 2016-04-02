@@ -1,5 +1,5 @@
-image\_crawler
-==============
+icrawler
+========
 
 Introduction
 ------------
@@ -117,6 +117,21 @@ Supported optional searching auguments are
    https://www.flickr.com/services/api/flickr.photos.search.html for
    more details.
 -  ``per_page`` -- Number of photos to return per page.
+
+If you just want to crawl all the images from some website, then
+``GreedyImageCrawler`` may be helpful.
+
+.. code:: python
+
+    from image_crawler.examples import GreedyImageCrawler
+
+    greedy_crawler = GreedyImageCrawler('images/greedy')
+    greedy_crawler.crawl(domains='gzhplus.com', max_num=0, 
+                         parser_thr_num=1, downloader_thr_num=1)
+
+The argument ``domains`` can be either a url string or list. Second
+level domains and subpaths are supported, but there should be no scheme
+like 'http' in the domains.
 
 You can see the complete example in *test.py*, to run it
 
