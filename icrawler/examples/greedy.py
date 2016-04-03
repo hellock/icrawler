@@ -3,6 +3,7 @@ from .. import Parser
 from .. import Crawler
 from bs4 import BeautifulSoup
 from urllib.parse import urlsplit
+from urllib.parse import urljoin
 import logging
 import re
 
@@ -17,13 +18,14 @@ class GreedyFeeder(Feeder):
         else:
             self.error('domains must be a string or a list')
         for domain in self.domains:
-            self.put_url_into_queue('http://' + urlsplit(domain).geturl())
+            self.put_url_into_queue('http://' +
+                                    urlsplit(domain).geturl().rstrip('/'))
 
 
 class GreedyParser(Parser):
 
     def __init__(self, url_queue, task_queue, session, dup_filter_size=0):
-        self.pattern = re.compile(r'http(.*)\.(jpg|jpeg|png|bmp|gif|ico)')
+        self.pattern = re.compile(r'http(.*)\.(jpg|jpeg|png|bmp|gif|tiff|ico)')
         super(GreedyParser, self).__init__(url_queue, task_queue,
                                            session, dup_filter_size)
 
@@ -42,16 +44,33 @@ class GreedyParser(Parser):
         tags = soup.find_all(href=True)
         for tag in tags:
             href = tag['href']
+            # deal with urls start with '//' or '/' or '#'
+            if len(href) < 2:
+                continue
+            if href[0:2] == '//':
+                href = 'http:' + href.rstrip('/')
+            elif href[0] == '/':
+                href = urljoin(response.url, href[1:].rstrip('/'))
+            elif href[0] == '#':
+                continue
+            else:
+                href = urljoin(response.url, href.rstrip('/'))
+            # if it is a image url
             if re.match(self.pattern, href):
                 self.put_task_into_queue(dict(img_url=href))
-            elif href[0:10] == 'javascript':
-                continue
-            elif href.split('.')[-1] in ['xml', 'css', 'js', 'txt', 'json']:
-                continue
-            elif self.is_in_domain(href, feeder.domains):
-                if href[0:2] == '//':
-                    href = 'http:' + href
-                feeder.put_url_into_queue(href)
+            else:
+                # discard urls such as 'www.example.com/file.zip'
+                tmp = href.split('/')[-1].split('.')
+                # TODO: deal with '#' in the urls
+                if len(tmp) > 1 and tmp[-1] not in [
+                  'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp']:
+                    continue
+                # discard urls such as 'javascript:void(0)'
+                elif href.find('javascript', 0, 10) == 0:
+                    continue
+                # urls of the same domain
+                elif self.is_in_domain(href, feeder.domains):
+                    feeder.put_url_into_queue(href)
 
 
 class GreedyImageCrawler(Crawler):
