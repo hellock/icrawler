@@ -59,6 +59,8 @@ class Crawler(object):
         self.parser.start(parser_thread_num, task_threshold=10*downloader_thread_num,
                           **parser_kwargs)
         self.logger.info('starting downloader... %s threads in total', downloader_thread_num)
+        # not a good way to check whether the parser is alive, to be modified
+        downloader_kwargs['parser'] = self.parser
         self.downloader.start(downloader_thread_num, **downloader_kwargs)
         while True:
             if threading.active_count() > 1:

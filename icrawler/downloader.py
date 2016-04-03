@@ -91,7 +91,7 @@ class Downloader(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, max_num, queue_timeout=20, request_timeout=10, **kwargs):
+    def thread_run(self, max_num, queue_timeout=5, request_timeout=10, **kwargs):
         self.max_num = max_num
         while True:
             if self.signal_term:
@@ -99,9 +99,13 @@ class Downloader(object):
             try:
                 task = self.task_queue.get(timeout=queue_timeout)
             except queue.Empty:
-                self.logger.error('timeout, thread %s exit',
-                                  threading.current_thread().name)
-                break
+                if kwargs['parser'].is_alive():
+                    self.logger.info('%s is waiting for new download tasks',
+                                     threading.current_thread().name)
+                else:
+                    self.logger.info('no more download task, thread %s exit',
+                                     threading.current_thread().name)
+                    break
             except:
                 self.logger.error('exception in thread %s',
                                   threading.current_thread().name)

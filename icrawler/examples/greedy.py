@@ -42,6 +42,7 @@ class GreedyParser(Parser):
             if re.match(self.pattern, tag['src']):
                 self.put_task_into_queue(dict(img_url=tag['src']))
         tags = soup.find_all(href=True)
+        base_url = '{0.scheme}://{0.netloc}'.format(urlsplit(response.url))
         for tag in tags:
             href = tag['href']
             # deal with urls start with '//' or '/' or '#'
@@ -50,23 +51,26 @@ class GreedyParser(Parser):
             if href[0:2] == '//':
                 href = 'http:' + href.rstrip('/')
             elif href[0] == '/':
-                href = urljoin(response.url, href[1:].rstrip('/'))
+                href = urljoin(base_url, href.strip('/'))
             elif href[0] == '#':
                 continue
             else:
-                href = urljoin(response.url, href.rstrip('/'))
+                href = urljoin(base_url, href.rstrip('/'))
             # if it is a image url
             if re.match(self.pattern, href):
                 self.put_task_into_queue(dict(img_url=href))
             else:
                 # discard urls such as 'www.example.com/file.zip'
-                tmp = href.split('/')[-1].split('.')
                 # TODO: deal with '#' in the urls
+                tmp = href.split('/')[-1].split('.')
                 if len(tmp) > 1 and tmp[-1] not in [
                   'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp']:
                     continue
                 # discard urls such as 'javascript:void(0)'
                 elif href.find('javascript', 0, 10) == 0:
+                    continue
+                # discard urls such as 'android-app://xxxxxxxxx'
+                elif urlsplit(href).scheme not in ['http', 'https', 'ftp']:
                     continue
                 # urls of the same domain
                 elif self.is_in_domain(href, feeder.domains):

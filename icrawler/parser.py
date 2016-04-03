@@ -28,7 +28,6 @@ class Parser(object):
     def put_task_into_queue(self, task):
         if self.dup_filter.check_dup(task):
             self.logger.debug('duplicated task: %s', task['img_url'])
-            pass
         else:
             self.task_queue.put(task)
 
@@ -93,6 +92,12 @@ class Parser(object):
                     break
                 finally:
                     retry -= 1
+
+    def is_alive(self):
+        for t in self.threads:
+            if t.is_alive():
+                return True
+        return False
 
     def __exit__(self):
         logging.info('all parser threads exited')

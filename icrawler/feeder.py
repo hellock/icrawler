@@ -22,7 +22,6 @@ class Feeder(object):
     def put_url_into_queue(self, url):
         if self.dup_filter.check_dup(url):
             self.logger.debug('duplicated url: %s', url)
-            pass
         else:
             self.url_queue.put(url)
 
