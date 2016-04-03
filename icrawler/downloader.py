@@ -30,38 +30,46 @@ class Downloader(object):
         return filename
 
     def reach_max_num(self):
-        if (self.max_num > 0 and self.fetched_num >= self.max_num):
+        if self.signal_term:
+            return True
+        if self.max_num > 0 and self.fetched_num >= self.max_num:
             return True
         else:
             return False
 
-    def download(self, img_task, request_timeout, **kwargs):
+    def download(self, img_task, request_timeout, max_retry=3, **kwargs):
         img_url = img_task['img_url']
-        try:
-            response = self.session.get(img_url, timeout=request_timeout)
-        except requests.exceptions.ConnectionError:
-            self.logger.error('Connection error when downloading '
-                              'image %s', img_url)
-        except requests.exceptions.HTTPError:
-            self.logger.error('HTTP error when downloading '
-                              'image %s', img_url)
-        except requests.exceptions.Timeout:
-            self.logger.error('Timeout when downloading '
-                              'image %s', img_url)
-        except:
-            self.logger.error('Other error catched when downloading '
-                              'image %s', img_url)
-        else:
-            if self.reach_max_num():
+        retry = max_retry
+        while retry > 0:
+            try:
+                response = self.session.get(img_url, timeout=request_timeout)
+            except requests.exceptions.ConnectionError:
+                self.logger.error('Connection error when downloading image %s, '
+                                  'remaining retry time: %d', img_url, retry - 1)
+            except requests.exceptions.HTTPError:
+                self.logger.error('HTTP error when downloading image %s '
+                                  'remaining retry time: %d', img_url, retry - 1)
+            except requests.exceptions.Timeout:
+                self.logger.error('Timeout when downloading image %s '
+                                  'remaining retry time: %d', img_url, retry - 1)
+            except Exception as ex:
+                self.logger.error('Unexcepted error catched when downloading '
+                                  'image %s, error info: %s,remaining retry '
+                                  'time: %d', img_url, ex, retry - 1)
+            else:
+                if self.reach_max_num():
+                    with self.lock:
+                        self.signal_term = True
+                    return
                 with self.lock:
-                    self.signal_term = True
-                return
-            with self.lock:
-                self.fetched_num += 1
-            self.logger.info('image #%s\t%s', self.fetched_num, img_url)
-            filename = self.set_file_path(img_task)
-            with open(filename, 'wb') as fout:
-                fout.write(response.content)
+                    self.fetched_num += 1
+                self.logger.info('image #%s\t%s', self.fetched_num, img_url)
+                filename = self.set_file_path(img_task)
+                with open(filename, 'wb') as fout:
+                    fout.write(response.content)
+                break
+            finally:
+                retry -= 1
 
     def process_meta(self, img_task):
         pass

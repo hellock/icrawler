@@ -49,7 +49,8 @@ class Parser(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, queue_timeout=1, request_timeout=5, task_threshold=50, **kwargs):
+    def thread_run(self, queue_timeout=1, request_timeout=5, max_retry=3,
+                   task_threshold=50, **kwargs):
         while not self.url_queue.empty():
             # if there is still lots of tasks in the queue, stop parsing
             if self.task_queue.qsize() > task_threshold:
@@ -69,23 +70,29 @@ class Parser(object):
             else:
                 self.logger.debug('start downloading page {}'.format(url))
             # fetch and parse the page
-            try:
-                response = self.session.get(url, timeout=request_timeout)
-            except exceptions.ConnectionError:
-                self.logger.error('Connection error when fetching '
-                                  'page %s', url)
-            except exceptions.HTTPError:
-                self.logger.error('HTTP error when fetching '
-                                  'page %s', url)
-            except exceptions.Timeout:
-                self.logger.error('Timeout when fetching '
-                                  'page %s', url)
-            except:
-                self.logger.error('Other error catched when fetching '
-                                  'page %s', url)
-            else:
-                self.logger.info('parsing result page {}'.format(url))
-                self.parse(response, **kwargs)
+            retry = max_retry
+            while retry > 0:
+                try:
+                    response = self.session.get(url, timeout=request_timeout)
+                except exceptions.ConnectionError:
+                    self.logger.error('Connection error when fetching page %s, '
+                                      'remaining retry time: %d', url, retry - 1)
+                except exceptions.HTTPError:
+                    self.logger.error('HTTP error when fetching page %s, '
+                                      'remaining retry time: %d', url, retry - 1)
+                except exceptions.Timeout:
+                    self.logger.error('Timeout when fetching page %s, '
+                                      'remaining retry time: %d', url, retry - 1)
+                except Exception as ex:
+                    self.logger.error('Unexcepted error catched when fetching '
+                                      'page %s, error info: %s, remaining retry'
+                                      ' times: %d', url, ex, retry - 1)
+                else:
+                    self.logger.info('parsing result page {}'.format(url))
+                    self.parse(response, **kwargs)
+                    break
+                finally:
+                    retry -= 1
 
     def __exit__(self):
         logging.info('all parser threads exited')

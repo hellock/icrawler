@@ -34,8 +34,8 @@ def test_flickr():
 
 
 def test_greedy():
-    greedy_crawler = GreedyImageCrawler('images/iplaysoft')
-    greedy_crawler.crawl('iplaysoft.com', 1000, 8, 2)
+    greedy_crawler = GreedyImageCrawler('images/greedy/')
+    greedy_crawler.crawl('bbc.com/sport', 1000, 8, 2)
 
 
 def main():

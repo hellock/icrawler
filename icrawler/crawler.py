@@ -43,8 +43,9 @@ class Crawler(object):
         self.session.headers.update(self.headers)
 
     def set_logger(self, log_level):
-        logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s %(message)s',
-                            level=log_level, stream=sys.stderr)
+        logging.basicConfig(
+            format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+            level=log_level, stream=sys.stderr)
         self.logger = logging.getLogger(__name__)
         logging.getLogger('requests').setLevel(logging.WARNING)
 
