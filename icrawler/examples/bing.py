@@ -29,7 +29,8 @@ class BingImageCrawler(Crawler):
             parser_cls=BingParser, log_level=log_level)
 
     def crawl(self, keyword, offset=0, max_num=1000, feeder_thr_num=1,
-              parser_thr_num=1, downloader_thr_num=1):
+              parser_thr_num=1, downloader_thr_num=1,
+              min_size=None, max_size=None):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '
@@ -49,7 +50,8 @@ class BingImageCrawler(Crawler):
             max_num=max_num,
             page_step=35
         )
-        downloader_kwargs = dict(max_num=max_num)
+        downloader_kwargs = dict(max_num=max_num, min_size=min_size,
+                                 max_size=max_size)
         super(BingImageCrawler, self).crawl(
             feeder_thr_num, parser_thr_num, downloader_thr_num,
             feeder_kwargs=feeder_kwargs,

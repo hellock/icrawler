@@ -48,9 +48,9 @@ class GoogleImageCrawler(Crawler):
             img_dir, feeder_cls=GoogleFeeder,
             parser_cls=GoogleParser, log_level=log_level)
 
-    def crawl(self, keyword, offset=0, max_num=1000,
-              date_min=None, date_max=None, feeder_thr_num=1,
-              parser_thr_num=1, downloader_thr_num=1):
+    def crawl(self, keyword, offset=0, max_num=1000, date_min=None,
+              date_max=None, feeder_thr_num=1, parser_thr_num=1,
+              downloader_thr_num=1, min_size=None, max_size=None):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '
@@ -70,7 +70,8 @@ class GoogleImageCrawler(Crawler):
             date_min=date_min,
             date_max=date_max
         )
-        downloader_kwargs = dict(max_num=max_num)
+        downloader_kwargs = dict(max_num=max_num, min_size=min_size,
+                                 max_size=max_size)
         super(GoogleImageCrawler, self).crawl(
             feeder_thr_num, parser_thr_num, downloader_thr_num,
             feeder_kwargs=feeder_kwargs,
