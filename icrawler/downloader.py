@@ -1,10 +1,12 @@
 # -*- encoding: utf-8 -*-
 
+import io
 import logging
 import os
 import queue
 import requests
 import threading
+from PIL import Image
 
 
 class Downloader(object):
@@ -37,7 +39,20 @@ class Downloader(object):
         else:
             return False
 
-    def download(self, img_task, request_timeout, max_retry=3, **kwargs):
+    def _size_smaller(self, sz1, sz2):
+        if sz1[0] < sz2[0] and sz1[1] < sz2[1]:
+            return True
+        else:
+            return False
+
+    def _size_greater(self, sz1, sz2):
+        if sz1[0] > sz2[0] and sz1[1] > sz2[1]:
+            return True
+        else:
+            return False
+
+    def download(self, img_task, request_timeout, max_retry=3, min_size=None,
+                 max_size=None, **kwargs):
         img_url = img_task['img_url']
         retry = max_retry
         while retry > 0:
@@ -57,6 +72,12 @@ class Downloader(object):
                                   'image %s, error info: %s,remaining retry '
                                   'time: %d', img_url, ex, retry - 1)
             else:
+                if min_size is not None or max_size is not None:
+                    img = Image.open(io.BytesIO(response.content))
+                    if min_size is not None and not self._size_greater(img.size, min_size):
+                        return
+                    elif max_size is not None and not self._size_smaller(img.size, max_size):
+                        return
                 if self.reach_max_num():
                     with self.lock:
                         self.signal_term = True

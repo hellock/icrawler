@@ -84,9 +84,11 @@ class GreedyImageCrawler(Crawler):
             img_dir, feeder_cls=GreedyFeeder,
             parser_cls=GreedyParser, log_level=log_level)
 
-    def crawl(self, domains, max_num=0, parser_thr_num=1, downloader_thr_num=1):
+    def crawl(self, domains, max_num=0, parser_thr_num=1, downloader_thr_num=1,
+              min_size=None, max_size=None):
         super(GreedyImageCrawler, self).crawl(
               1, parser_thr_num, downloader_thr_num,
               feeder_kwargs={'domains': domains},
               parser_kwargs={'feeder': self.feeder},
-              downloader_kwargs={'max_num': max_num})
+              downloader_kwargs=dict(max_num=max_num, min_size=min_size,
+                                     max_size=max_size))

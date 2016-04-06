@@ -35,7 +35,7 @@ def test_flickr():
 
 def test_greedy():
     greedy_crawler = GreedyImageCrawler('images/greedy/')
-    greedy_crawler.crawl('bbc.com/sport', 100, 8, 1)
+    greedy_crawler.crawl('bbc.com/sport', 10, 4, 1, min_size=(200, 200))
 
 
 def main():
