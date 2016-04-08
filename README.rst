@@ -41,13 +41,17 @@ Quick start
 Installation
 ~~~~~~~~~~~~
 
-This package is under development and not available at PyPI currently,
-so you can NOT install it using the command ``pip install icrawler``.
-Instead, you can install it by
+For quick install, just use pip.
 
 ::
 
-    python setup.py develop
+    pip install icrawler
+
+You can also manually install it by
+
+::
+
+    python setup.py install
 
 Then you should have all the dependency installed. If there is any
 problem with it, you can install the dependency manually.
