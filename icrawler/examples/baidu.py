@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
+import json
+import logging
 from .. import SimpleSEFeeder
 from .. import Parser
 from .. import Crawler
-import logging
-import json
 
 
 class BaiduParser(Parser):

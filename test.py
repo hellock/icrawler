@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import logging
+import sys
 from datetime import date
 from icrawler.examples import GoogleImageCrawler
 from icrawler.examples import BingImageCrawler
 from icrawler.examples import BaiduImageCrawler
 from icrawler.examples import FlickrImageCrawler
 from icrawler.examples import GreedyImageCrawler
-import logging
-import sys
 
 
 def test_google():
@@ -18,18 +18,18 @@ def test_google():
 
 def test_bing():
     bing_crawler = BingImageCrawler('images/bing')
-    bing_crawler.crawl('sunny', 10, 1, 1, 4)
+    bing_crawler.crawl('sunny', 0, 10, 1, 1, 4)
 
 
 def test_baidu():
     baidu_crawler = BaiduImageCrawler('images/baidu')
-    baidu_crawler.crawl('sunny', 10, 1, 1, 4)
+    baidu_crawler.crawl('sunny', 0, 10, 1, 1, 4)
 
 
 def test_flickr():
     flickr_crawler = FlickrImageCrawler('your_own_apikey',
                                         'images/flickr')
-    flickr_crawler.crawl(max_num=200, downloader_thr_num=4, tags='family,child',
+    flickr_crawler.crawl(max_num=10, downloader_thr_num=4, tags='family,child',
                          tag_mode='all', group_id='68012010@N00')
 
 

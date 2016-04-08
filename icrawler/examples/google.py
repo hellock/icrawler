@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+
+import logging
+import re
+from bs4 import BeautifulSoup
+from six.moves.urllib.parse import urlencode
 from .. import Feeder
 from .. import Parser
 from .. import Crawler
-from bs4 import BeautifulSoup
-from urllib.parse import urlencode
-import logging
-import re
 
 
 class GoogleFeeder(Feeder):

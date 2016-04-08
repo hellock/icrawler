@@ -1,11 +1,11 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import logging
-import queue
 import threading
 import time
-from .dup_filter import DupFilter
 from requests import exceptions
+from six.moves import queue
+from .dup_filter import DupFilter
 
 
 class Parser(object):

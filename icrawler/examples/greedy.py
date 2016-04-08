@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
+
+import logging
+import re
+from bs4 import BeautifulSoup
+from six.moves.urllib.parse import urlsplit
+from six.moves.urllib.parse import urljoin
 from .. import Feeder
 from .. import Parser
 from .. import Crawler
-from bs4 import BeautifulSoup
-from urllib.parse import urlsplit
-from urllib.parse import urljoin
-import logging
-import re
 
 
 class GreedyFeeder(Feeder):

@@ -28,6 +28,7 @@ setup(name='icrawler',
           'beautifulsoup4',
           'lxml',
           'Pillow',
-          'requests'
+          'requests',
+          'six'
       ],
       zip_safe=False)

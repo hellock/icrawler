@@ -1,12 +1,12 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import io
 import logging
 import os
-import queue
 import requests
 import threading
 from PIL import Image
+from six.moves import queue
 
 
 class Downloader(object):

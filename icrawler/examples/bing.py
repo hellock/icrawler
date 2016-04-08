@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+
+import logging
+import re
+from bs4 import BeautifulSoup
+from six.moves import html_parser
 from .. import SimpleSEFeeder
 from .. import Parser
 from .. import Crawler
-from bs4 import BeautifulSoup
-import logging
-import html
-import re
 
 
 class BingParser(Parser):
@@ -14,7 +16,7 @@ class BingParser(Parser):
         image_divs = soup.find_all('div', class_='dg_u')
         pattern = re.compile(r'imgurl:\"(.*?)\.jpg')
         for div in image_divs:
-            href_str = html.unescape(div.a['m'])
+            href_str = html_parser.HTMLParser().unescape(div.a['m'])
             match = pattern.search(href_str)
             if match:
                 img_url = '{}.jpg'.format(match.group(1))

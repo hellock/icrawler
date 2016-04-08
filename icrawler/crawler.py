@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from .downloader import Downloader
-from .feeder import Feeder
-from .parser import Parser
 import logging
 import os
-import queue
 import requests
 import sys
 import threading
+from six.moves import queue
+from .downloader import Downloader
+from .feeder import Feeder
+from .parser import Parser
 
 
 class Crawler(object):

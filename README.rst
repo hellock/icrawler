@@ -4,8 +4,12 @@ icrawler
 Introduction
 ------------
 
-This python package is a mini framework of image crawlers. Python 2.x is
-not supported for the moment.
+This python package is a mini framework of image crawlers.
+
+Requirements
+------------
+
+Python 2.7+ or 3.4+.
 
 Stucture
 --------
@@ -38,7 +42,7 @@ Installation
 ~~~~~~~~~~~~
 
 This package is under development and not available at PyPI currently,
-so you cannot install it using the command ``pip install icrawler``.
+so you can NOT install it using the command ``pip install icrawler``.
 Instead, you can install it by
 
 ::
@@ -58,12 +62,13 @@ and the the parsing library **beautifulsoup4** for parsing HTML pages.
 Use built-in crawlers
 ~~~~~~~~~~~~~~~~~~~~~
 
-This framework contains 4 built-in crawlers.
+This framework contains 5 built-in crawlers.
 
 -  Google
 -  Bing
 -  Baidu
 -  Flickr
+-  General greedy crawl (crawl all the images from a website)
 
 Here is an example of how to use the built-in crawlers. The search
 engine crawlers have similar interfaces.
@@ -77,13 +82,16 @@ engine crawlers have similar interfaces.
     google_crawler = GoogleImageCrawler('your_image_dir')
     google_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
                          date_min=None, date_max=None, feeder_thr_num=1,
-                         parser_thr_num=1, downloader_thr_num=4)
+                         parser_thr_num=1, downloader_thr_num=4,
+                         min_size=(200,200), max_size=None)
     bing_crawler = BingImageCrawler('your_image_dir')
     bing_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
-                       feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4)
+                       feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
+                       min_size=None, max_size=None)
     baidu_crawler = BaiduImageCrawler('your_image_dir')
     baidu_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
-                        feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4)
+                        feeder_thr_num=1, parser_thr_num=1, downloader_thr_num=4,
+                        min_size=None, max_size=None)
 
 **Note:** Only google image crawler supports date range parameters.
 
@@ -91,8 +99,8 @@ Flickr crawler is a little different.
 
 .. code:: python
 
-    from icrawler.examples import FlickrImageCrawler
     from datetime import date
+    from icrawler.examples import FlickrImageCrawler
 
     flickr_crawler = FlickrImageCrawler('your_apikey', 'your_image_dir')
     flickr_crawler.crawl(max_num=1000, feeder_thr_num=1, parser_thr_num=1,
@@ -114,8 +122,8 @@ Supported optional searching auguments are
 -  ``group_id`` -- The id of a group who's pool to search.
 -  ``extras`` -- A comma-delimited list of extra information to fetch
    for each returned record. See
-   https://www.flickr.com/services/api/flickr.photos.search.html for
-   more details.
+   `here <https://www.flickr.com/services/api/flickr.photos.search.html>`__
+   for more details.
 -  ``per_page`` -- Number of photos to return per page.
 
 If you just want to crawl all the images from some website, then
@@ -126,8 +134,9 @@ If you just want to crawl all the images from some website, then
     from icrawler.examples import GreedyImageCrawler
 
     greedy_crawler = GreedyImageCrawler('images/greedy')
-    greedy_crawler.crawl(domains='gzhplus.com', max_num=0, 
-                         parser_thr_num=1, downloader_thr_num=1)
+    greedy_crawler.crawl(domains='bbc.com', max_num=0, 
+                         parser_thr_num=1, downloader_thr_num=1,
+                         min_size=None, max_size=None)
 
 The argument ``domains`` can be either a url string or list. Second
 level domains and subpaths are supported, but there should be no scheme
@@ -139,8 +148,9 @@ You can see the complete example in *test.py*, to run it
 
     python test.py [option]
 
-``option`` can be ``google``, ``bing`` , ``baidu``, ``flickr`` or
-``all``, using ``all`` by default.
+``option`` can be ``google``, ``bing`` , ``baidu``, ``flickr``,
+``greedy`` or ``all``, using ``all`` by default if no auguments are
+specified.
 
 Write your own crawler
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +235,8 @@ Downloader class.
 
    .. code:: python
 
-       downloader.download(self, img_task, request_timeout, **kwargs)
+       downloader.download(img_task, request_timeout, max_retry=3,
+                           min_size=None, max_size=None, **kwargs)
 
    You can retrive tasks from ``task_queue`` and then do what you want
    to do.
@@ -260,8 +271,13 @@ Downloader class.
                          offset=0,
                          max_num=1000,
                          page_step=50
-                     ),
-                     downloader_kwargs=dict(max_num=1000))
+                         ),
+                     downloader_kwargs=dict(
+                         max_num=1000,
+                         min_size=None,
+                         max_size=None
+                         )
+                     )
 
    Or define a class to avoid using complex and ugly dictionaries as
    arguments.
@@ -274,8 +290,8 @@ Downloader class.
                ImageCrawler.__init__(self, img_dir, feeder_cls=SimpleSEFeeder,
                                      parser_cls=MyParser, log_level=log_level)
 
-           def crawl(self, keyword, max_num, feeder_thr_num=1, parser_thr_num=1,
-                     downloader_thr_num=1, offset=0):
+           def crawl(self, keyword, offset=0, max_num=1000, feeder_thr_num=1, parser_thr_num=1,
+                     downloader_thr_num=1, min_size=None, max_size=None):
                feeder_kwargs = dict(
                    url_template='https://www.some_search_engine.com/search?keyword={}&start={}',
                    keyword=keyword,
@@ -283,7 +299,11 @@ Downloader class.
                    max_num=max_num,
                    page_step=50
                )
-               downloader_kwargs = dict(max_num=max_num)
+               downloader_kwargs = dict(
+                   max_num=max_num,
+                   min_size=None,
+                   max_size=None
+               )
                super(MyCrawler, self).crawl(
                    feeder_thr_num, parser_thr_num, downloader_thr_num,
                    feeder_kwargs=feeder_kwargs,
@@ -291,7 +311,7 @@ Downloader class.
 
        crawler = MyCrawler()
        crawler.crawl(keyword='cat', offset=0, max_num=1000, feeder_thr_num=1,
-                     parser_thr_num=1, downloader_thr_num=4)
+                     parser_thr_num=1, downloader_thr_num=4, max_size=(1000,800))
 
 API reference
 -------------

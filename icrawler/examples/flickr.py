@@ -1,11 +1,13 @@
-from .. import Feeder
-from .. import Parser
-from .. import Crawler
-from urllib.parse import urlencode
+# -*- coding: utf-8 -*-
+
 import datetime
 import json
 import logging
 import math
+from six.moves.urllib.parse import urlencode
+from .. import Feeder
+from .. import Parser
+from .. import Crawler
 
 
 class FlickrFeeder(Feeder):
