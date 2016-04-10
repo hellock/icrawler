@@ -39,25 +39,22 @@ def test_greedy():
 
 
 def main():
-    if len(sys.argv) > 1:
-        dst = sys.argv[1]
-    else:
+    if len(sys.argv) == 1:
         dst = 'all'
-    if dst == 'all':
+    else:
+        dst = sys.argv[1:]
+    if 'all' in dst:
+        dst = ['google', 'bing', 'baidu', 'flickr', 'greedy']
+
+    if 'google' in dst:
         test_google()
+    if 'bing' in dst:
         test_bing()
+    if 'baidu' in dst:
         test_baidu()
+    if 'flickr' in dst:
         test_flickr()
-        test_greedy()
-    elif dst == 'google':
-        test_google()
-    elif dst == 'bing':
-        test_bing()
-    elif dst == 'baidu':
-        test_baidu()
-    elif dst == 'flickr':
-        test_flickr()
-    elif dst == 'greedy':
+    if 'greedy' in dst:
         test_greedy()
 
 

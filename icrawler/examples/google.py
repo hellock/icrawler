@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
-import re
 from bs4 import BeautifulSoup
 from six.moves.urllib.parse import urlencode
 from .. import Feeder
@@ -33,14 +33,11 @@ class GoogleParser(Parser):
 
     def parse(self, response):
         soup = BeautifulSoup(response.content, 'lxml')
-        image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
-        pattern = re.compile(r'imgurl=(.*?)\.jpg')
+        image_divs = soup.find_all('div', class_='rg_meta')
         for div in image_divs:
-            href_str = div.a['href']
-            match = pattern.search(href_str)
-            if match:
-                img_url = '{}.jpg'.format(match.group(1))
-                self.put_task_into_queue(dict(img_url=img_url))
+            meta = json.loads(div.text)
+            if 'ou' in meta:
+                self.put_task_into_queue(dict(img_url=meta['ou']))
 
 
 class GoogleImageCrawler(Crawler):

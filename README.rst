@@ -1,6 +1,10 @@
 icrawler
 ========
 
+.. image:: https://img.shields.io/pypi/v/icrawler.svg
+   :target: https://pypi.python.org/pypi/icrawler
+   :alt: PyPI Version
+
 Introduction
 ------------
 
@@ -204,13 +208,10 @@ Downloader class.
            def parse(self, response):
                soup = BeautifulSoup(response.content, 'lxml')
                image_divs = soup.find_all('div', class_='rg_di rg_el ivg-i')
-               pattern = re.compile(r'imgurl=(.*?)\.jpg')
                for div in image_divs:
-                   href_str = div.a['href']
-                   match = pattern.search(href_str)
-                   if match:
-                       img_url = '{}.jpg'.format(match.group(1))
-                       self.put_task_into_queue(dict(img_url=img_url))
+                   meta = json.loads(div.text)
+                   if 'ou' in meta:
+                       self.put_task_into_queue(dict(img_url=meta['ou']))
 
 3. **Downloader**
 
@@ -321,3 +322,6 @@ API reference
 -------------
 
 To be continued.
+
+.. |Latest Version| image:: https://img.shields.io/pypi/v/icrawler.svg
+   :target: https://pypi.python.org/pypi/icrawler/
