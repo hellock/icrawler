@@ -11,17 +11,18 @@ from six.moves import queue
 
 class Downloader(object):
 
-    def __init__(self, img_dir, task_queue, session):
-        self.task_queue = task_queue
+    def __init__(self, img_dir, task_queue, signal, session):
         self.img_dir = img_dir
+        self.task_queue = task_queue
+        self.global_signal = signal
         self.session = session
         self.threads = []
+        self.threads_status = {}
         self.clear_status()
         self.set_logger()
 
     def clear_status(self):
         self.fetched_num = 0
-        self.signal_term = False
 
     def set_logger(self):
         self.logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class Downloader(object):
         return filename
 
     def reach_max_num(self):
-        if self.signal_term:
+        if self.global_signal.get('reach_max_num'):
             return True
         if self.max_num > 0 and self.fetched_num >= self.max_num:
             return True
@@ -55,7 +56,7 @@ class Downloader(object):
                  max_size=None, **kwargs):
         img_url = img_task['img_url']
         retry = max_retry
-        while retry > 0:
+        while retry > 0 and not self.global_signal.get('reach_max_num'):
             try:
                 response = self.session.get(img_url, timeout=request_timeout)
             except requests.exceptions.ConnectionError:
@@ -80,7 +81,10 @@ class Downloader(object):
                         return
                 if self.reach_max_num():
                     with self.lock:
-                        self.signal_term = True
+                        if not self.global_signal.get('reach_max_num'):
+                            self.global_signal.set({'reach_max_num': True})
+                            self.logger.info('downloaded images reach max num,'
+                                             ' waiting all threads to exit...')
                     return
                 with self.lock:
                     self.fetched_num += 1
@@ -112,21 +116,23 @@ class Downloader(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, max_num, queue_timeout=5, request_timeout=10, **kwargs):
+    def thread_run(self, max_num, queue_timeout=5, request_timeout=5, **kwargs):
         self.max_num = max_num
         while True:
-            if self.signal_term:
+            if self.global_signal.get('reach_max_num'):
+                self.logger.info('downloaded image reached max num, thread %s exit',
+                                 threading.current_thread().name)
                 break
             try:
                 task = self.task_queue.get(timeout=queue_timeout)
             except queue.Empty:
-                if kwargs['parser'].is_alive():
-                    self.logger.info('%s is waiting for new download tasks',
-                                     threading.current_thread().name)
-                else:
+                if self.global_signal.get('parser_exited'):
                     self.logger.info('no more download task, thread %s exit',
                                      threading.current_thread().name)
                     break
+                else:
+                    self.logger.info('%s is waiting for new download tasks',
+                                     threading.current_thread().name)
             except:
                 self.logger.error('exception in thread %s',
                                   threading.current_thread().name)

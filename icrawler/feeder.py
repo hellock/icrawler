@@ -2,13 +2,15 @@
 
 import logging
 import threading
-from .dup_filter import DupFilter
+
+from .utils import DupFilter
 
 
 class Feeder(object):
 
-    def __init__(self, url_queue, session):
+    def __init__(self, url_queue, signal, session):
         self.url_queue = url_queue
+        self.global_signal = signal
         self.session = session
         self.threads = []
         self.set_logger()
@@ -44,6 +46,12 @@ class Feeder(object):
         for t in self.threads:
             t.start()
             self.logger.info('thread %s started', t.name)
+
+    def is_alive(self):
+        for t in self.threads:
+            if t.is_alive():
+                return True
+        return False
 
     def __exit__(self):
         self.logger.info('all feeder threads exited')

@@ -5,10 +5,13 @@ import os
 import requests
 import sys
 import threading
+import time
 from six.moves import queue
+
 from .downloader import Downloader
 from .feeder import Feeder
 from .parser import Parser
+from .utils import Signal
 
 
 class Crawler(object):
@@ -23,12 +26,22 @@ class Crawler(object):
         self.task_queue = queue.Queue()
         # set session
         self.set_session()
+        # init signal
+        self.init_signal()
         # set feeder, parser and downloader
-        self.feeder = feeder_cls(self.url_queue, self.session)
-        self.parser = parser_cls(self.url_queue, self.task_queue, self.session)
-        self.downloader = downloader_cls(self.img_dir, self.task_queue, self.session)
+        self.feeder = feeder_cls(self.url_queue, self.signal, self.session)
+        self.parser = parser_cls(self.url_queue, self.task_queue,
+                                 self.signal, self.session)
+        self.downloader = downloader_cls(self.img_dir, self.task_queue,
+                                         self.signal, self.session)
         # set logger
         self.set_logger(log_level)
+
+    def init_signal(self):
+        self.signal = Signal()
+        self.signal.set({'feeder_exited': False,
+                         'parser_exited': False,
+                         'reach_max_num': False})
 
     def set_session(self, headers=None):
         if headers is None:
@@ -52,6 +65,7 @@ class Crawler(object):
     def crawl(self, feeder_thread_num=1, parser_thread_num=1,
               downloader_thread_num=1, feeder_kwargs={},
               parser_kwargs={}, downloader_kwargs={}):
+        self.signal.reset()
         self.logger.info('start crawling...')
         self.logger.info('starting feeder... %s threads in total', feeder_thread_num)
         self.feeder.start(feeder_thread_num, **feeder_kwargs)
@@ -60,11 +74,14 @@ class Crawler(object):
                           **parser_kwargs)
         self.logger.info('starting downloader... %s threads in total', downloader_thread_num)
         # not a good way to check whether the parser is alive, to be modified
-        downloader_kwargs['parser'] = self.parser
         self.downloader.start(downloader_thread_num, **downloader_kwargs)
         while True:
-            if threading.active_count() > 1:
-                pass
-            else:
+            if threading.active_count() <= 1:
                 break
-        self.logger.info('All images downloaded!')
+            elif not self.feeder.is_alive():
+                self.signal.set({'feeder_exited': True})
+            elif not self.parser.is_alive():
+                self.signal.set({'parser_exited': True})
+            else:
+                time.sleep(1)
+        self.logger.info('Crawling task done!')

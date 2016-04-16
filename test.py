@@ -3,6 +3,7 @@
 import logging
 import sys
 from datetime import date
+
 from icrawler.examples import GoogleImageCrawler
 from icrawler.examples import BingImageCrawler
 from icrawler.examples import BaiduImageCrawler
@@ -27,7 +28,7 @@ def test_baidu():
 
 
 def test_flickr():
-    flickr_crawler = FlickrImageCrawler('your_own_apikey',
+    flickr_crawler = FlickrImageCrawler('bc59c93a0c89a500f2ebe67d750219a8',
                                         'images/flickr')
     flickr_crawler.crawl(max_num=10, downloader_thr_num=4, tags='family,child',
                          tag_mode='all', group_id='68012010@N00')
@@ -45,7 +46,6 @@ def main():
         dst = sys.argv[1:]
     if 'all' in dst:
         dst = ['google', 'bing', 'baidu', 'flickr', 'greedy']
-
     if 'google' in dst:
         test_google()
     if 'bing' in dst:

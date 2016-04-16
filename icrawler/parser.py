@@ -6,14 +6,16 @@ import time
 from requests import exceptions
 from six.moves import queue
 from six.moves.urllib.parse import urlsplit
-from .dup_filter import DupFilter
+
+from .utils import DupFilter
 
 
 class Parser(object):
 
-    def __init__(self, url_queue, task_queue, session, dup_filter_size=0):
+    def __init__(self, url_queue, task_queue, signal, session, dup_filter_size=0):
         self.url_queue = url_queue
         self.task_queue = task_queue
+        self.global_signal = signal
         self.session = session
         self.dup_filter = DupFilter(dup_filter_size)
         self.threads = []
@@ -49,9 +51,13 @@ class Parser(object):
             t.start()
             self.logger.info('thread %s started', t.name)
 
-    def thread_run(self, queue_timeout=1, request_timeout=5, max_retry=3,
+    def thread_run(self, queue_timeout=2, request_timeout=5, max_retry=3,
                    task_threshold=50, **kwargs):
-        while not self.url_queue.empty():
+        while True:
+            if self.global_signal.get('reach_max_num'):
+                self.logger.info('downloaded image reached max num, thread %s exit',
+                                 threading.current_thread().name)
+                break
             # if there is still lots of tasks in the queue, stop parsing
             if self.task_queue.qsize() > task_threshold:
                 time.sleep(1)
@@ -60,9 +66,14 @@ class Parser(object):
             try:
                 url = self.url_queue.get(timeout=queue_timeout)
             except queue.Empty:
-                self.logger.error('timeout, thread %s exit',
-                                  threading.current_thread().name)
-                break
+                if self.global_signal.get('feeder_exited'):
+                    self.logger.info('no more page urls to parse, thread %s exit',
+                                     threading.current_thread().name)
+                    break
+                else:
+                    self.logger.info('%s is waiting for new page urls',
+                                     threading.current_thread().name)
+                    continue
             except:
                 self.logger.error('exception in thread %s',
                                   threading.current_thread().name)

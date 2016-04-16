@@ -2,6 +2,7 @@
 
 import json
 import logging
+
 from .. import SimpleSEFeeder
 from .. import Parser
 from .. import Crawler
