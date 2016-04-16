@@ -5,6 +5,7 @@ import threading
 import time
 from requests import exceptions
 from six.moves import queue
+from six.moves.urllib.parse import urlsplit
 from .dup_filter import DupFilter
 
 
@@ -72,7 +73,9 @@ class Parser(object):
             retry = max_retry
             while retry > 0:
                 try:
-                    response = self.session.get(url, timeout=request_timeout)
+                    base_url = '{0.scheme}://{0.netloc}'.format(urlsplit(url))
+                    response = self.session.get(url, timeout=request_timeout,
+                                                headers={'Referer': base_url})
                 except exceptions.ConnectionError:
                     self.logger.error('Connection error when fetching page %s, '
                                       'remaining retry time: %d', url, retry - 1)
