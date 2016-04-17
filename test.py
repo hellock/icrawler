@@ -28,7 +28,7 @@ def test_baidu():
 
 
 def test_flickr():
-    flickr_crawler = FlickrImageCrawler('bc59c93a0c89a500f2ebe67d750219a8',
+    flickr_crawler = FlickrImageCrawler('your_own_apikey',
                                         'images/flickr')
     flickr_crawler.crawl(max_num=10, downloader_thr_num=4, tags='family,child',
                          tag_mode='all', group_id='68012010@N00')

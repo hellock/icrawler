@@ -5,6 +5,10 @@ icrawler
    :target: https://pypi.python.org/pypi/icrawler
    :alt: PyPI Version
 
+.. image:: https://img.shields.io/pypi/dm/icrawler.svg
+   :target: https://pypi.python.org/pypi/icrawler
+   :alt: PyPI Monthly downloads
+
 Introduction
 ------------
 
@@ -154,11 +158,12 @@ You can see the complete example in *test.py*, to run it
 
 ::
 
-    python test.py [option]
+    python test.py [options]
 
-``option`` can be ``google``, ``bing`` , ``baidu``, ``flickr``,
+``options`` can be ``google``, ``bing`` , ``baidu``, ``flickr``,
 ``greedy`` or ``all``, using ``all`` by default if no auguments are
-specified.
+specified. Note that you have to provide your flickr apikey if you want
+to test FlickrCrawler.
 
 Write your own crawler
 ~~~~~~~~~~~~~~~~~~~~~~
