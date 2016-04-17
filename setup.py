@@ -1,4 +1,3 @@
-import sys
 from setuptools import setup
 from setuptools import find_packages
 
@@ -7,18 +6,8 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
-install_requires = [
-    'beautifulsoup4>=4.4.1',
-    'lxml',
-    'Pillow',
-    'requests>=2.9.1',
-    'six>=1.10.0'
-]
-if sys.version_info < (3, 4):
-    install_requires.append('enum34')
-
 setup(name='icrawler',
-      version='0.1.4',
+      version='0.1.5',
       description='A mini framework of image crawlers',
       long_description=readme(),
       keywords='image crawler spider',
@@ -40,5 +29,11 @@ setup(name='icrawler',
       author='Kai Chen',
       author_email='chenkaidev@gmail.com',
       license='MIT',
-      install_requires=install_requires,
+      install_requires=[
+          'beautifulsoup4>=4.4.1',
+          'lxml',
+          'Pillow',
+          'requests>=2.9.1',
+          'six>=1.10.0'
+      ],
       zip_safe=False)
