@@ -81,7 +81,8 @@ class Parser(object):
         self.threads = []
         for i in range(self.thread_num):
             name = 'parser-{:0>2d}'.format(i+1)
-            t = threading.Thread(name=name, target=self.thread_run, kwargs=kwargs)
+            t = threading.Thread(name=name, target=self.thread_run,
+                                 kwargs=kwargs)
             t.daemon = True
             self.threads.append(t)
 
@@ -125,8 +126,8 @@ class Parser(object):
         """
         while True:
             if self.global_signal.get('reach_max_num'):
-                self.logger.info('downloaded image reached max num, thread %s exit',
-                                 threading.current_thread().name)
+                self.logger.info('downloaded image reached max num, thread %s'
+                                 ' exit', threading.current_thread().name)
                 break
             # if there is still lots of tasks in the queue, stop parsing
             if self.task_queue.qsize() > task_threshold:
@@ -137,8 +138,8 @@ class Parser(object):
                 url = self.url_queue.get(timeout=queue_timeout)
             except queue.Empty:
                 if self.global_signal.get('feeder_exited'):
-                    self.logger.info('no more page urls to parse, thread %s exit',
-                                     threading.current_thread().name)
+                    self.logger.info('no more page urls to parse, thread %s'
+                                     ' exit', threading.current_thread().name)
                     break
                 else:
                     self.logger.info('%s is waiting for new page urls',

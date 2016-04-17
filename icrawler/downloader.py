@@ -47,9 +47,9 @@ class Downloader(object):
     def set_file_path(self, img_task):
         """Set the path where the image will be saved.
 
-        The default strategy is to save images in the img_dir, with a increasing
-        6-digit number as the filename. Users can override this method if need
-        to rename the image file or store it in custom paths.
+        The default strategy is to save images in the img_dir, with an
+        increasing 6-digit number as the filename. Users can override this
+        method if need to rename the image file or store it in custom paths.
 
         Args:
             img_task: The task dict got from task_queue.
@@ -123,7 +123,7 @@ class Downloader(object):
                 if min_size is not None or max_size is not None:
                     img = Image.open(io.BytesIO(response.content))
                     if (min_size is not None and
-                        not self._size_greater(img.size, min_size)):
+                       not self._size_greater(img.size, min_size)):
                         return
                     elif (max_size is not None and
                           not self._size_smaller(img.size, max_size)):
@@ -160,8 +160,8 @@ class Downloader(object):
     def create_threads(self, **kwargs):
         """Create parser threads.
 
-        Creates threads named "downloader-xx" counting from 01 to 99, all threads
-        are daemon threads.
+        Creates threads named "downloader-xx" counting from 01 to 99, all
+        threads are daemon threads.
 
         Args:
             **kwargs: Arguments to be passed to the thread_run() method.
@@ -169,7 +169,8 @@ class Downloader(object):
         self.threads = []
         for i in range(self.thread_num):
             name = 'downloader-{:0>2d}'.format(i+1)
-            t = threading.Thread(name=name, target=self.thread_run, kwargs=kwargs)
+            t = threading.Thread(name=name, target=self.thread_run,
+                                 kwargs=kwargs)
             t.daemon = True
             self.threads.append(t)
 
@@ -207,8 +208,8 @@ class Downloader(object):
         self.max_num = max_num
         while True:
             if self.global_signal.get('reach_max_num'):
-                self.logger.info('downloaded image reached max num, thread %s exit',
-                                 threading.current_thread().name)
+                self.logger.info('downloaded image reached max num, thread %s'
+                                 ' exit', threading.current_thread().name)
                 break
             try:
                 task = self.task_queue.get(timeout=queue_timeout)

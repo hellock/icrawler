@@ -114,13 +114,16 @@ class Crawler(object):
         """
         self.signal.reset()
         self.logger.info('start crawling...')
-        self.logger.info('starting feeder... %s threads in total', feeder_thread_num)
+        self.logger.info('starting feeder... %s threads in total',
+                         feeder_thread_num)
         self.feeder.start(feeder_thread_num, **feeder_kwargs)
-        self.logger.info('starting parser... %s threads in total', parser_thread_num)
-        self.parser.start(parser_thread_num, task_threshold=10*downloader_thread_num,
+        self.logger.info('starting parser... %s threads in total',
+                         parser_thread_num)
+        self.parser.start(parser_thread_num,
+                          task_threshold=10*downloader_thread_num,
                           **parser_kwargs)
-        self.logger.info('starting downloader... %s threads in total', downloader_thread_num)
-        # not a good way to check whether the parser is alive, to be modified
+        self.logger.info('starting downloader... %s threads in total',
+                         downloader_thread_num)
         self.downloader.start(downloader_thread_num, **downloader_kwargs)
         while True:
             if threading.active_count() <= 1:

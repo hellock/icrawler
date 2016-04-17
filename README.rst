@@ -5,14 +5,21 @@ icrawler
    :target: https://pypi.python.org/pypi/icrawler
    :alt: PyPI Version
 
-.. image:: https://img.shields.io/pypi/dm/icrawler.svg
+.. image:: https://img.shields.io/pypi/pyversions/icrawler.svg
    :target: https://pypi.python.org/pypi/icrawler
-   :alt: PyPI Monthly downloads
+   :alt: Python
 
 Introduction
 ------------
 
-This python package is a mini framework of image crawlers.
+This package is a mini framework of image crawlers. Scrapy is heavy and
+powerful, while icrawler is tiny and flexible.
+
+With icrawler, you can write a crawler easily by focusing on the
+contents you want to crawl, avoiding some troublesome problems like
+exception handling, thread scheduling and communication. It also
+provides built-in crawlers for popular image sites such as search
+engines (Google, Bing, Baidu) and flickr.
 
 Requirements
 ------------
@@ -49,7 +56,7 @@ Quick start
 Installation
 ~~~~~~~~~~~~
 
-For quick install, just use pip.
+The quick way:
 
 ::
 
@@ -59,17 +66,13 @@ You can also manually install it by
 
 ::
 
+    git clone git@github.com:hellock/icrawler.git
+    cd icrawler
     python setup.py install
 
-Then you should have all the dependency installed. If there is any
-problem with it, you can install the dependency manually.
-
-::
-
-    pip install -r requirements.txt
-
-This framework uses the HTTP library **requests** for sending requests
-and the the parsing library **beautifulsoup4** for parsing HTML pages.
+If you fail to install icrawler on Linux, it is probably caused by
+*lxml*. See `here <http://lxml.de/installation.html#requirements>`__ for
+solutions.
 
 Use built-in crawlers
 ~~~~~~~~~~~~~~~~~~~~~
@@ -329,4 +332,6 @@ API reference
 To be continued.
 
 .. |Latest Version| image:: https://img.shields.io/pypi/v/icrawler.svg
-   :target: https://pypi.python.org/pypi/icrawler/
+   :target: https://pypi.python.org/pypi/icrawler
+.. |PyPI Monthly downloads| image:: https://img.shields.io/pypi/dm/icrawler.svg
+   :target: https://pypi.python.org/pypi/icrawler
