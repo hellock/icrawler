@@ -5,6 +5,7 @@ import re
 from bs4 import BeautifulSoup
 from six.moves.urllib.parse import urlsplit
 from six.moves.urllib.parse import urljoin
+
 from .. import Feeder
 from .. import Parser
 from .. import Crawler
@@ -22,13 +23,15 @@ class GreedyFeeder(Feeder):
         for domain in self.domains:
             self.put_url_into_queue('http://' +
                                     urlsplit(domain).geturl().rstrip('/'))
+        while not self.global_signal.get('reach_max_num'):
+            pass
 
 
 class GreedyParser(Parser):
 
-    def __init__(self, url_queue, task_queue, session, dup_filter_size=0):
+    def __init__(self, url_queue, task_queue, signal, session, dup_filter_size=0):
         self.pattern = re.compile(r'http(.*)\.(jpg|jpeg|png|bmp|gif|tiff|ico)')
-        super(GreedyParser, self).__init__(url_queue, task_queue,
+        super(GreedyParser, self).__init__(url_queue, task_queue, signal,
                                            session, dup_filter_size)
 
     def is_in_domain(self, url, domains):

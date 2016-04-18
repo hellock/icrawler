@@ -3,6 +3,7 @@
 import logging
 import sys
 from datetime import date
+
 from icrawler.examples import GoogleImageCrawler
 from icrawler.examples import BingImageCrawler
 from icrawler.examples import BaiduImageCrawler
@@ -45,7 +46,6 @@ def main():
         dst = sys.argv[1:]
     if 'all' in dst:
         dst = ['google', 'bing', 'baidu', 'flickr', 'greedy']
-
     if 'google' in dst:
         test_google()
     if 'bing' in dst:
