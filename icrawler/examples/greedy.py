@@ -29,10 +29,10 @@ class GreedyFeeder(Feeder):
 
 class GreedyParser(Parser):
 
-    def __init__(self, url_queue, task_queue, signal, session, dup_filter_size=0):
+    def __init__(self, url_queue, task_queue, signal, session):
         self.pattern = re.compile(r'http(.*)\.(jpg|jpeg|png|bmp|gif|tiff|ico)')
         super(GreedyParser, self).__init__(url_queue, task_queue, signal,
-                                           session, dup_filter_size)
+                                           session)
 
     def is_in_domain(self, url, domains):
         for domain in domains:
@@ -69,7 +69,7 @@ class GreedyParser(Parser):
                 # TODO: deal with '#' in the urls
                 tmp = href.split('/')[-1].split('.')
                 if len(tmp) > 1 and tmp[-1] not in [
-                  'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp']:
+                        'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp']:
                     continue
                 # discard urls such as 'javascript:void(0)'
                 elif href.find('javascript', 0, 10) == 0:
@@ -92,8 +92,8 @@ class GreedyImageCrawler(Crawler):
     def crawl(self, domains, max_num=0, parser_thr_num=1, downloader_thr_num=1,
               min_size=None, max_size=None):
         super(GreedyImageCrawler, self).crawl(
-              1, parser_thr_num, downloader_thr_num,
-              feeder_kwargs={'domains': domains},
-              parser_kwargs={'feeder': self.feeder},
-              downloader_kwargs=dict(max_num=max_num, min_size=min_size,
-                                     max_size=max_size))
+            1, parser_thr_num, downloader_thr_num,
+            feeder_kwargs={'domains': domains},
+            parser_kwargs={'feeder': self.feeder},
+            downloader_kwargs=dict(max_num=max_num, min_size=min_size,
+                                   max_size=max_size))

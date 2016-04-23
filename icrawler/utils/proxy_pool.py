@@ -1,9 +1,7 @@
-import os
 import json
 import logging
+import random
 import time
-from collections import OrderedDict
-from random import randint
 
 import requests
 from bs4 import BeautifulSoup
@@ -30,12 +28,6 @@ class Proxy(object):
                     weight=self.weight,
                     last_checked=self.last_checked)
 
-    def improve_weight(self, ratio):
-        self.weight *= ratio
-
-    def reduce_weight(self, ratio):
-        self.weight /= ratio
-
 
 class ProxyPool(object):
     """Proxy pool implementation
@@ -46,10 +38,12 @@ class ProxyPool(object):
         self.test_url = {'http': 'http://www.sina.com.cn',
                          'https': 'https://www.taobao.com'}
         self.proxies = {'http': {}, 'https': {}}
-        self.current_proxy = None
+        self.addr_list = {'http': [], 'https': []}
+        self.ratio = 0.9
+        self.weight_thr = 0.2
+        self.logger = logging.getLogger(__name__)
         if filename is not None:
             self.load(filename)
-        self.logger = logging.getLogger(__name__)
 
     def proxy_num(self, protocol=None):
         """ Get the number of proxies in the pool
@@ -61,50 +55,33 @@ class ProxyPool(object):
         elif protocol == 'https':
             return https_num
         else:
-            return {'http': http_num, 'https': https_num}
+            return http_num + https_num
 
-    def get_next(self, protocol='http', format=True):
+    def get_next(self, protocol='http', format=False):
         if not self.proxies[protocol]:
             return None
         idx = self.idx[protocol]
-        proxy = self.proxies[protocol][idx]
-        self.current_proxy = proxy
+        proxy = self.proxies[protocol][self.addr_list[protocol][idx]]
+        if proxy.weight < random.random():
+            return self.get_next(protocol, format)
         self.idx[protocol] = (idx + 1) % len(self.proxies[protocol])
         if format:
             return proxy.format()
         else:
             return proxy
 
-    def get_random(self, protocol='http', format=True):
+    def get_random(self, protocol='http', format=False):
         if not self.proxies[protocol]:
             return ''
         if protocol == 'http':
-            idx = randint(0, self.proxy_num('http') - 1)
+            idx = random.randint(0, self.proxy_num('http') - 1)
         elif protocol == 'https':
-            idx = randint(0, self.proxy_num('https') - 1)
-        proxy = self.proxies[protocol][idx]
-        self.current_proxy = proxy
+            idx = random.randint(0, self.proxy_num('https') - 1)
+        proxy = self.proxies[protocol][self.addr_list[protocol][idx]]
         if format:
             return proxy.format()
         else:
             return proxy
-
-    def current_proxy(self, format=False):
-        if format:
-            return self.current_proxy.format()
-        else:
-            return self.current_proxy
-
-    # def self_check(self):
-    #     for protocol in self.proxies:
-    #         self.logger.info('start testing {} proxies...'.format(protocol))
-    #         for proxy in self.proxies[protocol]:
-    #             ret = self.is_valid(proxy)
-    #             if ret['valid']:
-    #                 print('{} ok, {:.2f}s'.format(proxy.addr,
-    #                                               ret['response_time']))
-    #             else:
-    #                 print('{} invalid, {}'.format(proxy.addr, ret['msg']))
 
     def save(self, filename):
         proxies = {'http': [], 'https': []}
@@ -126,17 +103,34 @@ class ProxyPool(object):
                     proxy['weight'],
                     proxy['last_checked']
                 )
+                self.addr_list[protocol].append(proxy['addr'])
 
     def add_proxy(self, proxy):
         protocol = proxy.protocol
         addr = proxy.addr
-        if proxy.addr in self.proxies:
+        if addr in self.proxies:
             self.proxies[protocol][addr].last_checked = proxy.last_checked
         else:
             self.proxies[protocol][addr] = proxy
+            self.addr_list[protocol].append(addr)
 
     def remove_proxy(self, proxy):
         del self.search_flag[proxy.protocol][proxy.addr]
+        del self.addr_list[proxy.protocol][proxy.addr]
+
+    def increase_weight(self, proxy):
+        new_weight = proxy.weight / self.ratio
+        if new_weight < 1.0:
+            proxy.weight = new_weight
+        else:
+            proxy.weight = 1.0
+
+    def decrease_weight(self, proxy):
+        new_weight = proxy.weight * self.ratio
+        if new_weight < self.weight_thr:
+            self.remove_proxy(proxy)
+        else:
+            proxy.weight = new_weight
 
     def is_valid(self, addr, protocol='http', timeout=5):
         start = time.time()
@@ -165,10 +159,11 @@ class ProxyPool(object):
         else:
             self.logger.info('{} invalid, {}'.format(addr, ret['msg']))
 
-    def scan_ip84(self, region='mainland', page=1):
+    def scan_ip84(self, region='mainland', page=1, expected_num=20):
         """Scan valid proxies from http://ip84.com
         """
         self.logger.info('start scanning http://ip84.com for valid proxies...')
+        proxy_list = {'addr': [], 'protocol': []}
         for i in range(1, page + 1):
             if region == 'mainland':
                 url = 'http://ip84.com/dlgn/{}'.format(i)
@@ -185,34 +180,42 @@ class ProxyPool(object):
                 info = tr.find_all('td')
                 protocol = info[4].string.lower()
                 addr = '{}:{}'.format(info[0].string, info[1].string)
-                self.scan_single(addr, protocol)
+                proxy_list['addr'].append(addr)
+                proxy_list['protocol'].append(protocol)
+                # self.scan_single(addr, protocol)
+                # if self.proxy_num() >= expected_num:
+                #     return
 
-    def scan_kuaidaili(self, region='mainland', page=1):
-        """Scan valid proxies from http://kuaidaili.com
-        """
-        self.logger.info('start scanning http://kuaidaili.com for valid proxies...')
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X '
-                                 '10_11_4) AppleWebKit/537.36 (KHTML, like '
-                                 'Gecko) Chrome/49.0.2623.110 Safari/537.36',
-                   'Host': 'www.kuaidaili.com',
-                   'Referer': 'http://www.kuaidaili.com/free/'}
+    def scan_mimiip(self, region='mainland', page=1, expected_num=20):
+        """Scan valid http proxies from http://mimiip.com"""
+        self.logger.info('start scanning http://mimiip.com for valid proxies...')
+        proxy_list = {'addr': [], 'protocol': []}
         for i in range(1, page + 1):
             if region == 'mainland':
-                url = 'http://www.kuaidaili.com/free/inha/{}'.format(i)
+                url = 'http://www.mimiip.com/gngao/{}'.format(i)
+            elif region == 'overseas':
+                url = 'http://www.mimiip.com/hw/{}'.format(i)
             else:
-                url = 'http://www.kuaidaili.com/free/outha/{}'.format(i)
-            response = requests.get(url, headers=headers)
+                url = 'http://www.mimiip.com/gngao/{}'.format(i)
+            response = requests.get(url)
             soup = BeautifulSoup(response.content, 'lxml')
-            table = soup.find('table',
-                              class_='table table-bordered table-striped')
-            for tr in table.tbody.find_all('tr'):
+            table = soup.find('table', class_='list')
+            for tr in table.find_all('tr'):
+                if tr.th is not None:
+                    continue
                 info = tr.find_all('td')
-                protocol = info[3].string.lower()
+                protocol = info[4].string.lower()
                 addr = '{}:{}'.format(info[0].string, info[1].string)
-                self.scan_single(addr, protocol)
+                proxy_list['addr'].append(addr)
+                proxy_list['protocol'].append(protocol)
+                # self.scan_single(addr, protocol)
+                # if self.proxy_num() >= expected_num:
+                #     return
 
-    def scan_cnproxy(self):
+    def scan_cnproxy(self, region='mainland', expected_num=20):
         """Scan valid http proxies from http://cn-proxy.com"""
+        if region != 'mainland':
+            return
         self.logger.info('start scanning http://cn-proxy.com for valid proxies...')
         response = requests.get('http://cn-proxy.com')
         soup = BeautifulSoup(response.content, 'lxml')
@@ -222,38 +225,89 @@ class ProxyPool(object):
                 info = tr.find_all('td')
                 addr = '{}:{}'.format(info[0].string, info[1].string)
                 self.scan_single(addr, 'http')
+                if self.proxy_num() >= expected_num:
+                    return
 
-    def scan_file(self, src_file):
+    def scan_free_proxy_list(self, region='overseas', expected_num=20):
+        """Scan valid http proxies from http://free-proxy-list.net"""
+        if region != 'overseas':
+            return
+        self.logger.info('start scanning http://free-proxy-list.net '
+                         'for valid proxies...')
+        response = requests.get('http://free-proxy-list.net')
+        soup = BeautifulSoup(response.content, 'lxml')
+        table = soup.find('table', id='proxylisttable')
+        for tr in table.tbody.find_all('tr'):
+            info = tr.find_all('td')
+            if info[4].string != 'elite proxy':
+                continue
+            if info[6].string == 'yes':
+                protocol = 'https'
+            else:
+                protocol = 'http'
+            addr = '{}:{}'.format(info[0].string, info[1].string)
+            self.scan_single(addr, protocol)
+            if self.proxy_num() >= expected_num:
+                return
+
+    def scan_file(self, src_file, expected_num=20):
         with open(src_file, 'r') as fin:
             proxies = json.load(fin)
         for protocol in proxies.keys():
             for proxy in proxies[protocol]:
                 self.scan_single(proxy['addr'], protocol)
+                if self.proxy_num() >= expected_num:
+                    return
 
-    def scan(self, src='ip84', filename='proxies.txt', scan_args={}):
-        if src == 'all':
-            multi_src = ['ip84', 'kuaidaili', 'cnproxy']
-        elif isinstance(src, str):
-            multi_src = [src]
-        elif isinstance(src, list):
-            multi_src = list(OrderedDict.fromkeys(src))
+    def scan(self, region='mainland', expected_num=20, out_file='proxies.json',
+             src_files=[]):
+        """Scan valid proxies from multi-source
+
+        It will scan proxies in the following order:
+        1. src_files
+        2. cnproxy
+        3. ip84, page 1
+        4. mimiip, page 1
+        5. repeat 3 and 4 till page 5
+        After scaning, all the proxy info will be saved in out_file.
+
+        Args:
+            region: Either 'mainland' or 'overseas'
+            expected_num: An integer indicating the expected number of proxies,
+                          if this argument is set too great, it may take long to
+                          finish scaning process.
+            out_file: the file name of the output file saving all the proxy info
+            src_files: A list of file names to scan
+        """
+        if expected_num > 30:
+            self.logger.warn('The more proxy you expect, the more time it '
+                             'will take. It is highly recommended to limit the'
+                             ' expected num under 30.')
+        if isinstance(src_files, str):
+            files = [src_files]
         else:
-            self.logger.error('invalid scan src argument.')
+            files = src_files
+        if files:
+            for filename in files:
+                self.scan_file(filename, expected_num)
+        if self.proxy_num() >= expected_num:
             return
-        for src in multi_src:
-            if src in scan_args:
-                kwargs = scan_args[src]
-            else:
-                kwargs = {}
-            if os.path.isfile(src):
-                self.scan_file(src)
-            elif src == 'ip84':
-                self.scan_ip84(**kwargs)
-            elif src == 'kuaidaili':
-                self.scan_kuaidaili(**kwargs)
-            elif src == 'cnproxy':
-                self.scan_cnproxy()
-            else:
-                self.logger.warning('invalid scan src %s is ignored.', src)
-        if filename is not None:
-            self.save(filename)
+        try:
+            if region == 'mainland':
+                self.scan_cnproxy(region, expected_num)
+            elif region == 'overseas':
+                self.scan_free_proxy_list(region, expected_num)
+                if self.proxy_num() >= expected_num:
+                    return
+            for page in range(1, 6):
+                self.scan_ip84(region, page, expected_num)
+                if self.proxy_num() >= expected_num:
+                    return
+                self.scan_mimiip(region, page, expected_num)
+                if self.proxy_num() >= expected_num:
+                    return
+        except:
+            raise
+        finally:
+            if out_file is not None:
+                self.save(out_file)
