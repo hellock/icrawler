@@ -145,10 +145,9 @@ class Crawler(object):
         while True:
             if threading.active_count() <= 1:
                 break
-            elif not self.feeder.is_alive():
+            if not self.feeder.is_alive():
                 self.signal.set({'feeder_exited': True})
-            elif not self.parser.is_alive():
+            if not self.parser.is_alive():
                 self.signal.set({'parser_exited': True})
-            else:
-                time.sleep(1)
+            time.sleep(1)
         self.logger.info('Crawling task done!')
