@@ -120,7 +120,7 @@ class Crawler(object):
         self.logger.info('starting parser... %s threads in total',
                          parser_thread_num)
         self.parser.start(parser_thread_num,
-                          task_threshold=10*downloader_thread_num,
+                          task_threshold=10 * downloader_thread_num,
                           **parser_kwargs)
         self.logger.info('starting downloader... %s threads in total',
                          downloader_thread_num)
@@ -128,10 +128,9 @@ class Crawler(object):
         while True:
             if threading.active_count() <= 1:
                 break
-            elif not self.feeder.is_alive():
+            if not self.feeder.is_alive():
                 self.signal.set({'feeder_exited': True})
-            elif not self.parser.is_alive():
+            if not self.parser.is_alive():
                 self.signal.set({'parser_exited': True})
-            else:
-                time.sleep(1)
+            time.sleep(1)
         self.logger.info('Crawling task done!')
