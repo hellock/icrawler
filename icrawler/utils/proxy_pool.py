@@ -1,13 +1,24 @@
 import json
 import logging
 import random
+import threading
 import time
+from six.moves import queue
 
 import requests
 from bs4 import BeautifulSoup
 
 
 class Proxy(object):
+    """Proxy class
+
+    Attributes:
+        addr: A string with IP and port, for example '123.123.123.123:8080'.
+        protocol: Either 'http' or 'https', indicating whether the proxy supports https.
+        weight: A float point number indicating the probability of being
+                selected, the weight is based on the connection time and stability.
+        last_checked: A UNIX timestamp indicating when the proxy was checked.
+    """
 
     def __init__(self, addr=None, protocol='http', weight=1.0,
                  last_checked=None):
@@ -20,9 +31,15 @@ class Proxy(object):
             self.last_checked = last_checked
 
     def format(self):
+        """Return the proxy compatible with requests.Session parameters.
+
+        Returns:
+            A dictionary like {'http': '123.123.123.123:8080'}.
+        """
         return {self.protocol: self.addr}
 
     def to_dict(self):
+        """Return the proxy info in a dict"""
         return dict(addr=self.addr,
                     protocol=self.protocol,
                     weight=self.weight,
@@ -31,6 +48,22 @@ class Proxy(object):
 
 class ProxyPool(object):
     """Proxy pool implementation
+
+    Attributes:
+        idx: A dict containing two integer, indicating the index for http proxy
+             list and https proxy list.
+        test_url: A dict containing two urls, when testing a http proxy,
+                  test_url['http'] will be used, otherwise test_url['https'] will be used.
+        proxies: A dict containing all http and https proxies.
+        addr_list: A dict containing all the address of proxies.
+        dec_ratio: A float point number. When decreasing the weight of some
+                   proxy, its weight is multiplied with `dec_ratio`
+        inc_ratio: A float point number. Similar to `dec_ratio` but used for
+                   increasing weights, default the reciprocal of `dec_ratio`
+        weight_thr: A float point number indicating the minimum weight of a
+                    proxy, if its weight is lower than `weight_thr`, it will
+                    be removed from the proxy pool.
+        logger: A logging.Logger object used for logging.
     """
 
     def __init__(self, filename=None):
@@ -39,7 +72,8 @@ class ProxyPool(object):
                          'https': 'https://www.taobao.com'}
         self.proxies = {'http': {}, 'https': {}}
         self.addr_list = {'http': [], 'https': []}
-        self.ratio = 0.9
+        self.dec_ratio = 0.9
+        self.inc_ratio = 1 / self.dec_ratio
         self.weight_thr = 0.2
         self.logger = logging.getLogger(__name__)
         if filename is not None:
@@ -47,6 +81,13 @@ class ProxyPool(object):
 
     def proxy_num(self, protocol=None):
         """ Get the number of proxies in the pool
+
+        Args:
+            protocol: 'http' or 'https' or None. (default None)
+
+        Returns:
+            If protocol is None, return the total number of proxies, otherwise,
+            return the number of proxies of corresponding protocol.
         """
         http_num = len(self.proxies['http'])
         https_num = len(self.proxies['https'])
@@ -57,27 +98,34 @@ class ProxyPool(object):
         else:
             return http_num + https_num
 
-    def get_next(self, protocol='http', format=False):
+    def get_next(self, protocol='http', format=False, policy='loop'):
+        """
+        Get the next proxy
+
+        Args:
+            protocol: 'http' or 'https'. (default 'http')
+            format: A boolean indicating whether to format the proxy. (default False)
+            policy: Eeither 'loop' or 'random', indicating the policy of getting
+                    next proxy. If set to 'loop', will return proxies in turn,
+                    otherwise will return a proxy randomly.
+
+        Returns:
+            If format is true, then return the formatted proxy which is
+            compatible with requests.Session parameters, otherwise a Proxy object.
+        """
         if not self.proxies[protocol]:
             return None
-        idx = self.idx[protocol]
+        if policy == 'loop':
+            idx = self.idx[protocol]
+            self.idx[protocol] = (idx + 1) % len(self.proxies[protocol])
+        elif policy == 'random':
+            idx = random.randint(0, self.proxy_num(protocol) - 1)
+        else:
+            self.logger.error('Unsupported get_next policy: {}'.format(policy))
+            exit()
         proxy = self.proxies[protocol][self.addr_list[protocol][idx]]
         if proxy.weight < random.random():
-            return self.get_next(protocol, format)
-        self.idx[protocol] = (idx + 1) % len(self.proxies[protocol])
-        if format:
-            return proxy.format()
-        else:
-            return proxy
-
-    def get_random(self, protocol='http', format=False):
-        if not self.proxies[protocol]:
-            return ''
-        if protocol == 'http':
-            idx = random.randint(0, self.proxy_num('http') - 1)
-        elif protocol == 'https':
-            idx = random.randint(0, self.proxy_num('https') - 1)
-        proxy = self.proxies[protocol][self.addr_list[protocol][idx]]
+            return self.get_next(protocol, format, random)
         if format:
             return proxy.format()
         else:
@@ -119,14 +167,14 @@ class ProxyPool(object):
         del self.addr_list[proxy.protocol][proxy.addr]
 
     def increase_weight(self, proxy):
-        new_weight = proxy.weight / self.ratio
+        new_weight = proxy.weight * self.inc_ratio
         if new_weight < 1.0:
             proxy.weight = new_weight
         else:
             proxy.weight = 1.0
 
     def decrease_weight(self, proxy):
-        new_weight = proxy.weight * self.ratio
+        new_weight = proxy.weight * self.dec_ratio
         if new_weight < self.weight_thr:
             self.remove_proxy(proxy)
         else:
@@ -151,19 +199,120 @@ class ProxyPool(object):
                 return {'valid': False,
                         'msg': 'status code: {}'.format(r.status_code)}
 
-    def scan_single(self, addr, protocol):
-        ret = self.is_valid(addr, protocol)
-        if ret['valid']:
-            self.add_proxy(Proxy(addr, protocol))
-            self.logger.info('{} ok, {:.2f}s'.format(addr, ret['response_time']))
-        else:
-            self.logger.info('{} invalid, {}'.format(addr, ret['msg']))
+    def validate(self, proxy_scanner, expected_num=20, queue_timeout=3,
+                 val_timeout=5):
+        while self.proxy_num() < expected_num:
+            try:
+                candidate_proxy = proxy_scanner.proxy_queue.get(
+                    timeout=queue_timeout)
+            except queue.Empty:
+                if proxy_scanner.is_scanning():
+                    continue
+                else:
+                    break
+            addr = candidate_proxy['addr']
+            protocol = candidate_proxy['protocol']
+            ret = self.is_valid(addr, protocol, val_timeout)
+            if self.proxy_num() >= expected_num:
+                self.logger.info('Enough valid proxies, thread {} exit.'
+                                 .format(threading.current_thread().name))
+                break
+            if ret['valid']:
+                self.add_proxy(Proxy(addr, protocol))
+                self.logger.info('{} ok, {:.2f}s'.format(addr,
+                                                         ret['response_time']))
+            else:
+                self.logger.info('{} invalid, {}'.format(addr, ret['msg']))
 
-    def scan_ip84(self, region='mainland', page=1, expected_num=20):
+    def scan(self, proxy_scanner, expected_num=20, val_thr_num=4,
+             queue_timeout=3, val_timeout=5, out_file='proxies.json'):
+        try:
+            proxy_scanner.scan()
+            val_threads = []
+            for i in range(val_thr_num):
+                t = threading.Thread(name='val-{:0>2d}'.format(i + 1),
+                                     target=self.validate,
+                                     kwargs=dict(proxy_scanner=proxy_scanner,
+                                                 expected_num=expected_num,
+                                                 queue_timeout=queue_timeout,
+                                                 val_timeout=val_timeout))
+                t.daemon = True
+                val_threads.append(t)
+                t.start()
+            for t in val_threads:
+                t.join()
+        finally:
+            if out_file is not None:
+                self.save(out_file)
+
+    def default_scan(self, region='mainland', expected_num=20, val_thr_num=4,
+                     queue_timeout=3, val_timeout=5, out_file='proxies.json',
+                     src_files=[]):
+        """Scan valid proxies from multi-source
+
+        It will register following scan functions:
+        1. scan_file
+        2. scan_cnproxy (if region is mainland)
+        3. scan_free_proxy_list (if region is overseas)
+        4. scan_ip84
+        5. scan_mimiip
+        After scaning, all the proxy info will be saved in out_file.
+
+        Args:
+            region: Either 'mainland' or 'overseas'
+            expected_num: An integer indicating the expected number of proxies,
+                          if this argument is set too great, it may take long to
+                          finish scaning process.
+            val_thr_num: Number of threads used for validating proxies.
+            queue_timeout: An integer indicating the timeout for getting a
+                           candidate proxy from the queue.
+            val_timeout: An integer indicating the timeout when connecting the
+                         test url using a candidate proxy.
+            out_file: the file name of the output file saving all the proxy info
+            src_files: A list of file names to scan
+        """
+        if expected_num > 30:
+            self.logger.warn('The more proxy you expect, the more time it '
+                             'will take. It is highly recommended to limit the'
+                             ' expected num under 30.')
+        proxy_scanner = ProxyScanner()
+        if isinstance(src_files, str):
+            files = [src_files]
+        else:
+            files = src_files
+        if files:
+            for filename in files:
+                proxy_scanner.register_func(proxy_scanner.scan_file,
+                                            {'src_file': filename})
+        if region == 'mainland':
+            proxy_scanner.register_func(proxy_scanner.scan_cnproxy, {})
+        elif region == 'overseas':
+            proxy_scanner.register_func(proxy_scanner.scan_free_proxy_list, {})
+        proxy_scanner.register_func(proxy_scanner.scan_ip84,
+                                    {'region': region, 'page': 5})
+        proxy_scanner.register_func(proxy_scanner.scan_mimiip,
+                                    {'region': region, 'page': 5})
+        self.scan(proxy_scanner, expected_num, val_thr_num, queue_timeout,
+                  val_timeout, out_file)
+
+
+class ProxyScanner():
+
+    def __init__(self):
+        self.proxy_queue = queue.Queue()
+        self.scan_funcs = []
+        self.scan_kwargs = []
+        self.scan_threads = []
+        self.logger = logging.getLogger(__name__)
+
+    def register_func(self, func_name, func_kwargs):
+        self.scan_funcs.append(func_name)
+        self.scan_kwargs.append(func_kwargs)
+
+    def scan_ip84(self, region='mainland', page=1):
         """Scan valid proxies from http://ip84.com
         """
         self.logger.info('start scanning http://ip84.com for valid proxies...')
-        proxy_list = {'addr': [], 'protocol': []}
         for i in range(1, page + 1):
             if region == 'mainland':
                 url = 'http://ip84.com/dlgn/{}'.format(i)
@@ -180,16 +329,11 @@ class ProxyPool(object):
                 info = tr.find_all('td')
                 protocol = info[4].string.lower()
                 addr = '{}:{}'.format(info[0].string, info[1].string)
-                proxy_list['addr'].append(addr)
-                proxy_list['protocol'].append(protocol)
-                # self.scan_single(addr, protocol)
-                # if self.proxy_num() >= expected_num:
-                #     return
+                self.proxy_queue.put({'addr': addr, 'protocol': protocol})
 
-    def scan_mimiip(self, region='mainland', page=1, expected_num=20):
+    def scan_mimiip(self, region='mainland', page=1):
         """Scan valid http proxies from http://mimiip.com"""
         self.logger.info('start scanning http://mimiip.com for valid proxies...')
-        proxy_list = {'addr': [], 'protocol': []}
         for i in range(1, page + 1):
             if region == 'mainland':
                 url = 'http://www.mimiip.com/gngao/{}'.format(i)
@@ -206,16 +350,10 @@ class ProxyPool(object):
                 info = tr.find_all('td')
                 protocol = info[4].string.lower()
                 addr = '{}:{}'.format(info[0].string, info[1].string)
-                proxy_list['addr'].append(addr)
-                proxy_list['protocol'].append(protocol)
-                # self.scan_single(addr, protocol)
-                # if self.proxy_num() >= expected_num:
-                #     return
+                self.proxy_queue.put({'addr': addr, 'protocol': protocol})
 
-    def scan_cnproxy(self, region='mainland', expected_num=20):
+    def scan_cnproxy(self):
         """Scan valid http proxies from http://cn-proxy.com"""
-        if region != 'mainland':
-            return
         self.logger.info('start scanning http://cn-proxy.com for valid proxies...')
         response = requests.get('http://cn-proxy.com')
         soup = BeautifulSoup(response.content, 'lxml')
@@ -224,14 +362,10 @@ class ProxyPool(object):
             for tr in table.tbody.find_all('tr'):
                 info = tr.find_all('td')
                 addr = '{}:{}'.format(info[0].string, info[1].string)
-                self.scan_single(addr, 'http')
-                if self.proxy_num() >= expected_num:
-                    return
+                self.proxy_queue.put({'addr': addr, 'protocol': 'http'})
 
-    def scan_free_proxy_list(self, region='overseas', expected_num=20):
+    def scan_free_proxy_list(self):
         """Scan valid http proxies from http://free-proxy-list.net"""
-        if region != 'overseas':
-            return
         self.logger.info('start scanning http://free-proxy-list.net '
                          'for valid proxies...')
         response = requests.get('http://free-proxy-list.net')
@@ -246,68 +380,29 @@ class ProxyPool(object):
             else:
                 protocol = 'http'
             addr = '{}:{}'.format(info[0].string, info[1].string)
-            self.scan_single(addr, protocol)
-            if self.proxy_num() >= expected_num:
-                return
+            self.proxy_queue.put({'addr': addr, 'protocol': protocol})
 
-    def scan_file(self, src_file, expected_num=20):
+    def scan_file(self, src_file):
+        self.logger.info('start scanning {} for valid proxies...'
+                         .format(src_file))
         with open(src_file, 'r') as fin:
             proxies = json.load(fin)
         for protocol in proxies.keys():
             for proxy in proxies[protocol]:
-                self.scan_single(proxy['addr'], protocol)
-                if self.proxy_num() >= expected_num:
-                    return
+                self.proxy_queue.put({'addr': proxy['addr'],
+                                      'protocol': protocol})
 
-    def scan(self, region='mainland', expected_num=20, out_file='proxies.json',
-             src_files=[]):
-        """Scan valid proxies from multi-source
+    def is_scanning(self):
+        for t in self.scan_threads:
+            if t.is_alive():
+                return True
+        return False
 
-        It will scan proxies in the following order:
-        1. src_files
-        2. cnproxy
-        3. ip84, page 1
-        4. mimiip, page 1
-        5. repeat 3 and 4 till page 5
-        After scaning, all the proxy info will be saved in out_file.
-
-        Args:
-            region: Either 'mainland' or 'overseas'
-            expected_num: An integer indicating the expected number of proxies,
-                          if this argument is set too great, it may take long to
-                          finish scaning process.
-            out_file: the file name of the output file saving all the proxy info
-            src_files: A list of file names to scan
-        """
-        if expected_num > 30:
-            self.logger.warn('The more proxy you expect, the more time it '
-                             'will take. It is highly recommended to limit the'
-                             ' expected num under 30.')
-        if isinstance(src_files, str):
-            files = [src_files]
-        else:
-            files = src_files
-        if files:
-            for filename in files:
-                self.scan_file(filename, expected_num)
-        if self.proxy_num() >= expected_num:
-            return
-        try:
-            if region == 'mainland':
-                self.scan_cnproxy(region, expected_num)
-            elif region == 'overseas':
-                self.scan_free_proxy_list(region, expected_num)
-                if self.proxy_num() >= expected_num:
-                    return
-            for page in range(1, 6):
-                self.scan_ip84(region, page, expected_num)
-                if self.proxy_num() >= expected_num:
-                    return
-                self.scan_mimiip(region, page, expected_num)
-                if self.proxy_num() >= expected_num:
-                    return
-        except:
-            raise
-        finally:
-            if out_file is not None:
-                self.save(out_file)
+    def scan(self):
+        for i in range(len(self.scan_funcs)):
+            t = threading.Thread(name=self.scan_funcs[i].__name__,
+                                 target=self.scan_funcs[i],
+                                 kwargs=self.scan_kwargs[i])
+            t.daemon = True
+            self.scan_threads.append(t)
+            t.start()

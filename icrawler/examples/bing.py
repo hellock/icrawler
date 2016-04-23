@@ -43,7 +43,7 @@ class BingImageCrawler(Crawler):
                 max_num = 1000 - offset
                 self.logger.warning('Due to Bing\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
-                                    'been automatically set to %d', 1000-offset)
+                                    'been automatically set to %d', 1000 - offset)
         else:
             pass
         feeder_kwargs = dict(

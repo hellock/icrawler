@@ -82,7 +82,12 @@ class Crawler(object):
         method if you want to use proxies.
         """
         self.proxy_pool = ProxyPool()
-        self.proxy_pool.scan('overseas', 10, 'icrawler/proxy_overseas.json')
+        # from .utils import ProxyScanner
+        # proxy_scanner = ProxyScanner()
+        # proxy_scanner.register_func(proxy_scanner.scan_file,
+        #                             {'src_file': 'proxy_overseas.json'})
+        # self.proxy_pool.scan(proxy_scanner)
+        self.proxy_pool.default_scan('mainland', 10, out_file='proxy_mainland.json')
 
     def set_session(self, headers=None):
         """Init session with default or custom headers
