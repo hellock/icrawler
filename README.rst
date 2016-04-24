@@ -366,8 +366,3 @@ API reference
 -------------
 
 To be continued.
-
-.. |Latest Version| image:: https://img.shields.io/pypi/v/icrawler.svg
-   :target: https://pypi.python.org/pypi/icrawler
-.. |PyPI| image:: https://img.shields.io/pypi/pyversions/icrawler.svg
-   :target: 
