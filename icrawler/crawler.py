@@ -12,6 +12,7 @@ from .feeder import Feeder
 from .parser import Parser
 from .utils import Signal
 from .utils import ProxyPool
+from .utils import ProxyScanner
 from .utils import Session
 
 
@@ -82,12 +83,6 @@ class Crawler(object):
         method if you want to use proxies.
         """
         self.proxy_pool = ProxyPool()
-        # from .utils import ProxyScanner
-        # proxy_scanner = ProxyScanner()
-        # proxy_scanner.register_func(proxy_scanner.scan_file,
-        #                             {'src_file': 'proxy_overseas.json'})
-        # self.proxy_pool.scan(proxy_scanner)
-        self.proxy_pool.default_scan('mainland', 10, out_file='proxy_mainland.json')
 
     def set_session(self, headers=None):
         """Init session with default or custom headers
