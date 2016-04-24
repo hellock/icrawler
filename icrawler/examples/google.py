@@ -24,7 +24,8 @@ class GoogleFeeder(Feeder):
             else:
                 dmax = ''
             tbs = 'cdr:1,cd_min:{},cd_max:{}'.format(dmin, dmax)
-            params = dict(q=keyword, ijn=int(i/100), start=i, tbs=tbs, tbm='isch')
+            params = dict(q=keyword, ijn=int(i / 100), start=i, tbs=tbs,
+                          tbm='isch')
             url = base_url + urlencode(params)
             self.put_url_into_queue(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
@@ -60,7 +61,8 @@ class GoogleImageCrawler(Crawler):
                 max_num = 1000 - offset
                 self.logger.warning('Due to Google\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
-                                    'been automatically set to %d', 1000-offset)
+                                    'been automatically set to %d',
+                                    1000 - offset)
         else:
             pass
         feeder_kwargs = dict(

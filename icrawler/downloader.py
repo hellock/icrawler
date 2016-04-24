@@ -168,7 +168,7 @@ class Downloader(object):
         """
         self.threads = []
         for i in range(self.thread_num):
-            name = 'downloader-{:0>2d}'.format(i+1)
+            name = 'downloader-{:0>2d}'.format(i + 1)
             t = threading.Thread(name=name, target=self.thread_run,
                                  kwargs=kwargs)
             t.daemon = True

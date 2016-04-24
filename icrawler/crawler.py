@@ -2,7 +2,6 @@
 
 import logging
 import os
-import requests
 import sys
 import threading
 import time
@@ -12,6 +11,9 @@ from .downloader import Downloader
 from .feeder import Feeder
 from .parser import Parser
 from .utils import Signal
+from .utils import ProxyPool
+from .utils import ProxyScanner
+from .utils import Session
 
 
 class Crawler(object):
@@ -49,6 +51,10 @@ class Crawler(object):
         # init queues
         self.url_queue = queue.Queue()
         self.task_queue = queue.Queue()
+        # set logger
+        self.set_logger(log_level)
+        # set proxy pool
+        self.set_proxy_pool()
         # set session
         self.set_session()
         # init signal
@@ -59,8 +65,6 @@ class Crawler(object):
                                  self.signal, self.session)
         self.downloader = downloader_cls(self.img_dir, self.task_queue,
                                          self.signal, self.session)
-        # set logger
-        self.set_logger(log_level)
 
     def init_signal(self):
         """Init signal.
@@ -71,6 +75,14 @@ class Crawler(object):
         self.signal.set({'feeder_exited': False,
                          'parser_exited': False,
                          'reach_max_num': False})
+
+    def set_proxy_pool(self):
+        """Construct a proxy pool
+
+        By default no proxy is scaned or loaded, you will have to override this
+        method if you want to use proxies.
+        """
+        self.proxy_pool = ProxyPool()
 
     def set_session(self, headers=None):
         """Init session with default or custom headers
@@ -87,7 +99,7 @@ class Crawler(object):
             }
         else:
             self.headers = headers
-        self.session = requests.Session()
+        self.session = Session(self.proxy_pool)
         self.session.headers.update(self.headers)
 
     def set_logger(self, log_level):

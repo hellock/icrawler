@@ -23,3 +23,6 @@ requirements.in
 
 # Readme of markdown version
 README.md
+
+# Local test scripts
+icrawler/utils/test_proxy.py
