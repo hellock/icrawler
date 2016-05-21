@@ -123,7 +123,7 @@ class Downloader(object):
                 if min_size is not None or max_size is not None:
                     img = Image.open(io.BytesIO(response.content))
                     if (min_size is not None and
-                       not self._size_greater(img.size, min_size)):
+                            not self._size_greater(img.size, min_size)):
                         return
                     elif (max_size is not None and
                           not self._size_smaller(img.size, max_size)):

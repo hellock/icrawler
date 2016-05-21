@@ -12,7 +12,6 @@ from .feeder import Feeder
 from .parser import Parser
 from .utils import Signal
 from .utils import ProxyPool
-from .utils import ProxyScanner
 from .utils import Session
 
 
