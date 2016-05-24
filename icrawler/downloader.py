@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import io
 import logging
 import os
-import requests
 import threading
+
+import requests
 from PIL import Image
+from six import BytesIO
 from six.moves import queue
 
 
@@ -121,7 +122,11 @@ class Downloader(object):
                                   'time: %d', img_url, ex, retry - 1)
             else:
                 if min_size is not None or max_size is not None:
-                    img = Image.open(io.BytesIO(response.content))
+                    # TODO: figure out the error details caused by Pillow
+                    try:
+                        img = Image.open(BytesIO(response.content))
+                    except OSError:
+                        break
                     if (min_size is not None and
                             not self._size_greater(img.size, min_size)):
                         return
