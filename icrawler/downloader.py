@@ -5,6 +5,7 @@ import os
 import threading
 
 import requests
+from urllib.parse import urlparse
 from PIL import Image
 from six import BytesIO
 from six.moves import queue
@@ -62,13 +63,14 @@ class Downloader(object):
         Output:
             Fullpath of the image.
         """
-        old_filename = img_task['img_url'].split("/")[-1]
-        extension_with_params = old_filename.split(".")
+        url_parsed = urlparse(img_task['img_url'])
+        old_filename = url_parsed[2].split('/')[-1]
+        extension_with_params = old_filename.split('.')
         extension = "jpg"
         if len(extension_with_params) > 1:
-            extension = extension_with_params[-1].split("?")[0]
+            extension = extension_with_params[-1]
         filename = os.path.join(self.img_dir,
-                                ('{:0>6d}.'+extension).format(self.fetched_num))
+                                '{:0>6d}.{}'.format(self.fetched_num, extension))
         return filename
 
     def reach_max_num(self):
