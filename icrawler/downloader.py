@@ -5,6 +5,7 @@ import os
 import threading
 
 import requests
+from six.moves.urllib.parse import urlparse
 from PIL import Image
 from six import BytesIO
 from six.moves import queue
@@ -51,6 +52,10 @@ class Downloader(object):
         The default strategy is to save images in the img_dir, with an
         increasing 6-digit number as the filename. Users can override this
         method if need to rename the image file or store it in custom paths.
+        
+        The goal is also to preserve the extension of the file.
+        The extension is computed from the url: http://some_url/image.XXX?params=a.
+        Where XXX is the extension.
 
         Args:
             img_task: The task dict got from task_queue.
@@ -58,8 +63,14 @@ class Downloader(object):
         Output:
             Fullpath of the image.
         """
+        url_parsed = urlparse(img_task['img_url'])
+        old_filename = url_parsed[2].split('/')[-1]
+        extension_with_params = old_filename.split('.')
+        extension = "jpg"
+        if len(extension_with_params) > 1:
+            extension = extension_with_params[-1]
         filename = os.path.join(self.img_dir,
-                                '{:0>6d}.jpg'.format(self.fetched_num))
+                                '{:0>6d}.{}'.format(self.fetched_num, extension))
         return filename
 
     def reach_max_num(self):
