@@ -5,7 +5,7 @@ import os
 import threading
 
 import requests
-from urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse
 from PIL import Image
 from six import BytesIO
 from six.moves import queue
