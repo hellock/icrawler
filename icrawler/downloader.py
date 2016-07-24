@@ -118,6 +118,7 @@ class Downloader(object):
         while retry > 0 and not self.global_signal.get('reach_max_num'):
             try:
                 response = self.session.get(img_url, timeout=request_timeout)
+                if response.status_code != 200: break
             except requests.exceptions.ConnectionError:
                 self.logger.error('Connection error when downloading image %s, '
                                   'remaining retry time: %d', img_url, retry - 1)
