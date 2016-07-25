@@ -52,7 +52,7 @@ class Downloader(object):
         The default strategy is to save images in the img_dir, with an
         increasing 6-digit number as the filename. Users can override this
         method if need to rename the image file or store it in custom paths.
-        
+
         The goal is also to preserve the extension of the file.
         The extension is computed from the url: http://some_url/image.XXX?params=a.
         Where XXX is the extension.
@@ -141,6 +141,8 @@ class Downloader(object):
                     try:
                         img = Image.open(BytesIO(response.content))
                     except OSError:
+                        break
+                    except IOError:  # usually non-image urls
                         break
                     if (min_size is not None and
                             not self._size_greater(img.size, min_size)):
