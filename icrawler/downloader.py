@@ -118,7 +118,6 @@ class Downloader(object):
         while retry > 0 and not self.global_signal.get('reach_max_num'):
             try:
                 response = self.session.get(img_url, timeout=request_timeout)
-                if response.status_code != 200: break
             except requests.exceptions.ConnectionError:
                 self.logger.error('Connection error when downloading image %s, '
                                   'remaining retry time: %d', img_url, retry - 1)
@@ -133,6 +132,10 @@ class Downloader(object):
                                   'image %s, error info: %s, remaining retry '
                                   'time: %d', img_url, ex, retry - 1)
             else:
+                if response.status_code != 200:
+                    self.logger.error('Unexcepted HTTP status code. Should be 200 '
+                                      'image %s', img_url)
+                    break
                 if min_size is not None or max_size is not None:
                     # TODO: figure out the error details caused by Pillow
                     try:
