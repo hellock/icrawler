@@ -7,7 +7,7 @@ def readme():
         return f.read()
 
 setup(name='icrawler',
-      version='0.2.3',
+      version='0.2.4',
       description='A mini framework of image crawlers',
       long_description=readme(),
       keywords='image crawler spider',

@@ -50,7 +50,7 @@ class BaiduImageCrawler(Crawler):
 
     def crawl(self, keyword, offset=0, max_num=1000, feeder_thr_num=1,
               parser_thr_num=1, downloader_thr_num=1,
-              min_size=None, max_size=None):
+              min_size=None, max_size=None, save_mode='overwrite'):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '
@@ -60,19 +60,19 @@ class BaiduImageCrawler(Crawler):
                 max_num = 1000 - offset
                 self.logger.warning('Due to Baidu\'s limitation, you can only '
                                     'get the first 1000 result. "max_num" has '
-                                    'been automatically set to %d', 1000-offset)
+                                    'been automatically set to %d', 1000 - offset)
         else:
             pass
         feeder_kwargs = dict(
             url_template='http://image.baidu.com/search/acjson?'
                          'tn=resultjson_com&ipn=rj&word={}&pn={}&rn=30',
             keyword=keyword,
-            offset=offset+30,
+            offset=offset + 30,
             max_num=max_num,
             page_step=30
         )
         downloader_kwargs = dict(max_num=max_num, min_size=min_size,
-                                 max_size=max_size)
+                                 max_size=max_size, save_mode=save_mode)
         super(BaiduImageCrawler, self).crawl(
             feeder_thr_num, parser_thr_num, downloader_thr_num,
             feeder_kwargs=feeder_kwargs,

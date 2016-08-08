@@ -227,7 +227,7 @@ Downloader class.
 
    .. code:: python
 
-       downloader.set_file_path(img_task)
+       downloader.set_file_path(img_task, save_mode)
 
    The default names of downloaded images are counting numbers, from
    000001 to 999999.

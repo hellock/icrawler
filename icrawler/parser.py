@@ -3,6 +3,7 @@
 import logging
 import threading
 import time
+
 from requests import exceptions
 from six.moves import queue
 from six.moves.urllib.parse import urlsplit

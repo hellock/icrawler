@@ -3,6 +3,7 @@
 import logging
 import os
 import threading
+import sys
 
 import requests
 from six.moves.urllib.parse import urlparse
@@ -46,7 +47,7 @@ class Downloader(object):
     def set_logger(self):
         self.logger = logging.getLogger(__name__)
 
-    def set_file_path(self, img_task):
+    def set_file_path(self, img_task, save_mode):
         """Set the path where the image will be saved.
 
         The default strategy is to save images in the img_dir, with an
@@ -59,6 +60,8 @@ class Downloader(object):
 
         Args:
             img_task: The task dict got from task_queue.
+            save_mode: Indicate the way to handle the image filename if the
+                       output directory is not empty.
 
         Output:
             Fullpath of the image.
@@ -66,11 +69,22 @@ class Downloader(object):
         url_parsed = urlparse(img_task['img_url'])
         old_filename = url_parsed[2].split('/')[-1]
         extension_with_params = old_filename.split('.')
-        extension = "jpg"
+        extension = 'jpg'
         if len(extension_with_params) > 1:
             extension = extension_with_params[-1]
-        filename = os.path.join(self.img_dir,
-                                '{:0>6d}.{}'.format(self.fetched_num, extension))
+        if save_mode == 'overwrite':
+            filename = os.path.join(
+                self.img_dir, '{:0>6d}.{}'.format(self.fetched_num, extension))
+        elif save_mode == 'auto':
+            filename = os.path.join(
+                self.img_dir,
+                '{:0>6d}.{}'.format(self.fetched_num + self.filename_start, extension))
+        elif isinstance(save_mode, int):
+            filename = os.path.join(
+                self.img_dir,
+                '{:0>6d}.{}'.format(self.fetched_num + save_mode, extension))
+        else:
+            sys.exit('unknown save_mode: {}'.format(save_mode))
         return filename
 
     def reach_max_num(self):
@@ -99,7 +113,7 @@ class Downloader(object):
             return False
 
     def download(self, img_task, request_timeout, max_retry=3, min_size=None,
-                 max_size=None, **kwargs):
+                 max_size=None, save_mode='overwrite', **kwargs):
         """Download the image and save it to the corresponding path.
 
         Args:
@@ -111,6 +125,10 @@ class Downloader(object):
                       images with smaller size than min_size will be discarded.
             max_size: A tuple containing (width, height) in pixels. Downloaded
                       images with greater size than max_size will be discarded.
+            save_mode: If set to `overwrite`, the filename will start from
+                       000001.jpg regardless of existing files, if set to `auto`,
+                       the filename will be exist_max + 1, if set to an integer,
+                       the filename will start from save_mode + 1.
             **kwargs: reserved arguments for overriding.
         """
         img_url = img_task['img_url']
@@ -160,7 +178,7 @@ class Downloader(object):
                 with self.lock:
                     self.fetched_num += 1
                 self.logger.info('image #%s\t%s', self.fetched_num, img_url)
-                filename = self.set_file_path(img_task)
+                filename = self.set_file_path(img_task, save_mode)
                 with open(filename, 'wb') as fout:
                     fout.write(response.content)
                 break
@@ -196,6 +214,17 @@ class Downloader(object):
             t.daemon = True
             self.threads.append(t)
 
+    def max_filename_idx(self, img_dir):
+        max_idx = 0
+        for filename in os.listdir(img_dir):
+            try:
+                idx = int(os.path.splitext(filename)[0])
+            except:
+                continue
+            if idx > max_idx:
+                max_idx = idx
+        return max_idx
+
     def start(self, thread_num, **kwargs):
         """Start all the parser threads.
 
@@ -206,6 +235,8 @@ class Downloader(object):
         """
         self.thread_num = thread_num
         self.clear_status()
+        if 'save_mode' in kwargs and kwargs['save_mode'] == 'auto':
+            self.filename_start = self.max_filename_idx(self.img_dir)
         self.create_threads(**kwargs)
         self.lock = threading.Lock()
         for t in self.threads:
