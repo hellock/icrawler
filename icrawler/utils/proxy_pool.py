@@ -297,7 +297,7 @@ class ProxyPool(object):
 
     def default_scan(self, region='mainland', expected_num=20, val_thr_num=4,
                      queue_timeout=3, val_timeout=5, out_file='proxies.json',
-                     src_files=[]):
+                     src_files=None):
         """Default scan method, to simplify the usage of `scan` method.
 
         It will register following scan functions:
@@ -326,14 +326,13 @@ class ProxyPool(object):
                              'will take. It is highly recommended to limit the'
                              ' expected num under 30.')
         proxy_scanner = ProxyScanner()
-        if isinstance(src_files, str):
-            files = [src_files]
-        else:
-            files = src_files
-        if files:
-            for filename in files:
-                proxy_scanner.register_func(proxy_scanner.scan_file,
-                                            {'src_file': filename})
+        if src_files is None:
+            src_files = []
+        elif isinstance(src_files, str):
+            src_files = [src_files]
+        for filename in src_files:
+            proxy_scanner.register_func(proxy_scanner.scan_file,
+                                        {'src_file': filename})
         if region == 'mainland':
             proxy_scanner.register_func(proxy_scanner.scan_cnproxy, {})
         elif region == 'overseas':
