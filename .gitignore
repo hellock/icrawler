@@ -3,6 +3,7 @@
 
 # vscode config
 .vscode/
+icrawler/.vscode/
 
 # Image folder
 images
