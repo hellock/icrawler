@@ -46,9 +46,10 @@ class Parser(object):
         """Parse a page and extract image urls, then put it into task_queue.
 
         This method should be overridden by users.
+        example: task = {}
+                 self.put_task_into_queue(task)
         """
-        task = {}
-        self.put_task_into_queue(task)
+        raise NotImplementedError
 
     def put_task_into_queue(self, task):
         """Safely put an downloading task into the task_queue.

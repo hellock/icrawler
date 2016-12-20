@@ -38,7 +38,7 @@ class Feeder(object):
 
         This method should be overridden by users.
         """
-        pass
+        raise NotImplementedError
 
     def put_url_into_queue(self, url):
         """Safely put an url into the url_queue.

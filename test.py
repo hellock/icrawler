@@ -9,6 +9,7 @@ from icrawler.examples import BingImageCrawler
 from icrawler.examples import BaiduImageCrawler
 from icrawler.examples import FlickrImageCrawler
 from icrawler.examples import GreedyImageCrawler
+from icrawler.examples import UrlListCrawler
 
 
 def test_google():
@@ -39,6 +40,11 @@ def test_greedy():
     greedy_crawler.crawl('bbc.com/sport', 10, 4, 1, min_size=(200, 200))
 
 
+def test_urllist():
+    urllist_crawler = UrlListCrawler('images/urllist/')
+    urllist_crawler.crawl('test_list.txt', downloader_thr_num=3)
+
+
 def main():
     if len(sys.argv) == 1:
         dst = 'all'
@@ -56,6 +62,8 @@ def main():
         test_flickr()
     if 'greedy' in dst:
         test_greedy()
+    if 'urllist' in dst:
+        test_urllist()
 
 
 if __name__ == '__main__':
