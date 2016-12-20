@@ -51,7 +51,7 @@ def main():
     else:
         dst = sys.argv[1:]
     if 'all' in dst:
-        dst = ['google', 'bing', 'baidu', 'flickr', 'greedy']
+        dst = ['google', 'bing', 'baidu', 'flickr', 'greedy', 'urllist']
     if 'google' in dst:
         test_google()
     if 'bing' in dst:
