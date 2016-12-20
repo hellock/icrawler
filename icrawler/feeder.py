@@ -3,7 +3,7 @@
 import logging
 import threading
 
-from .utils import DupFilter
+from icrawler.utils import DupFilter
 
 
 class Feeder(object):

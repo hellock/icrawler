@@ -4,9 +4,7 @@ import threading
 
 from six.moves import queue
 
-from .. import Feeder
-from .. import Parser
-from .. import Crawler
+from icrawler import Crawler, Feeder, Parser
 
 
 class UrlListParser(Parser):

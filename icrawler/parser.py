@@ -4,11 +4,11 @@ import logging
 import threading
 import time
 
-from requests import exceptions
+from requests.exceptions import ConnectionError, HTTPError, Timeout
 from six.moves import queue
 from six.moves.urllib.parse import urlsplit
 
-from .utils import DupFilter
+from icrawler.utils import DupFilter
 
 
 class Parser(object):
@@ -160,13 +160,13 @@ class Parser(object):
                     base_url = '{0.scheme}://{0.netloc}'.format(urlsplit(url))
                     response = self.session.get(url, timeout=request_timeout,
                                                 headers={'Referer': base_url})
-                except exceptions.ConnectionError:
+                except ConnectionError:
                     self.logger.error('Connection error when fetching page %s, '
                                       'remaining retry time: %d', url, retry - 1)
-                except exceptions.HTTPError:
+                except HTTPError:
                     self.logger.error('HTTP error when fetching page %s, '
                                       'remaining retry time: %d', url, retry - 1)
-                except exceptions.Timeout:
+                except Timeout:
                     self.logger.error('Timeout when fetching page %s, '
                                       'remaining retry time: %d', url, retry - 1)
                 except Exception as ex:

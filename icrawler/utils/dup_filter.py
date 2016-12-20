@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+from collections import OrderedDict
 
 
 class DupFilter(object):
@@ -13,14 +14,12 @@ class DupFilter(object):
         cache_size: An interger that controls the capacity of cache
                     (default 0, means unlimited capacity)
         cache_dict: A dict storing all the recent items
-        cache_list: A list storing all the recent items in sequence order
     """
 
     def __init__(self, cache_size=0):
         """Init the DupFilter with specified cache capacity."""
         self.cache_size = cache_size
-        self.cache_dict = {}
-        self.cache_list = []
+        self.cache_dict = OrderedDict()
 
     def check_dup(self, elem):
         """Check whether the elem has been in the cache
@@ -44,8 +43,7 @@ class DupFilter(object):
         if hashable_item in self.cache_dict:
             return True
         else:
-            self.cache_list.append(hashable_item)
+            if self.cache_size > 0 and len(self.cache_dict) >= self.cache_size:
+                self.cache_dict.popitem(False)
             self.cache_dict[hashable_item] = 1
-            if self.cache_size > 0 and len(self.cache_list) > self.cache_size:
-                del self.cache_dict[self.cache_list.pop()]
             return False

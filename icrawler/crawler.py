@@ -5,14 +5,11 @@ import os
 import sys
 import threading
 import time
+
 from six.moves import queue
 
-from .downloader import Downloader
-from .feeder import Feeder
-from .parser import Parser
-from .utils import Signal
-from .utils import ProxyPool
-from .utils import Session
+from icrawler import Downloader, Feeder, Parser
+from icrawler.utils import ProxyPool, Session, Signal
 
 
 class Crawler(object):

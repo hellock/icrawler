@@ -89,9 +89,7 @@ engine crawlers have similar interfaces.
 
 .. code:: python
 
-    from icrawler.examples import GoogleImageCrawler
-    from icrawler.examples import BingImageCrawler
-    from icrawler.examples import BaiduImageCrawler
+    from icrawler.builtin import BaiduImageCrawler, BingImageCrawler, GoogleImageCrawler
 
     google_crawler = GoogleImageCrawler('your_image_dir')
     google_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
@@ -114,7 +112,7 @@ Flickr crawler is a little different.
 .. code:: python
 
     from datetime import date
-    from icrawler.examples import FlickrImageCrawler
+    from icrawler.builtin import FlickrImageCrawler
 
     flickr_crawler = FlickrImageCrawler('your_apikey', 'your_image_dir')
     flickr_crawler.crawl(max_num=1000, feeder_thr_num=1, parser_thr_num=1,
@@ -145,7 +143,7 @@ If you just want to crawl all the images from some website, then
 
 .. code:: python
 
-    from icrawler.examples import GreedyImageCrawler
+    from icrawler.builtin import GreedyImageCrawler
 
     greedy_crawler = GreedyImageCrawler('images/greedy')
     greedy_crawler.crawl(domains='bbc.com', max_num=0, 

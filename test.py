@@ -4,16 +4,17 @@ import logging
 import sys
 from datetime import date
 
-from icrawler.examples import GoogleImageCrawler
-from icrawler.examples import BingImageCrawler
-from icrawler.examples import BaiduImageCrawler
-from icrawler.examples import FlickrImageCrawler
-from icrawler.examples import GreedyImageCrawler
-from icrawler.examples import UrlListCrawler
+from icrawler.builtin import GoogleImageCrawler
+from icrawler.builtin import BingImageCrawler
+from icrawler.builtin import BaiduImageCrawler
+from icrawler.builtin import FlickrImageCrawler
+from icrawler.builtin import GreedyImageCrawler
+from icrawler.builtin import UrlListCrawler
 
 
 def test_google():
-    google_crawler = GoogleImageCrawler('images/google', log_level=logging.INFO)
+    google_crawler = GoogleImageCrawler(
+        'images/google', log_level=logging.INFO)
     google_crawler.crawl('cloudy', 0, 10, date(2016, 2, 1),
                          date(2016, 3, 15), 1, 1, 4)
 
@@ -42,7 +43,7 @@ def test_greedy():
 
 def test_urllist():
     urllist_crawler = UrlListCrawler('images/urllist/')
-    urllist_crawler.crawl('test_list.txt', downloader_thr_num=3)
+    urllist_crawler.crawl('test_data/test_list.txt', downloader_thr_num=3)
 
 
 def main():

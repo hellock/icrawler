@@ -2,12 +2,11 @@
 
 import logging
 import re
+
 from bs4 import BeautifulSoup
 from six.moves import html_parser
 
-from .. import SimpleSEFeeder
-from .. import Parser
-from .. import Crawler
+from icrawler import Crawler, Parser, SimpleSEFeeder
 
 
 class BingParser(Parser):

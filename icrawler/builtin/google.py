@@ -2,12 +2,11 @@
 
 import json
 import logging
+
 from bs4 import BeautifulSoup
 from six.moves.urllib.parse import urlencode
 
-from .. import Feeder
-from .. import Parser
-from .. import Crawler
+from icrawler import Crawler, Feeder, Parser
 
 
 class GoogleFeeder(Feeder):

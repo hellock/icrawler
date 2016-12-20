@@ -3,9 +3,7 @@
 import json
 import logging
 
-from .. import SimpleSEFeeder
-from .. import Parser
-from .. import Crawler
+from icrawler import Crawler, Parser, SimpleSEFeeder
 
 
 class BaiduParser(Parser):

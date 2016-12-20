@@ -3,10 +3,11 @@ import logging
 import random
 import threading
 import time
-from six.moves import queue
 
 import requests
 from bs4 import BeautifulSoup
+
+from six.moves import queue
 
 
 class Proxy(object):
@@ -429,7 +430,8 @@ class ProxyScanner():
 
     def scan_cnproxy(self):
         """Scan candidate (mainland) proxies from http://cn-proxy.com"""
-        self.logger.info('start scanning http://cn-proxy.com for proxy list...')
+        self.logger.info(
+            'start scanning http://cn-proxy.com for proxy list...')
         response = requests.get('http://cn-proxy.com')
         soup = BeautifulSoup(response.content, 'lxml')
         tables = soup.find_all('table', class_='sortable')

@@ -2,14 +2,14 @@
 
 import logging
 import os
-import threading
 import sys
+import threading
 
 import requests
-from six.moves.urllib.parse import urlparse
 from PIL import Image
 from six import BytesIO
 from six.moves import queue
+from six.moves.urllib.parse import urlparse
 
 
 class Downloader(object):
