@@ -171,7 +171,7 @@ class Downloader(object):
                 if self.reach_max_num():
                     with self.lock:
                         if not self.global_signal.get('reach_max_num'):
-                            self.global_signal.set({'reach_max_num': True})
+                            self.global_signal.set(reach_max_num=True)
                             self.logger.info('downloaded images reach max num,'
                                              ' waiting all threads to exit...')
                     return

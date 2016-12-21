@@ -1,10 +1,9 @@
 import logging
-import os
 import threading
 
 from six.moves import queue
 
-from icrawler import Crawler, Feeder, Parser
+from icrawler import Crawler, Feeder, Parser, UrlListFeeder
 
 
 class UrlListParser(Parser):
@@ -35,24 +34,6 @@ class UrlListParser(Parser):
             else:
                 self.logger.debug('start downloading page {}'.format(url))
             self.put_task_into_queue({'img_url': url})
-
-
-class UrlListFeeder(Feeder):
-
-    def feed(self, url_list):
-        if isinstance(url_list, str):
-            if os.path.isfile(url_list):
-                with open(url_list, 'r') as fin:
-                    for line in fin:
-                        self.put_url_into_queue(line.strip('\n'))
-            else:
-                raise IOError('url list file {} not found'.format(url_list))
-        elif isinstance(url_list. list):
-            for url in url_list:
-                self.put_url_into_queue(url)
-                self.logger.debug('put url to url_queue: {}'.format(url))
-        else:
-            raise TypeError('"url_list" can only be a filename or a list')
 
 
 class UrlListCrawler(Crawler):

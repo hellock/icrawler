@@ -8,6 +8,9 @@ icrawler/.vscode/
 # Image folder
 images
 
+# doc folder (TODO)
+docs/
+
 # Python cache folder
 __pycache__
 

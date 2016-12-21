@@ -68,9 +68,8 @@ class Crawler(object):
         3 signals are added: feeder_exited, parser_exited and reach_max_num.
         """
         self.signal = Signal()
-        self.signal.set({'feeder_exited': False,
-                         'parser_exited': False,
-                         'reach_max_num': False})
+        self.signal.set(feeder_exited=False, parser_exited=False,
+                        reach_max_num=False)
 
     def set_proxy_pool(self):
         """Construct a proxy pool
@@ -137,8 +136,8 @@ class Crawler(object):
             if threading.active_count() <= 1:
                 break
             if not self.feeder.is_alive():
-                self.signal.set({'feeder_exited': True})
+                self.signal.set(feeder_exited=True)
             if not self.parser.is_alive():
-                self.signal.set({'parser_exited': True})
+                self.signal.set(parser_exited=True)
             time.sleep(1)
         self.logger.info('Crawling task done!')
