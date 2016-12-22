@@ -8,7 +8,7 @@ from requests.exceptions import ConnectionError, HTTPError, Timeout
 from six.moves import queue
 from six.moves.urllib.parse import urlsplit
 
-from icrawler.utils import DupFilter
+from icrawler.utils import DupChecker
 
 
 class Parser(object):
@@ -66,7 +66,7 @@ class Parser(object):
                    'tags': ['tag1', 'tag2'],
                    'label': True}
         """
-        if self.dup_filter.check_dup(task):
+        if self.dup_checker.check(task):
             self.logger.debug('duplicated task: %s', task['img_url'])
         else:
             self.task_queue.put(task)
@@ -97,7 +97,7 @@ class Parser(object):
             dup_filter_size: An integer deciding the cache size of dup_filter.
             **kwargs: Arguments to be passed to the create_threads() method.
         """
-        self.dup_filter = DupFilter(dup_filter_size)
+        self.dup_checker = DupChecker(dup_filter_size)
         self.thread_num = thread_num
         self.create_threads(**kwargs)
         self.lock = threading.Lock()

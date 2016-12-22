@@ -20,7 +20,7 @@ class Crawler(object):
         url_queue: A queue storing page urls, connecting Feeder and Parser.
         task_queue: A queue storing image downloading tasks, connecting
                     Parser and Downloader.
-        headers: A dict of request headers used by session.
+        # headers: A dict of request headers used by session.
         session: A requests.Session object.
         feeder: A Feeder object.
         parser: A Parser object.
@@ -44,7 +44,7 @@ class Crawler(object):
         self.img_dir = img_dir
         if not os.path.isdir(img_dir):
             os.makedirs(img_dir)
-        # init queues
+        # init url queue and task queue
         self.url_queue = queue.Queue()
         self.task_queue = queue.Queue()
         # set logger
@@ -71,13 +71,12 @@ class Crawler(object):
         self.signal.set(feeder_exited=False, parser_exited=False,
                         reach_max_num=False)
 
-    def set_proxy_pool(self):
+    def set_proxy_pool(self, pool=None):
         """Construct a proxy pool
 
-        By default no proxy is scaned or loaded, you will have to override this
-        method if you want to use proxies.
+        By default no proxy is scaned or loaded.
         """
-        self.proxy_pool = ProxyPool()
+        self.proxy_pool = ProxyPool() if pool is None else pool
 
     def set_session(self, headers=None):
         """Init session with default or custom headers
@@ -87,17 +86,18 @@ class Crawler(object):
                      header to init the session)
         """
         if headers is None:
-            self.headers = {
+            headers = {
                 'User-Agent': ('Mozilla/5.0 (Macintosh; Intel Mac OS X '
                                '10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) '
                                'Chrome/48.0.2564.116 Safari/537.36')
             }
-        else:
-            self.headers = headers
-        self.session = Session(self.proxy_pool)
-        self.session.headers.update(self.headers)
+        elif not isinstance(headers, dict):
+            raise TypeError('"headers" must be a dict object')
 
-    def set_logger(self, log_level):
+        self.session = Session(self.proxy_pool)
+        self.session.headers.update(headers)
+
+    def set_logger(self, log_level=logging.INFO):
         """Configure the logger with log_level."""
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
@@ -105,33 +105,28 @@ class Crawler(object):
         self.logger = logging.getLogger(__name__)
         logging.getLogger('requests').setLevel(logging.WARNING)
 
-    def crawl(self, feeder_thread_num=1, parser_thread_num=1,
-              downloader_thread_num=1, feeder_kwargs={},
-              parser_kwargs={}, downloader_kwargs={}):
+    def crawl(self, feeder_num=1, parser_num=1, downloader_num=1,
+              feeder_kwargs={}, parser_kwargs={}, downloader_kwargs={}):
         """Start crawling.
 
         Args:
-            feeder_thread_num: An integer indicating the number of feeder threads.
-            parser_thread_num: An integer indicating the number of parser threads.
-            downloader_thread_num: An integer indicating the number of
-                                   downloader threads.
+            feeder_num: number of feeder threads.
+            parser_num: number of parser threads.
+            downloader_num: number of downloader threads.
             feeder_kwargs: Arguments to be passed to feeder.start()
             parser_kwargs: Arguments to be passed to parser.start()
             downloader_kwargs: Arguments to be passed to downloader.start()
         """
         self.signal.reset()
         self.logger.info('start crawling...')
-        self.logger.info('starting feeder... %s threads in total',
-                         feeder_thread_num)
-        self.feeder.start(feeder_thread_num, **feeder_kwargs)
-        self.logger.info('starting parser... %s threads in total',
-                         parser_thread_num)
-        self.parser.start(parser_thread_num,
-                          task_threshold=10 * downloader_thread_num,
+        self.logger.info('starting %d feeder threads...', feeder_num)
+        self.feeder.start(feeder_num, **feeder_kwargs)
+        self.logger.info('starting %d parser threads...', parser_num)
+        self.parser.start(parser_num, task_threshold=10 * downloader_num,
                           **parser_kwargs)
-        self.logger.info('starting downloader... %s threads in total',
-                         downloader_thread_num)
-        self.downloader.start(downloader_thread_num, **downloader_kwargs)
+        self.logger.info('starting %d downloader threads...',
+                         downloader_num)
+        self.downloader.start(downloader_num, **downloader_kwargs)
         while True:
             if threading.active_count() <= 1:
                 break

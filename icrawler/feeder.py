@@ -4,7 +4,7 @@ import logging
 import os
 import threading
 
-from icrawler.utils import DupFilter
+from icrawler.utils import DupChecker
 
 
 class Feeder(object):
@@ -17,7 +17,7 @@ class Feeder(object):
         global_signal: A Signal object for cross-module communication.
         session: A requests.Session object.
         logger: A logging.Logger object used for logging.
-        dup_filter: A DupFilter object used for filtering urls.
+        dup_checker: A DupChecker object used for filtering urls.
         threads: A list storing all the threading.Thread objects of the feeder.
         thread_num: An integer indicating the number of threads.
         lock: A threading.Lock object.
@@ -50,7 +50,7 @@ class Feeder(object):
         Args:
             url: The page url string.
         """
-        if self.dup_filter.check_dup(url):
+        if self.dup_checker.check(url):
             self.logger.debug('duplicated url: %s', url)
         else:
             self.url_queue.put(url)
@@ -82,16 +82,16 @@ class Feeder(object):
         """
         self.feed(**kwargs)
 
-    def start(self, thread_num, dup_filter_size=0, **kwargs):
+    def start(self, thread_num, dup_checker_cap=0, **kwargs):
         """Start all the feeder threads.
 
         Args:
             thread_num: An integer indicating the number of threads to be
                         created and run.
-            dup_filter_size: An integer deciding the cache size of dup_filter.
+            dup_checker_cap: An integer deciding the cache size of dup_checker.
             **kwargs: Arguments to be passed to the create_threads() method.
         """
-        self.dup_filter = DupFilter(dup_filter_size)
+        self.dup_checker = DupChecker(dup_checker_cap)
         self.thread_num = thread_num
         self.create_threads(**kwargs)
         self.lock = threading.Lock()
@@ -135,7 +135,8 @@ class UrlListFeeder(Feeder):
             else:
                 end_idx = len(url_list)
             for i in range(offset, end_idx):
-                self.put_url_into_queue(url_list[i])
+                url = url_list[i]
+                self.put_url_into_queue(url)
                 self.logger.debug('put url to url_queue: {}'.format(url))
 
 
