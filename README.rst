@@ -23,7 +23,7 @@ engines (Google, Bing, Baidu) and flickr.
 Requirements
 ------------
 
-Python 2.7+ or 3.4+.
+Python 2.7+ or 3.4+ (recommended).
 
 Stucture
 --------
@@ -76,13 +76,14 @@ solutions.
 Use built-in crawlers
 ~~~~~~~~~~~~~~~~~~~~~
 
-This framework contains 5 built-in crawlers.
+This framework contains 6 built-in crawlers.
 
 -  Google
 -  Bing
 -  Baidu
 -  Flickr
 -  General greedy crawl (crawl all the images from a website)
+-  UrlList (crawl all images given a url list)
 
 Here is an example of how to use the built-in crawlers. The search
 engine crawlers have similar interfaces.
@@ -153,6 +154,16 @@ If you just want to crawl all the images from some website, then
 The argument ``domains`` can be either a url string or list. Second
 level domains and subpaths are supported, but there should be no scheme
 like 'http' in the domains.
+
+If you have already got an image url list somehow and want to download all
+images using multiple threads, then ``UrlListCrawler`` may be helpful.
+
+.. code:: python
+
+    from icrawler.builtin import UrlListCrawler
+
+    urllist_crawler = UrlListCrawler('images/greedy')
+    urllist_crawler.crawl('url_list.txt', downloader_thr_num=4)
 
 You can see the complete example in *test.py*, to run it
 
