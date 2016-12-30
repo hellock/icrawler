@@ -83,7 +83,7 @@ This framework contains 6 built-in crawlers.
 -  Baidu
 -  Flickr
 -  General greedy crawl (crawl all the images from a website)
--  UrlList (crawl all images given a url list)
+-  UrlList (crawl all images given an url list)
 
 Here is an example of how to use the built-in crawlers. The search
 engine crawlers have similar interfaces.
@@ -129,7 +129,7 @@ Supported optional searching auguments are
 -  ``text`` -- A free text search. Photos who's title, description or
    tags contain the text will be returned.
 -  ``min_upload_date`` -- Minimum upload date. The date can be in the
-   form of ``datetime.date`` object, a unix timestamp or a string.
+   form of ``datetime.date`` object, an unix timestamp or a string.
 -  ``max_upload_date`` -- Maximum upload date. Same form as
    ``min_upload_date``.
 -  ``group_id`` -- The id of a group who's pool to search.
@@ -151,7 +151,7 @@ If you just want to crawl all the images from some website, then
                          parser_thr_num=1, downloader_thr_num=1,
                          min_size=None, max_size=None)
 
-The argument ``domains`` can be either a url string or list. Second
+The argument ``domains`` can be either an url string or list. Second
 level domains and subpaths are supported, but there should be no scheme
 like 'http' in the domains.
 
@@ -162,7 +162,7 @@ images using multiple threads, then ``UrlListCrawler`` may be helpful.
 
     from icrawler.builtin import UrlListCrawler
 
-    urllist_crawler = UrlListCrawler('images/greedy')
+    urllist_crawler = UrlListCrawler('images/urllist')
     urllist_crawler.crawl('url_list.txt', downloader_thr_num=4)
 
 You can see the complete example in *test.py*, to run it
@@ -172,7 +172,7 @@ You can see the complete example in *test.py*, to run it
     python test.py [options]
 
 ``options`` can be ``google``, ``bing`` , ``baidu``, ``flickr``,
-``greedy`` or ``all``, using ``all`` by default if no auguments are
+``greedy``, ``urllist`` or ``all``, using ``all`` by default if no auguments are
 specified. Note that you have to provide your flickr apikey if you want
 to test FlickrCrawler.
 

@@ -6,8 +6,9 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+
 setup(name='icrawler',
-      version='0.2.5',
+      version='0.2.6',
       description='A mini framework of image crawlers',
       long_description=readme(),
       keywords='image crawler spider',

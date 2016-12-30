@@ -136,7 +136,8 @@ class UrlListFeeder(Feeder):
                 end_idx = len(url_list)
             for i in range(offset, end_idx):
                 self.put_url_into_queue(url_list[i])
-                self.logger.debug('put url to url_queue: {}'.format(url))
+                self.logger.debug(
+                    'put url to url_queue: {}'.format(url_list[i]))
 
 
 class SimpleSEFeeder(Feeder):
