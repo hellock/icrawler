@@ -126,7 +126,7 @@ class ProxyPool(object):
             exit()
         proxy = self.proxies[protocol][self.addr_list[protocol][idx]]
         if proxy.weight < random.random():
-            return self.get_next(protocol, format, random)
+            return self.get_next(protocol, format, policy)
         if format:
             return proxy.format()
         else:
