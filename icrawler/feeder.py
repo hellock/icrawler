@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import os
-import threading
+from os import path
+from threading import Lock
 
-from icrawler.utils import DupChecker
+from icrawler.utils import DaemonThread, DupChecker
 
 
 class Feeder(object):
     """Base class for feeders.
 
-    Essentially a thread manager, in charge of feeding urls to parses.
+    Essentially a thread manager, in charge of feeding urls to parsers.
 
     Attributes:
         url_queue: A queue storing page urls, connecting Feeder and Parser.
@@ -18,7 +18,7 @@ class Feeder(object):
         session: A requests.Session object.
         logger: A logging.Logger object used for logging.
         dup_checker: A DupChecker object used for filtering urls.
-        threads: A list storing all the threading.Thread objects of the feeder.
+        _threads: A list storing all the threading.Thread objects of the feeder.
         thread_num: An integer indicating the number of threads.
         lock: A threading.Lock object.
     """
@@ -28,7 +28,7 @@ class Feeder(object):
         self.url_queue = url_queue
         self.global_signal = signal
         self.session = session
-        self.threads = []
+        self._threads = []
         self.set_logger()
 
     def set_logger(self):
@@ -37,11 +37,11 @@ class Feeder(object):
     def feed(self, **kwargs):
         """Feed urls.
 
-        This method should be overridden by users.
+        This method should be implemented by users.
         """
         raise NotImplementedError
 
-    def put_url_into_queue(self, url):
+    def add_url(self, url):
         """Safely put an url into the url_queue.
 
         Before putting the url into the queue, DupFilter.check_dup() method
@@ -64,13 +64,12 @@ class Feeder(object):
         Args:
             **kwargs: Arguments to be passed to the thread_run() method.
         """
-        self.threads = []
+        self._threads = []
         for i in range(self.thread_num):
-            name = 'feeder-{:0>2d}'.format(i + 1)
-            t = threading.Thread(name=name, target=self.thread_run,
-                                 kwargs=kwargs)
-            t.daemon = True
-            self.threads.append(t)
+            t = DaemonThread(name='feeder-{:03d}'.format(i + 1),
+                             target=self.thread_run,
+                             kwargs=kwargs)
+            self._threads.append(t)
 
     def thread_run(self, **kwargs):
         """Target method of threads.
@@ -82,20 +81,20 @@ class Feeder(object):
         """
         self.feed(**kwargs)
 
-    def start(self, thread_num, dup_checker_cap=0, **kwargs):
+    def start(self, thread_num, dup_checker_size=0, **kwargs):
         """Start all the feeder threads.
 
         Args:
             thread_num: An integer indicating the number of threads to be
                         created and run.
-            dup_checker_cap: An integer deciding the cache size of dup_checker.
+            dup_checker_size: An integer deciding the cache size of dup_checker.
             **kwargs: Arguments to be passed to the create_threads() method.
         """
-        self.dup_checker = DupChecker(dup_checker_cap)
+        self.dup_checker = DupChecker(dup_checker_size)
         self.thread_num = thread_num
         self.create_threads(**kwargs)
-        self.lock = threading.Lock()
-        for t in self.threads:
+        self.lock = Lock()
+        for t in self._threads:
             t.start()
             self.logger.info('thread %s started', t.name)
 
@@ -105,7 +104,7 @@ class Feeder(object):
         Returns:
             A boolean indicating if at least one thread is alive.
         """
-        for t in self.threads:
+        for t in self._threads:
             if t.is_alive():
                 return True
         return False
@@ -119,13 +118,13 @@ class UrlListFeeder(Feeder):
 
     def feed(self, url_list, offset=0, max_num=0):
         if isinstance(url_list, str):
-            if os.path.isfile(url_list):
+            if path.isfile(url_list):
                 with open(url_list, 'r') as fin:
-                    url_list = [line.rstrip('\n') for line in fin.readlines()]
+                    url_list = [line.rstrip('\n') for line in fin]
             else:
                 raise IOError('url list file {} not found'.format(url_list))
         elif not isinstance(url_list, list):
-            raise TypeError('"url_list" can only be a str(filename) or a list')
+            raise TypeError('"url_list" can only be a filename or a str list')
 
         if offset < 0 or offset >= len(url_list):
             raise ValueError('"offset" exceed the list length')
@@ -136,12 +135,12 @@ class UrlListFeeder(Feeder):
                 end_idx = len(url_list)
             for i in range(offset, end_idx):
                 url = url_list[i]
-                self.put_url_into_queue(url)
+                self.add_url(url)
                 self.logger.debug('put url to url_queue: {}'.format(url))
 
 
 class SimpleSEFeeder(Feeder):
-    """Simple search-engine-like Feeder"""
+    """Simple search engine like Feeder"""
 
     def feed(self, url_template, keyword, offset, max_num, page_step):
         """Feed urls once
@@ -155,5 +154,5 @@ class SimpleSEFeeder(Feeder):
         """
         for i in range(offset, offset + max_num, page_step):
             url = url_template.format(keyword, i)
-            self.url_queue.put(url)
+            self.add_url(url)
             self.logger.debug('put url to url_queue: {}'.format(url))

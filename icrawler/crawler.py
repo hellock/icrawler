@@ -20,7 +20,6 @@ class Crawler(object):
         url_queue: A queue storing page urls, connecting Feeder and Parser.
         task_queue: A queue storing image downloading tasks, connecting
                     Parser and Downloader.
-        # headers: A dict of request headers used by session.
         session: A requests.Session object.
         feeder: A Feeder object.
         parser: A Parser object.
@@ -74,7 +73,7 @@ class Crawler(object):
     def set_proxy_pool(self, pool=None):
         """Construct a proxy pool
 
-        By default no proxy is scaned or loaded.
+        By default no proxy is scanned or loaded.
         """
         self.proxy_pool = ProxyPool() if pool is None else pool
 
@@ -87,8 +86,8 @@ class Crawler(object):
         """
         if headers is None:
             headers = {
-                'User-Agent': ('Mozilla/5.0 (Macintosh; Intel Mac OS X '
-                               '10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) '
+                'User-Agent': ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3)'
+                               ' AppleWebKit/537.36 (KHTML, like Gecko) '
                                'Chrome/48.0.2564.116 Safari/537.36')
             }
         elif not isinstance(headers, dict):

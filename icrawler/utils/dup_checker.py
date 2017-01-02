@@ -11,7 +11,7 @@ class DupChecker(object):
     a new item comes, check weather it is already in the dict.
 
     Attributes:
-        cache_size: An interger that controls the capacity of cache
+        cache_size: An integer that controls the capacity of cache
                     (default 0, meaning unlimited capacity)
         cache_dict: A dict storing all the recent items
     """

@@ -20,7 +20,8 @@ class FlickrFeeder(Feeder):
             return
         if max_num > 4000:
             max_num = 4000
-            self.logger.warning('max_num exceeds 4000, set it to 4000 automatically.')
+            self.logger.warning(
+                'max_num exceeds 4000, set it to 4000 automatically.')
         base_url = 'https://api.flickr.com/services/rest/?'
         params = {'method': 'flickr.photos.search', 'api_key': apikey,
                   'format': 'json', 'nojsoncallback': 1}
@@ -33,14 +34,16 @@ class FlickrFeeder(Feeder):
             params['text'] = text
         if min_upload_date is not None:
             if isinstance(min_upload_date, datetime.date):
-                params['min_upload_date'] = min_upload_date.strftime('%Y-%m-%d')
+                params['min_upload_date'] = min_upload_date.strftime(
+                    '%Y-%m-%d')
             elif isinstance(min_upload_date, (int, str)):
                 params['min_upload_date'] = min_upload_date
             else:
                 self.logger.error('min_upload_date is invalid')
         if max_upload_date is not None:
             if isinstance(min_upload_date, datetime.date):
-                params['max_upload_date'] = max_upload_date.strftime('%Y-%m-%d')
+                params['max_upload_date'] = max_upload_date.strftime(
+                    '%Y-%m-%d')
             elif isinstance(min_upload_date, (int, str)):
                 params['max_upload_date'] = max_upload_date
             else:
@@ -51,7 +54,7 @@ class FlickrFeeder(Feeder):
             params['extras'] = extras
         params['per_page'] = per_page
         url = base_url + urlencode(params)
-        page_max = math.ceil(max_num / per_page)
+        page_max = int(math.ceil(max_num / per_page))
         for i in range(page, page + page_max):
             complete_url = '{}&page={}'.format(url, i)
             self.put_url_into_queue(complete_url)

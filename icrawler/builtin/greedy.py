@@ -77,7 +77,7 @@ class GreedyParser(Parser):
                     continue
                 # urls of the same domain
                 elif self.is_in_domain(href, feeder.domains):
-                    feeder.put_url_into_queue(href)
+                    feeder.add_url(href)
 
 
 class GreedyImageCrawler(Crawler):

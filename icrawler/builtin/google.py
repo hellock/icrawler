@@ -26,7 +26,7 @@ class GoogleFeeder(Feeder):
             params = dict(q=keyword, ijn=int(i / 100), start=i, tbs=tbs,
                           tbm='isch')
             url = base_url + urlencode(params)
-            self.put_url_into_queue(url)
+            self.add_url(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
 
 

@@ -146,13 +146,13 @@ class Downloader(object):
                 self.logger.error('Timeout when downloading image %s '
                                   'remaining retry time: %d', img_url, retry - 1)
             except Exception as ex:
-                self.logger.error('Unexcepted error catched when downloading '
+                self.logger.error('Unexpected error caught when downloading '
                                   'image %s, error info: %s, remaining retry '
                                   'time: %d', img_url, ex, retry - 1)
             else:
                 if response.status_code != 200:
-                    self.logger.error('Unexcepted HTTP status code. Should be 200 '
-                                      'image %s', img_url)
+                    self.logger.error('Response status code %d, image %s',
+                                      response.status_code, img_url)
                     break
                 if min_size is not None or max_size is not None:
                     # TODO: figure out the error details caused by Pillow

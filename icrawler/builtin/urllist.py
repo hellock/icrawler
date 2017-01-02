@@ -33,7 +33,7 @@ class UrlListParser(Parser):
                 continue
             else:
                 self.logger.debug('start downloading page {}'.format(url))
-            self.put_task_into_queue({'img_url': url})
+            self.add_url({'img_url': url})
 
 
 class UrlListCrawler(Crawler):

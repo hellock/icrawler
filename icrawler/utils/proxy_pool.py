@@ -106,7 +106,7 @@ class ProxyPool(object):
         Args:
             protocol: 'http' or 'https'. (default 'http')
             format: A boolean indicating whether to format the proxy. (default False)
-            policy: Eeither 'loop' or 'random', indicating the policy of getting
+            policy: Either 'loop' or 'random', indicating the policy of getting
                     next proxy. If set to 'loop', will return proxies in turn,
                     otherwise will return a proxy randomly.
 
@@ -307,13 +307,13 @@ class ProxyPool(object):
         3. scan_free_proxy_list (if region is overseas)
         4. scan_ip84
         5. scan_mimiip
-        After scaning, all the proxy info will be saved in out_file.
+        After scanning, all the proxy info will be saved in out_file.
 
         Args:
             region: Either 'mainland' or 'overseas'
             expected_num: An integer indicating the expected number of proxies,
                           if this argument is set too great, it may take long to
-                          finish scaning process.
+                          finish scanning process.
             val_thr_num: Number of threads used for validating proxies.
             queue_timeout: An integer indicating the timeout for getting a
                            candidate proxy from the queue.
@@ -460,7 +460,7 @@ class ProxyScanner():
             self.proxy_queue.put({'addr': addr, 'protocol': protocol})
 
     def scan_file(self, src_file):
-        """Scan candidate proxies from an exsiting file"""
+        """Scan candidate proxies from an existing file"""
         self.logger.info('start scanning file {} for proxy list...'
                          .format(src_file))
         with open(src_file, 'r') as fin:
