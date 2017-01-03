@@ -21,7 +21,10 @@ class Proxy(object):
         last_checked: A UNIX timestamp indicating when the proxy was checked.
     """
 
-    def __init__(self, addr=None, protocol='http', weight=1.0,
+    def __init__(self,
+                 addr=None,
+                 protocol='http',
+                 weight=1.0,
                  last_checked=None):
         self.addr = addr
         self.protocol = protocol
@@ -41,10 +44,11 @@ class Proxy(object):
 
     def to_dict(self):
         """Return the proxy info in a dict"""
-        return dict(addr=self.addr,
-                    protocol=self.protocol,
-                    weight=self.weight,
-                    last_checked=self.last_checked)
+        return dict(
+            addr=self.addr,
+            protocol=self.protocol,
+            weight=self.weight,
+            last_checked=self.last_checked)
 
 
 class ProxyPool(object):
@@ -69,8 +73,10 @@ class ProxyPool(object):
 
     def __init__(self, filename=None):
         self.idx = {'http': 0, 'https': 0}
-        self.test_url = {'http': 'http://www.sina.com.cn',
-                         'https': 'https://www.taobao.com'}
+        self.test_url = {
+            'http': 'http://www.sina.com.cn',
+            'https': 'https://www.taobao.com'
+        }
         self.proxies = {'http': {}, 'https': {}}
         self.addr_list = {'http': [], 'https': []}
         self.dec_ratio = 0.9
@@ -149,11 +155,8 @@ class ProxyPool(object):
         for protocol in proxies:
             for proxy in proxies[protocol]:
                 self.proxies[protocol][proxy['addr']] = Proxy(
-                    proxy['addr'],
-                    proxy['protocol'],
-                    proxy['weight'],
-                    proxy['last_checked']
-                )
+                    proxy['addr'], proxy['protocol'], proxy['weight'],
+                    proxy['last_checked'])
                 self.addr_list[protocol].append(proxy['addr'])
 
     def add_proxy(self, proxy):
@@ -207,7 +210,8 @@ class ProxyPool(object):
         """
         start = time.time()
         try:
-            r = requests.get(self.test_url[protocol], timeout=timeout,
+            r = requests.get(self.test_url[protocol],
+                             timeout=timeout,
                              proxies={protocol: 'http://' + addr})
         except KeyboardInterrupt:
             raise
@@ -220,10 +224,15 @@ class ProxyPool(object):
                 response_time = time.time() - start
                 return {'valid': True, 'response_time': response_time}
             else:
-                return {'valid': False,
-                        'msg': 'status code: {}'.format(r.status_code)}
+                return {
+                    'valid': False,
+                    'msg': 'status code: {}'.format(r.status_code)
+                }
 
-    def validate(self, proxy_scanner, expected_num=20, queue_timeout=3,
+    def validate(self,
+                 proxy_scanner,
+                 expected_num=20,
+                 queue_timeout=3,
                  val_timeout=5):
         """Target function of validation threads
 
@@ -251,13 +260,18 @@ class ProxyPool(object):
                 break
             if ret['valid']:
                 self.add_proxy(Proxy(addr, protocol))
-                self.logger.info('{} ok, {:.2f}s'.format(addr,
-                                                         ret['response_time']))
+                self.logger.info('{} ok, {:.2f}s'.format(addr, ret[
+                    'response_time']))
             else:
                 self.logger.info('{} invalid, {}'.format(addr, ret['msg']))
 
-    def scan(self, proxy_scanner, expected_num=20, val_thr_num=4,
-             queue_timeout=3, val_timeout=5, out_file='proxies.json'):
+    def scan(self,
+             proxy_scanner,
+             expected_num=20,
+             val_thr_num=4,
+             queue_timeout=3,
+             val_timeout=5,
+             out_file='proxies.json'):
         """Scan and validate proxies
 
         Firstly, call the `scan` method of `proxy_scanner`, then using multi
@@ -278,12 +292,14 @@ class ProxyPool(object):
                              .format(val_thr_num))
             val_threads = []
             for i in range(val_thr_num):
-                t = threading.Thread(name='val-{:0>2d}'.format(i + 1),
-                                     target=self.validate,
-                                     kwargs=dict(proxy_scanner=proxy_scanner,
-                                                 expected_num=expected_num,
-                                                 queue_timeout=queue_timeout,
-                                                 val_timeout=val_timeout))
+                t = threading.Thread(
+                    name='val-{:0>2d}'.format(i + 1),
+                    target=self.validate,
+                    kwargs=dict(
+                        proxy_scanner=proxy_scanner,
+                        expected_num=expected_num,
+                        queue_timeout=queue_timeout,
+                        val_timeout=val_timeout))
                 t.daemon = True
                 val_threads.append(t)
                 t.start()
@@ -296,8 +312,13 @@ class ProxyPool(object):
             if out_file is not None:
                 self.save(out_file)
 
-    def default_scan(self, region='mainland', expected_num=20, val_thr_num=4,
-                     queue_timeout=3, val_timeout=5, out_file='proxies.json',
+    def default_scan(self,
+                     region='mainland',
+                     expected_num=20,
+                     val_thr_num=4,
+                     queue_timeout=3,
+                     val_timeout=5,
+                     out_file='proxies.json',
                      src_files=None):
         """Default scan method, to simplify the usage of `scan` method.
 
@@ -339,9 +360,11 @@ class ProxyPool(object):
         elif region == 'overseas':
             proxy_scanner.register_func(proxy_scanner.scan_free_proxy_list, {})
         proxy_scanner.register_func(proxy_scanner.scan_ip84,
-                                    {'region': region, 'page': 5})
+                                    {'region': region,
+                                     'page': 5})
         proxy_scanner.register_func(proxy_scanner.scan_mimiip,
-                                    {'region': region, 'page': 5})
+                                    {'region': region,
+                                     'page': 5})
         self.scan(proxy_scanner, expected_num, val_thr_num, queue_timeout,
                   val_timeout, out_file)
 
@@ -467,8 +490,10 @@ class ProxyScanner():
             proxies = json.load(fin)
         for protocol in proxies.keys():
             for proxy in proxies[protocol]:
-                self.proxy_queue.put({'addr': proxy['addr'],
-                                      'protocol': protocol})
+                self.proxy_queue.put({
+                    'addr': proxy['addr'],
+                    'protocol': protocol
+                })
 
     def is_scanning(self):
         """Return whether at least one scanning thread is alive"""
@@ -483,9 +508,10 @@ class ProxyScanner():
                          'to scan candidate proxy lists...'
                          .format(len(self.scan_funcs)))
         for i in range(len(self.scan_funcs)):
-            t = threading.Thread(name=self.scan_funcs[i].__name__,
-                                 target=self.scan_funcs[i],
-                                 kwargs=self.scan_kwargs[i])
+            t = threading.Thread(
+                name=self.scan_funcs[i].__name__,
+                target=self.scan_funcs[i],
+                kwargs=self.scan_kwargs[i])
             t.daemon = True
             self.scan_threads.append(t)
             t.start()

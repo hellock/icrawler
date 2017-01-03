@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import logging
 from os import path
-from threading import Lock
+from threading import current_thread
 
-from icrawler.utils import DaemonThread, DupChecker
+from icrawler.utils import ThreadPool
 
 
-class Feeder(object):
+class Feeder(ThreadPool):
     """Base class for feeders.
 
-    Essentially a thread manager, in charge of feeding urls to parsers.
+    A thread pool for feeder threads, in charge of feeding urls to parsers.
 
     Attributes:
         url_queue: A queue storing page urls, connecting Feeder and Parser.
@@ -23,16 +22,12 @@ class Feeder(object):
         lock: A threading.Lock object.
     """
 
-    def __init__(self, url_queue, signal, session):
+    def __init__(self, thread_num, signal, session):
         """Init Feeder with some shared variables."""
-        self.url_queue = url_queue
-        self.global_signal = signal
+        super(Feeder, self).__init__(
+            thread_num=thread_num, in_queue=None, name='feeder')
+        self.signal = signal
         self.session = session
-        self._threads = []
-        self.set_logger()
-
-    def set_logger(self):
-        self.logger = logging.getLogger(__name__)
 
     def feed(self, **kwargs):
         """Feed urls.
@@ -41,73 +36,9 @@ class Feeder(object):
         """
         raise NotImplementedError
 
-    def add_url(self, url):
-        """Safely put an url into the url_queue.
-
-        Before putting the url into the queue, DupFilter.check_dup() method
-        will be called. If the url is duplicated, then it will be discarded.
-
-        Args:
-            url: The page url string.
-        """
-        if self.dup_checker.check(url):
-            self.logger.debug('duplicated url: %s', url)
-        else:
-            self.url_queue.put(url)
-
-    def create_threads(self, **kwargs):
-        """Create feeder threads.
-
-        Creates threads named "feeder-xx" counting from 01 to 99, all threads
-        are daemon threads.
-
-        Args:
-            **kwargs: Arguments to be passed to the thread_run() method.
-        """
-        self._threads = []
-        for i in range(self.thread_num):
-            t = DaemonThread(name='feeder-{:03d}'.format(i + 1),
-                             target=self.thread_run,
-                             kwargs=kwargs)
-            self._threads.append(t)
-
-    def thread_run(self, **kwargs):
-        """Target method of threads.
-
-        By default, this method just calls feed() method.
-
-        Args:
-            **kwargs: Arguments to be passed to the feed() method.
-        """
+    def worker_exec(self, **kwargs):
         self.feed(**kwargs)
-
-    def start(self, thread_num, dup_checker_size=0, **kwargs):
-        """Start all the feeder threads.
-
-        Args:
-            thread_num: An integer indicating the number of threads to be
-                        created and run.
-            dup_checker_size: An integer deciding the cache size of dup_checker.
-            **kwargs: Arguments to be passed to the create_threads() method.
-        """
-        self.dup_checker = DupChecker(dup_checker_size)
-        self.thread_num = thread_num
-        self.create_threads(**kwargs)
-        self.lock = Lock()
-        for t in self._threads:
-            t.start()
-            self.logger.info('thread %s started', t.name)
-
-    def is_alive(self):
-        """Check if the feeder has active threads.
-
-        Returns:
-            A boolean indicating if at least one thread is alive.
-        """
-        for t in self._threads:
-            if t.is_alive():
-                return True
-        return False
+        self.logger.info('thread {} exit'.format(current_thread().name))
 
     def __exit__(self):
         self.logger.info('all feeder threads exited')
@@ -135,7 +66,7 @@ class UrlListFeeder(Feeder):
                 end_idx = len(url_list)
             for i in range(offset, end_idx):
                 url = url_list[i]
-                self.add_url(url)
+                self.out_queue.put(url)
                 self.logger.debug('put url to url_queue: {}'.format(url))
 
 
@@ -154,5 +85,5 @@ class SimpleSEFeeder(Feeder):
         """
         for i in range(offset, offset + max_num, page_step):
             url = url_template.format(keyword, i)
-            self.add_url(url)
+            self.out_queue.put(url)
             self.logger.debug('put url to url_queue: {}'.format(url))

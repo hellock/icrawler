@@ -16,7 +16,8 @@ class Session(requests.Session):
         if proxy is None:
             return super(Session, self).get(url, **kwargs)
         try:
-            response = super(Session, self).get(url, proxies=proxy.format(),
+            response = super(Session, self).get(url,
+                                                proxies=proxy.format(),
                                                 **kwargs)
         except requests.exceptions.ConnectionError:
             self.proxy_pool.decrease_weight(proxy)
@@ -32,9 +33,8 @@ class Session(requests.Session):
         if proxy is None:
             return super(Session, self).get(url, data, json, **kwargs)
         try:
-            response = super(Session, self).post(url, data, json,
-                                                 proxies=proxy.format(),
-                                                 **kwargs)
+            response = super(Session, self).post(
+                url, data, json, proxies=proxy.format(), **kwargs)
         except requests.exceptions.ConnectionError:
             self.proxy_pool.decrease_weight(proxy)
             raise

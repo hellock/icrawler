@@ -4,46 +4,58 @@ import logging
 import sys
 from datetime import date
 
-from icrawler.builtin import GoogleImageCrawler
-from icrawler.builtin import BingImageCrawler
-from icrawler.builtin import BaiduImageCrawler
-from icrawler.builtin import FlickrImageCrawler
-from icrawler.builtin import GreedyImageCrawler
-from icrawler.builtin import UrlListCrawler
+from icrawler.builtin import (BaiduImageCrawler, BingImageCrawler,
+                              FlickrImageCrawler, GoogleImageCrawler,
+                              GreedyImageCrawler, UrlListCrawler)
 
 
 def test_google():
     google_crawler = GoogleImageCrawler(
-        'images/google', log_level=logging.INFO)
-    google_crawler.crawl('cloudy', 0, 10, date(2016, 2, 1),
-                         date(2016, 3, 15), 1, 1, 4)
+        downloader_threads=4,
+        storage={'root_dir': 'images/google'},
+        log_level=logging.INFO)
+    google_crawler.crawl(
+        'cloudy',
+        max_num=10,
+        date_min=date(2016, 2, 1),
+        date_max=date(2016, 3, 15))
 
 
 def test_bing():
-    bing_crawler = BingImageCrawler('images/bing')
-    bing_crawler.crawl('sunny', 0, 10, 1, 1, 4)
+    bing_crawler = BingImageCrawler(
+        storage={'root_dir': 'images/bing'}, log_level=logging.DEBUG)
+    bing_crawler.crawl('sunny', max_num=10)
 
 
 def test_baidu():
-    baidu_crawler = BaiduImageCrawler('images/baidu')
-    baidu_crawler.crawl('sunny', 0, 10, 1, 1, 4)
+    baidu_crawler = BaiduImageCrawler(
+        downloader_threads=4, storage={'root_dir': 'images/baidu'})
+    baidu_crawler.crawl('bird', max_num=10)
 
 
 def test_flickr():
-    flickr_crawler = FlickrImageCrawler('your_own_apikey',
-                                        'images/flickr')
-    flickr_crawler.crawl(max_num=10, downloader_thr_num=4, tags='family,child',
-                         tag_mode='all', group_id='68012010@N00')
+    flickr_crawler = FlickrImageCrawler(
+        apikey=None,
+        downloader_threads=4,
+        storage={'root_dir': 'images/flickr'})
+    flickr_crawler.crawl(
+        max_num=10,
+        tags='family,child',
+        tag_mode='all',
+        group_id='68012010@N00')
 
 
 def test_greedy():
-    greedy_crawler = GreedyImageCrawler('images/greedy/')
-    greedy_crawler.crawl('bbc.com/sport', 10, 4, 1, min_size=(200, 200))
+    greedy_crawler = GreedyImageCrawler(
+        parser_threads=4, storage={'root_dir': 'images/greedy'})
+    greedy_crawler.crawl(
+        'http://www.bbc.com/news', max_num=10, min_size=(100, 100))
 
 
 def test_urllist():
-    urllist_crawler = UrlListCrawler('images/urllist/')
-    urllist_crawler.crawl('test_data/test_list.txt', downloader_thr_num=3)
+    urllist_crawler = UrlListCrawler(
+        downloader_threads=3, storage={'root_dir': 'images/urllist'})
+    urllist_crawler.crawl('test_data/test_list.txt')
 
 
 def main():

@@ -2,29 +2,45 @@
 
 import datetime
 import json
-import logging
 import math
+import os
+
 from six.moves.urllib.parse import urlencode
 
-from .. import Feeder
-from .. import Parser
-from .. import Crawler
+from icrawler import Crawler, Feeder, Parser, ImageDownloader
 
 
 class FlickrFeeder(Feeder):
 
-    def feed(self, apikey, max_num=4000, page=1, user_id=None, tags=None,
-             tag_mode='any', text=None, min_upload_date=None,
-             max_upload_date=None, group_id=None, extras=None, per_page=100):
+    def feed(self,
+             apikey=None,
+             max_num=4000,
+             page=1,
+             user_id=None,
+             tags=None,
+             tag_mode='any',
+             text=None,
+             min_upload_date=None,
+             max_upload_date=None,
+             group_id=None,
+             extras=None,
+             per_page=100):
         if apikey is None:
-            return
+            apikey = os.getenv('FLICKR_APIKEY')
+            if not apikey:
+                self.logger.error('apikey is not specified')
+                return
         if max_num > 4000:
             max_num = 4000
             self.logger.warning(
                 'max_num exceeds 4000, set it to 4000 automatically.')
         base_url = 'https://api.flickr.com/services/rest/?'
-        params = {'method': 'flickr.photos.search', 'api_key': apikey,
-                  'format': 'json', 'nojsoncallback': 1}
+        params = {
+            'method': 'flickr.photos.search',
+            'api_key': apikey,
+            'format': 'json',
+            'nojsoncallback': 1
+        }
         if user_id is not None:
             params['user_id'] = user_id
         if tags is not None:
@@ -57,7 +73,7 @@ class FlickrFeeder(Feeder):
         page_max = int(math.ceil(max_num / per_page))
         for i in range(page, page + page_max):
             complete_url = '{}&page={}'.format(url, i)
-            self.put_url_into_queue(complete_url)
+            self.output(complete_url)
             self.logger.debug('put url to url_queue: {}'.format(complete_url))
 
 
@@ -73,24 +89,26 @@ class FlickrParser(Parser):
             server_id = photo['server']
             photo_id = photo['id']
             secret = photo['secret']
-            img_url = 'https://farm{0}.staticflickr.com/{1}/{2}_{3}.jpg'.format(
+            img_url = 'https://farm{}.staticflickr.com/{}/{}_{}.jpg'.format(
                 farm_id, server_id, photo_id, secret)
-            self.put_task_into_queue(dict(img_url=img_url, meta=photo))
+            yield dict(file_url=img_url, meta=photo)
 
 
 class FlickrImageCrawler(Crawler):
 
-    def __init__(self, apikey, img_dir='images', log_level=logging.INFO):
+    def __init__(self, apikey=None, *args, **kwargs):
         self.apikey = apikey
         super(FlickrImageCrawler, self).__init__(
-            img_dir, feeder_cls=FlickrFeeder,
-            parser_cls=FlickrParser, log_level=log_level)
+            feeder_cls=FlickrFeeder,
+            parser_cls=FlickrParser,
+            downloader_cls=ImageDownloader,
+            *args,
+            **kwargs)
 
-    def crawl(self, max_num=1000, feeder_thr_num=1, parser_thr_num=1,
-              downloader_thr_num=1, save_mode='overwrite', **kwargs):
+    def crawl(self, max_num=1000, file_idx_offset=0, **kwargs):
         kwargs['apikey'] = self.apikey
         kwargs['max_num'] = max_num
         super(FlickrImageCrawler, self).crawl(
-            feeder_thr_num, parser_thr_num, downloader_thr_num,
             feeder_kwargs=kwargs,
-            downloader_kwargs=dict(max_num=max_num, save_mode=save_mode))
+            downloader_kwargs=dict(
+                max_num=max_num, file_idx_offset=file_idx_offset))

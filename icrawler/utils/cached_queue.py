@@ -1,28 +1,18 @@
 import json
 from collections import OrderedDict
-from threading import Thread
 
 from six.moves.queue import Queue
-
-
-class DaemonThread(Thread):
-    """A wrapper for daemon thread
-
-    Since Thread class in Python 2.x does not support the `daemon` argument when
-    initialing, this wrapper just add `daemon=True` by default.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(DaemonThread, self).__init__(*args, **kwargs)
-        self.daemon = True
 
 
 class CachedQueue(Queue):
     """Queue with cache"""
 
-    def __init__(self, cache_capacity=0, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(CachedQueue, self).__init__(*args, **kwargs)
-        self.cache_capacity = cache_capacity
+        if 'cache_capacity' in kwargs:
+            self.cache_capacity = kwargs['cache_capacity']
+        else:
+            self.cache_capacity = 0
         self._cache = OrderedDict()
 
     def check_dup(self, item):
@@ -41,14 +31,18 @@ class CachedQueue(Queue):
         if hashable_item in self._cache:
             return True
         else:
-            if self.cache_capacity > 0 and len(self._cache) >= self.cache_capacity:
+            if self.cache_capacity > 0 and len(
+                    self._cache) >= self.cache_capacity:
                 self._cache.popitem(False)
             self._cache[hashable_item] = 1
             return False
 
-    def put(self, item, dup_callback=None):
-        if self.check_dup(item):
-            super(CachedQueue, self).put(item)
+    def put(self, item, block=True, timeout=None, dup_callback=None):
+        if not self.check_dup(item):
+            super(CachedQueue, self).put(item, block, timeout)
         else:
             if dup_callback:
                 dup_callback(item)
+
+    def put_nowait(self, item, dup_callback=None):
+        self.put(item, block=False, dup_callback=dup_callback)

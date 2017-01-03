@@ -1,36 +1,29 @@
 # -*- coding: utf-8 -*-
 
-import logging
 import re
+import time
 
 from bs4 import BeautifulSoup
 from six.moves.urllib.parse import urljoin, urlsplit
 
-from icrawler import Crawler, Feeder, Parser
+from icrawler import Crawler, Feeder, Parser, ImageDownloader
 
 
 class GreedyFeeder(Feeder):
 
     def feed(self, domains):
-        if isinstance(domains, str):
-            self.domains = [domains]
-        elif isinstance(domains, list):
-            self.domains = domains
-        else:
-            self.error('domains must be a string or a list')
-        for domain in self.domains:
-            self.put_url_into_queue('http://' +
-                                    urlsplit(domain).geturl().rstrip('/'))
-        while not self.global_signal.get('reach_max_num'):
-            pass
+        for domain in domains:
+            self.output(domain)
+        while not self.signal.get('reach_max_num'):
+            time.sleep(1)
 
 
 class GreedyParser(Parser):
 
-    def __init__(self, url_queue, task_queue, signal, session):
-        self.pattern = re.compile(r'http(.*)\.(jpg|jpeg|png|bmp|gif|tiff|ico)')
-        super(GreedyParser, self).__init__(url_queue, task_queue, signal,
-                                           session)
+    def __init__(self, *args, **kwargs):
+        self.pattern = re.compile(
+            r'(http|\/\/)(.*)\.(jpg|jpeg|png|bmp|gif|tiff)')
+        super(GreedyParser, self).__init__(*args, **kwargs)
 
     def is_in_domain(self, url, domains):
         for domain in domains:
@@ -38,12 +31,16 @@ class GreedyParser(Parser):
                 return True
         return False
 
-    def parse(self, response, feeder):
+    def parse(self, response, domains):
         soup = BeautifulSoup(response.content, 'lxml')
         tags = soup.find_all('img', src=True)
         for tag in tags:
             if re.match(self.pattern, tag['src']):
-                self.put_task_into_queue(dict(img_url=tag['src']))
+                if tag['src'].startswith('//'):
+                    img_url = 'http:' + tag['src']
+                else:
+                    img_url = tag['src']
+                yield dict(file_url=img_url)
         tags = soup.find_all(href=True)
         base_url = '{0.scheme}://{0.netloc}'.format(urlsplit(response.url))
         for tag in tags:
@@ -61,13 +58,14 @@ class GreedyParser(Parser):
                 href = urljoin(base_url, href.rstrip('/'))
             # if it is a image url
             if re.match(self.pattern, href):
-                self.put_task_into_queue(dict(img_url=href))
+                yield dict(file_url=href)
             else:
                 # discard urls such as 'www.example.com/file.zip'
                 # TODO: deal with '#' in the urls
                 tmp = href.split('/')[-1].split('.')
                 if len(tmp) > 1 and tmp[-1] not in [
-                        'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp']:
+                        'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp'
+                ]:
                     continue
                 # discard urls such as 'javascript:void(0)'
                 elif href.find('javascript', 0, 10) == 0:
@@ -76,22 +74,39 @@ class GreedyParser(Parser):
                 elif urlsplit(href).scheme not in ['http', 'https', 'ftp']:
                     continue
                 # urls of the same domain
-                elif self.is_in_domain(href, feeder.domains):
-                    feeder.add_url(href)
+                elif self.is_in_domain(href, domains):
+                    yield href
 
 
 class GreedyImageCrawler(Crawler):
 
-    def __init__(self, img_dir='images', log_level=logging.INFO):
+    def __init__(self, *args, **kwargs):
         super(GreedyImageCrawler, self).__init__(
-            img_dir, feeder_cls=GreedyFeeder,
-            parser_cls=GreedyParser, log_level=log_level)
+            feeder_cls=GreedyFeeder,
+            parser_cls=GreedyParser,
+            downloader_cls=ImageDownloader,
+            *args,
+            **kwargs)
 
-    def crawl(self, domains, max_num=0, parser_thr_num=1, downloader_thr_num=1,
-              min_size=None, max_size=None, save_mode='overwrite'):
+    def crawl(self,
+              domains,
+              max_num=0,
+              min_size=None,
+              max_size=None,
+              file_idx_offset=0):
+        if isinstance(domains, str):
+            domains = [domains]
+        elif not isinstance(domains, list):
+            self.logger.error('domains must be a string or a list')
+        for i in range(len(domains)):
+            if not domains[i].startswith('http'):
+                domains[i] = 'http://' + domains[i]
+            domains[i] = domains[i].rstrip('/')
         super(GreedyImageCrawler, self).crawl(
-            1, parser_thr_num, downloader_thr_num,
             feeder_kwargs={'domains': domains},
-            parser_kwargs={'feeder': self.feeder},
-            downloader_kwargs=dict(max_num=max_num, min_size=min_size,
-                                   max_size=max_size, save_mode=save_mode))
+            parser_kwargs={'domains': domains},
+            downloader_kwargs=dict(
+                max_num=max_num,
+                min_size=min_size,
+                max_size=max_size,
+                file_idx_offset=file_idx_offset))
