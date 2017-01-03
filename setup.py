@@ -31,7 +31,11 @@ setup(
     author_email='chenkaidev@gmail.com',
     license='MIT',
     install_requires=[
-        'beautifulsoup4>=4.4.1', 'lxml', 'Pillow', 'requests>=2.9.1',
+        'beautifulsoup4>=4.4.1',
+        'lxml',
+        'Pillow',
+        'requests>=2.9.1',
         'six>=1.10.0'
     ],
-    zip_safe=False)
+    zip_safe=False
+)  # yapf: disable
