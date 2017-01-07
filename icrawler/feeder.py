@@ -9,17 +9,16 @@ from icrawler.utils import ThreadPool
 class Feeder(ThreadPool):
     """Base class for feeders.
 
-    A thread pool for feeder threads, in charge of feeding urls to parsers.
+    A thread pool of feeder threads, in charge of feeding urls to parsers.
 
     Attributes:
-        url_queue: A queue storing page urls, connecting Feeder and Parser.
-        global_signal: A Signal object for cross-module communication.
-        session: A requests.Session object.
-        logger: A logging.Logger object used for logging.
-        dup_checker: A DupChecker object used for filtering urls.
-        _threads: A list storing all the threading.Thread objects of the feeder.
-        thread_num: An integer indicating the number of threads.
-        lock: A threading.Lock object.
+        thread_num (int): An integer indicating the number of threads.
+        global_signal (Signal): A :class:`Signal` object for communication among all threads.
+        out_queue (Queue): A queue connected with parsers' inputs, storing page urls.
+        session (Session): A session object.
+        logger (Logger): A logging.Logger object used for logging.
+        _threads (list): A list storing all the threading.Thread objects of the feeder.
+        lock (Lock): A :class:`Lock` instance shared by all feeder threads.
     """
 
     def __init__(self, thread_num, signal, session):
@@ -37,6 +36,7 @@ class Feeder(ThreadPool):
         raise NotImplementedError
 
     def worker_exec(self, **kwargs):
+        """Target function of workers"""
         self.feed(**kwargs)
         self.logger.info('thread {} exit'.format(current_thread().name))
 

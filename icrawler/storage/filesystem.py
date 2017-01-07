@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
+
 from os import listdir, makedirs, path
 
 from icrawler.storage import BaseStorage
 
 
 class FileSystem(BaseStorage):
+    """Use filesystem as storage backend.
+
+    The id is filename and data is stored as text files or binary files.
+    """
 
     def __init__(self, root_dir):
         self.root_dir = root_dir

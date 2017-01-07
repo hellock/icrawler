@@ -5,11 +5,11 @@
 .vscode/
 icrawler/.vscode/
 
+# docs
+docs/_build
+
 # Image folder
 images
-
-# doc folder (TODO)
-docs/
 
 # Python cache folder
 __pycache__

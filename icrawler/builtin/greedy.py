@@ -64,7 +64,7 @@ class GreedyParser(Parser):
                 # TODO: deal with '#' in the urls
                 tmp = href.split('/')[-1].split('.')
                 if len(tmp) > 1 and tmp[-1] not in [
-                        'html', 'html', 'shtml', 'shtm', 'php', 'jsp', 'asp'
+                        'html', 'shtml', 'shtm', 'php', 'jsp', 'asp'
                 ]:
                     continue
                 # discard urls such as 'javascript:void(0)'

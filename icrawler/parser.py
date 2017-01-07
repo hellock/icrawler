@@ -13,13 +13,10 @@ from icrawler.utils import ThreadPool
 class Parser(ThreadPool):
     """Base class for parses.
 
-    Essentially a thread manager, in charge of downloading pages, parsing pages,
-    extracting image urls and put them into task_queue.
+    A thread pool of parser threads, in charge of downloading and parsing pages,
+    extracting file urls and put them into the input queue of downloader.
 
     Attributes:
-        url_queue: A queue storing page urls, connecting Feeder and Parser.
-        task_queue: A queue storing image downloading tasks, connecting
-                    Parser and Downloader.
         global_signal: A Signal object for cross-module communication.
         session: A requests.Session object.
         logger: A logging.Logger object used for logging.
@@ -38,8 +35,11 @@ class Parser(ThreadPool):
         """Parse a page and extract image urls, then put it into task_queue.
 
         This method should be overridden by users.
-        example: task = {}
-                 self.out_queue.put(task)
+
+        :Example:
+
+        >>> task = {}
+        >>> self.output(task)
         """
         raise NotImplementedError
 

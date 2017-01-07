@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Crawler base class"""
 
 import logging
 import sys
@@ -13,20 +14,16 @@ from icrawler.utils import ProxyPool, Session, Signal
 
 
 class Crawler(object):
-    """Base class for Crawlers.
+    """Base class for crawlers
 
     Attributes:
-        save_dir: The root folder where images will be saved.
-        url_queue: A queue storing page urls, connecting Feeder and Parser.
-        task_queue: A queue storing image downloading tasks, connecting
-                    Parser and Downloader.
-        session: A requests.Session object.
-        feeder: A Feeder object.
-        parser: A Parser object.
-        downloader: A Downloader object.
-        signal: A Signal object shared by feeder, parser and downloader, used
-                for cross-module communication.
-        logger: A logging.Logger object used for logging.
+        session (Session): A Session object.
+        feeder (Feeder): A Feeder object.
+        parser (Parser): A Parser object.
+        downloader (Downloader): A Downloader object.
+        signal (Signal): A Signal object shared by all components,
+                         used for communication among threads
+        logger (Logger): A Logger object used for logging
     """
 
     def __init__(self,
@@ -39,17 +36,17 @@ class Crawler(object):
                  storage={'backend': 'FileSystem',
                           'root_dir': 'images'},
                  log_level=logging.INFO):
-        """Init Crawler with class names and other arguments.
+        """Init components with class names and other arguments.
 
         Args:
-            img_dir: The root folder where images will be saved.
-            feeder_cls: Class of the feeder used in the crawler.
-            parser_cls: Class of the parser used in the crawler.
-            downloader_cls: Class of the downloader used in the crawler.
-            feeder_threads: number of feeder threads.
-            parser_threads: number of parser threads.
-            downloader_threads: number of downloader threads.
-            log_level: logging level for the logger.
+            feeder_cls: class of feeder
+            parser_cls: class of parser
+            downloader_cls: class of downloader.
+            feeder_threads: thread number used by feeder
+            parser_threads: thread number used by parser
+            downloader_threads: thread number used by downloader
+            storage (dict or BaseStorage): storage backend configuration
+            log_level: logging level for the logger
         """
 
         # set logger
@@ -71,9 +68,10 @@ class Crawler(object):
         self.feeder.connect(self.parser).connect(self.downloader)
 
     def init_signal(self):
-        """Init signal.
+        """Init signal
 
-        3 signals are added: feeder_exited, parser_exited and reach_max_num.
+        3 signals are added: ``feeder_exited``, ``parser_exited`` and
+        ``reach_max_num``.
         """
         self.signal = Signal()
         self.signal.set(feeder_exited=False,
@@ -81,6 +79,14 @@ class Crawler(object):
                         reach_max_num=False)
 
     def set_storage(self, storage):
+        """Set storage backend for downloader
+
+        For full list of storage backend supported, please see :mod:`storage`.
+
+        Args:
+            storage (dict or BaseStorage): storage backend configuration or instance
+
+        """
         if isinstance(storage, BaseStorage):
             self.storage = storage
         elif isinstance(storage, dict):
@@ -104,7 +110,10 @@ class Crawler(object):
     def set_proxy_pool(self, pool=None):
         """Construct a proxy pool
 
-        By default no proxy is scanned or loaded.
+        By default no proxy is used.
+
+        Args:
+            pool (ProxyPool, optional): a :obj:`ProxyPool` object
         """
         self.proxy_pool = ProxyPool() if pool is None else pool
 
@@ -138,12 +147,16 @@ class Crawler(object):
         logging.getLogger('requests').setLevel(logging.WARNING)
 
     def crawl(self, feeder_kwargs={}, parser_kwargs={}, downloader_kwargs={}):
-        """Start crawling.
+        """Start crawling
+
+        This method will start feeder, parser and download and wait
+        until all threads exit.
 
         Args:
-            feeder_kwargs: Arguments to be passed to feeder.start()
-            parser_kwargs: Arguments to be passed to parser.start()
-            downloader_kwargs: Arguments to be passed to downloader.start()
+            feeder_kwargs (dict): Arguments to be passed to ``feeder.start()``
+            parser_kwargs (dict): Arguments to be passed to ``parser.start()``
+            downloader_kwargs (dict): Arguments to be passed to
+                ``downloader.start()``
         """
         self.signal.reset()
         self.logger.info('start crawling...')
