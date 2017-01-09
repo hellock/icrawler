@@ -3,8 +3,10 @@
 from abc import ABCMeta, abstractmethod
 
 
-class BaseStorage(metaclass=ABCMeta):
+class BaseStorage(object):
     """Base class of backend storage"""
+
+    __metaclass__ = ABCMeta
 
     @abstractmethod
     def write(self, id, data):
