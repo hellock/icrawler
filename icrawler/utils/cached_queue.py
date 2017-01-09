@@ -4,7 +4,7 @@ from collections import OrderedDict
 from six.moves.queue import Queue
 
 
-class CachedQueue(Queue):
+class CachedQueue(Queue, object):
     """Queue with cache"""
 
     def __init__(self, *args, **kwargs):
