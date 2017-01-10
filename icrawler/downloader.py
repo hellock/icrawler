@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
 from threading import current_thread
 
 from PIL import Image
