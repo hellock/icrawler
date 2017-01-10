@@ -14,14 +14,13 @@ from icrawler.utils import ThreadPool
 class Downloader(ThreadPool):
     """Base class for downloaders.
 
-    Essentially a thread manager, in charge of downloading images and save
+    Essentially a thread pool, in charge of downloading files and saving
     them in the corresponding paths.
 
     Attributes:
-        img_dir: The root folder where images will be saved.
         task_queue: A queue storing image downloading tasks, connecting
                     Parser and Downloader.
-        global_signal: A Signal object for cross-module communication.
+        signal: A Signal object for cross-module communication.
         session: A requests.Session object.
         logger: A logging.Logger object used for logging.
         threads: A list storing all the threading.Thread objects of the parser.
@@ -47,9 +46,9 @@ class Downloader(ThreadPool):
         """Set offset of file index.
 
         Args:
-            file_idx_offset: if set to an integer, the filename will start from
-                             `start_idx` + 1.
-                             if set to `auto`, the filename will be exist_max + 1;
+            file_idx_offset: If set to an integer, the filename will start from
+                `start_idx` + 1. If set to `auto`, the filename will be
+                exist_max + 1.
         """
         if isinstance(file_idx_offset, int):
             self.file_idx_offset = file_idx_offset
