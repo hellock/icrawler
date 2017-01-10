@@ -209,7 +209,6 @@ class ImageDownloader(Downloader):
         return sz1[0] > sz2[0] and sz1[1] > sz2[1]
 
     def keep_file(self, response, min_size=None, max_size=None):
-        print(min_size)
         try:
             img = Image.open(BytesIO(response.content))
         except (IOError, OSError):
@@ -228,19 +227,3 @@ class ImageDownloader(Downloader):
                     **kwargs):
         super(ImageDownloader, self).worker_exec(
             max_num, default_ext, queue_timeout, req_timeout, **kwargs)
-
-    # def download(self,
-    #              task,
-    #              default_ext='jpg',
-    #              timeout=5,
-    #              max_retry=3,
-    #              min_size=None,
-    #              max_size=None):
-    #     print(task, default_ext, timeout)
-    #     super(ImageDownloader, self).download(
-    #         task,
-    #         default_ext,
-    #         timeout,
-    #         max_retry,
-    #         min_size=min_size,
-    #         max_size=max_size)
