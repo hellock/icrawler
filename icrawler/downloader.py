@@ -11,20 +11,21 @@ from icrawler.utils import ThreadPool
 
 
 class Downloader(ThreadPool):
-    """Base class for downloaders.
+    """Base class for downloader.
 
-    Essentially a thread pool, in charge of downloading files and saving
-    them in the corresponding paths.
+    A thread pool of downloader threads, in charge of downloading files and
+    saving them in the corresponding paths.
 
     Attributes:
-        task_queue: A queue storing image downloading tasks, connecting
-                    Parser and Downloader.
-        signal: A Signal object for cross-module communication.
-        session: A requests.Session object.
+        task_queue (CachedQueue): A queue storing image downloading tasks,
+            connecting :class:`Parser` and :class:`Downloader`.
+        signal (Signal): A Signal object shared by all components.
+        session (Session): A session object.
         logger: A logging.Logger object used for logging.
-        threads: A list storing all the threading.Thread objects of the parser.
-        thread_num: An integer indicating the number of threads.
-        lock: A threading.Lock object.
+        workers (list): A list of downloader threads.
+        thread_num (int): The number of downloader threads.
+        lock (Lock): A threading.Lock object.
+        storage (BaseStorage): storage backend.
     """
 
     def __init__(self, thread_num, signal, session, storage):
@@ -45,9 +46,10 @@ class Downloader(ThreadPool):
         """Set offset of file index.
 
         Args:
-            file_idx_offset: If set to an integer, the filename will start from
-                `start_idx` + 1. If set to `auto`, the filename will be
-                exist_max + 1.
+            file_idx_offset: It can be either an integer or 'auto'. If set
+                to an integer, the filename will start from
+                ``file_idx_offset`` + 1. If set to ``'auto'``, the filename
+                will start from existing max file index plus 1.
         """
         if isinstance(file_idx_offset, int):
             self.file_idx_offset = file_idx_offset
@@ -62,10 +64,10 @@ class Downloader(ThreadPool):
         The default strategy is to use an increasing 6-digit number as
         the filename. You can override this method if you want to set custom
         naming rules. The file extension is kept if it can be obtained from
-        the url, otherwise `default_ext` is used as extension.
+        the url, otherwise ``default_ext`` is used as extension.
 
         Args:
-            task: The task dict got from task_queue.
+            task (dict): The task dict got from ``task_queue``.
 
         Output:
             Filename with extension.
@@ -79,7 +81,7 @@ class Downloader(ThreadPool):
         """Check if downloaded images reached max num.
 
         Returns:
-            A boolean indicating if downloaded images reached max num.
+            bool: if downloaded images reached max num.
         """
         if self.signal.get('reach_max_num'):
             return True
@@ -95,10 +97,9 @@ class Downloader(ThreadPool):
         """Download the image and save it to the corresponding path.
 
         Args:
-            task: The task dict got from task_queue.
-            timeout: An integer indicating the timeout of making
-                             requests for downloading images.
-            max_retry: An integer setting the max retry times if request fails.
+            task (dict): The task dict got from ``task_queue``.
+            timeout (int): Timeout of making requests for downloading images.
+            max_retry (int): the max retry times if the request fails.
             **kwargs: reserved arguments for overriding.
         """
         file_url = task['file_url']
@@ -133,11 +134,11 @@ class Downloader(ThreadPool):
         """Process some meta data of the images.
 
         This method should be overridden by users if wanting to do more things
-        other than just downloading the image, such as save annotations.
+        other than just downloading the image, such as saving annotations.
 
         Args:
-            task: The task dict got from task_queue. This method will make
-                  use of fields other than 'img_url' in the dict.
+            task (dict): The task dict got from task_queue. This method will
+                make use of fields other than ``file_url`` in the dict.
         """
         pass
 
@@ -145,7 +146,7 @@ class Downloader(ThreadPool):
         self.clear_status()
         self.set_file_idx_offset(file_idx_offset)
         self.init_workers(*args, **kwargs)
-        for worker in self._workers:
+        for worker in self.workers:
             worker.start()
             self.logger.debug('thread %s started', worker.name)
 
@@ -155,19 +156,18 @@ class Downloader(ThreadPool):
                     queue_timeout=5,
                     req_timeout=5,
                     **kwargs):
-        """Target method of threads.
+        """Target method of workers.
 
-        Get task from task_queue and then download files and process meta data.
-        A downloader thread will exit in either of the following cases:
+        Get task from ``task_queue`` and then download files and process meta
+        data. A downloader thread will exit in either of the following cases:
+
         1. All parser threads have exited and the task_queue is empty.
         2. Downloaded image number has reached required number(max_num).
 
         Args:
-            queue_timeout: An integer indicating the timeout of getting
-                           tasks from task_queue.
-            req_timeout: An integer indicating the timeout of making
-                              requests for downloading pages.
-            **kwargs: Arguments to be passed to the download() method.
+            queue_timeout (int): Timeout of getting tasks from ``task_queue``.
+            req_timeout (int): Timeout of making requests for downloading pages.
+            **kwargs: Arguments passed to the :func:`download` method.
         """
         self.max_num = max_num
         while True:
@@ -199,6 +199,8 @@ class Downloader(ThreadPool):
 
 
 class ImageDownloader(Downloader):
+    """Downloader specified for images.
+    """
 
     def _size_lt(self, sz1, sz2):
         return sz1[0] < sz2[0] and sz1[1] < sz2[1]
@@ -207,6 +209,17 @@ class ImageDownloader(Downloader):
         return sz1[0] > sz2[0] and sz1[1] > sz2[1]
 
     def keep_file(self, response, min_size=None, max_size=None):
+        """Decide whether to keep the image
+
+        Compare image size with ``min_size`` and ``max_size`` to decide.
+
+        Args:
+            response (Response): response of requests.
+            min_size (tuple or None): minimum size of required images.
+            max_size (tuple or None): maximum size of required images.
+        Returns:
+            bool: whether to keep the image.
+        """
         try:
             img = Image.open(BytesIO(response.content))
         except (IOError, OSError):

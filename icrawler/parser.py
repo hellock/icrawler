@@ -11,7 +11,7 @@ from icrawler.utils import ThreadPool
 
 
 class Parser(ThreadPool):
-    """Base class for parses.
+    """Base class for parser.
 
     A thread pool of parser threads, in charge of downloading and parsing pages,
     extracting file urls and put them into the input queue of downloader.
@@ -48,20 +48,19 @@ class Parser(ThreadPool):
                     req_timeout=5,
                     max_retry=3,
                     **kwargs):
-        """Target method of threads.
+        """Target method of workers.
 
-        Firstly download the page and then call the parse() method. A parser
-        thread will exit in either of the following cases:
-        1. All feeder threads have exited and the url_queue is empty.
-        2. Downloaded image number has reached required number(max_num).
+        Firstly download the page and then call the :func:`parse` method.
+        A parser thread will exit in either of the following cases:
+
+        1. All feeder threads have exited and the ``url_queue`` is empty.
+        2. Downloaded image number has reached required number.
 
         Args:
-            queue_timeout: An integer indicating the timeout of getting
-                           urls from url_queue.
-            req_timeout: An integer indicating the timeout of making
-                              requests for downloading pages.
-            max_retry: An integer setting the max retry times if request fails.
-            **kwargs: Arguments to be passed to the feed() method.
+            queue_timeout (int): Timeout of getting urls from ``url_queue``.
+            req_timeout (int): Timeout of making requests for downloading pages.
+            max_retry (int): Max retry times if the request fails.
+            **kwargs: Arguments to be passed to the :func:`parse` method.
         """
         while True:
             if self.signal.get('reach_max_num'):

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import logging
 import random
@@ -15,10 +17,10 @@ class Proxy(object):
 
     Attributes:
         addr (str): A string with IP and port, for example '123.123.123.123:8080'
-        protocol (str): Either 'http' or 'https', indicating whether the proxy supports https
-        weight (float, optional): A float point number indicating the probability of being
-                selected, the weight is based on the connection time and stability
-        last_checked (time, optional): A UNIX timestamp indicating when the proxy was checked
+        protocol (str): 'http' or 'https'
+        weight (float): A float point number indicating the probability of being
+            selected, the weight is based on the connection time and stability
+        last_checked (time): A UNIX timestamp indicating when the proxy was checked
     """
 
     def __init__(self,
@@ -38,7 +40,7 @@ class Proxy(object):
         """Return the proxy compatible with requests.Session parameters
 
         Returns:
-            dict: A dictionary like {'http': '123.123.123.123:8080'}
+            dict: A dict like {'http': '123.123.123.123:8080'}
         """
         return {self.protocol: self.addr}
 
@@ -46,7 +48,7 @@ class Proxy(object):
         """convert detailed proxy info into a dict
 
         Returns:
-            dict: A dict with four keys, ``addr``, ``protocol``,
+            dict: A dict with four keys: ``addr``, ``protocol``,
                   ``weight`` and ``last_checked``
         """
         return dict(

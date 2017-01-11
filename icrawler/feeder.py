@@ -7,17 +7,20 @@ from icrawler.utils import ThreadPool
 
 
 class Feeder(ThreadPool):
-    """Base class for feeders.
+    """Base class for feeder.
 
     A thread pool of feeder threads, in charge of feeding urls to parsers.
 
     Attributes:
         thread_num (int): An integer indicating the number of threads.
-        global_signal (Signal): A :class:`Signal` object for communication among all threads.
-        out_queue (Queue): A queue connected with parsers' inputs, storing page urls.
+        global_signal (Signal): A :class:`Signal` object for communication
+            among all threads.
+        out_queue (Queue): A queue connected with parsers' inputs,
+            storing page urls.
         session (Session): A session object.
         logger (Logger): A logging.Logger object used for logging.
-        _threads (list): A list storing all the threading.Thread objects of the feeder.
+        workers (list): A list storing all the threading.Thread objects
+            of the feeder.
         lock (Lock): A :class:`Lock` instance shared by all feeder threads.
     """
 
