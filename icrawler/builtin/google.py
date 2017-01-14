@@ -36,13 +36,14 @@ class GoogleParser(Parser):
 
 class GoogleImageCrawler(Crawler):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self,
+                 feeder_cls=GoogleFeeder,
+                 parser_cls=GoogleParser,
+                 downloader_cls=ImageDownloader,
+                 *args,
+                 **kwargs):
         super(GoogleImageCrawler, self).__init__(
-            feeder_cls=GoogleFeeder,
-            parser_cls=GoogleParser,
-            downloader_cls=ImageDownloader,
-            *args,
-            **kwargs)
+            feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
 
     def crawl(self,
               keyword,

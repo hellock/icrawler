@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
 import re
 
 from bs4 import BeautifulSoup
@@ -25,13 +24,14 @@ class BingParser(Parser):
 
 class BingImageCrawler(Crawler):
 
-    def __init__(self, *args, **kwargs):
-        super(BingImageCrawler, self).__init__(
-            feeder_cls=SimpleSEFeeder,
-            parser_cls=BingParser,
-            downloader_cls=ImageDownloader,
-            *args,
-            **kwargs)
+    def __init__(self,
+                 feeder_cls=SimpleSEFeeder,
+                 parser_cls=BingParser,
+                 downloader_cls=ImageDownloader,
+                 *args,
+                 **kwargs):
+        super(BingImageCrawler, self).__init__(feeder_cls, parser_cls,
+                                               downloader_cls, *args, **kwargs)
 
     def crawl(self,
               keyword,
