@@ -18,7 +18,10 @@ class FileSystem(BaseStorage):
         filepath = path.join(self.root_dir, id)
         folder = path.dirname(filepath)
         if not path.isdir(folder):
-            makedirs(folder)
+            try:
+                makedirs(folder)
+            except:
+                pass
         mode = 'w' if isinstance(data, str) else 'wb'
         with open(filepath, mode) as fout:
             fout.write(data)

@@ -96,14 +96,16 @@ class FlickrParser(Parser):
 
 class FlickrImageCrawler(Crawler):
 
-    def __init__(self, apikey=None, *args, **kwargs):
+    def __init__(self,
+                 apikey=None,
+                 feeder_cls=FlickrFeeder,
+                 parser_cls=FlickrParser,
+                 downloader_cls=ImageDownloader,
+                 *args,
+                 **kwargs):
         self.apikey = apikey
         super(FlickrImageCrawler, self).__init__(
-            feeder_cls=FlickrFeeder,
-            parser_cls=FlickrParser,
-            downloader_cls=ImageDownloader,
-            *args,
-            **kwargs)
+            feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
 
     def crawl(self, max_num=1000, file_idx_offset=0, **kwargs):
         kwargs['apikey'] = self.apikey

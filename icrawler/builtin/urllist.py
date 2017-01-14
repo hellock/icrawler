@@ -35,13 +35,14 @@ class PseudoParser(Parser):
 
 class UrlListCrawler(Crawler):
 
-    def __init__(self, *args, **kwargs):
-        super(UrlListCrawler, self).__init__(
-            feeder_cls=UrlListFeeder,
-            parser_cls=PseudoParser,
-            downloader_cls=ImageDownloader,
-            *args,
-            **kwargs)
+    def __init__(self,
+                 feeder_cls=UrlListFeeder,
+                 parser_cls=PseudoParser,
+                 downloader_cls=ImageDownloader,
+                 *args,
+                 **kwargs):
+        super(UrlListCrawler, self).__init__(feeder_cls, parser_cls,
+                                             downloader_cls, *args, **kwargs)
 
     def crawl(self, url_list, max_num=1000, file_idx_offset=0):
         feeder_kwargs = dict(url_list=url_list)
