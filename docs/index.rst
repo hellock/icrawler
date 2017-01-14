@@ -3,6 +3,12 @@ Welcome to icrawler
 
 .. include:: ../README.rst
 
+
+.. toctree::
+   :hidden:
+
+   Overview <self>
+
 Documentation index
 ===================
 
