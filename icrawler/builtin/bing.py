@@ -12,8 +12,8 @@ class BingParser(Parser):
 
     def parse(self, response):
         soup = BeautifulSoup(response.content, 'lxml')
-        image_divs = soup.find_all('div', class_='dg_u')
-        pattern = re.compile(r'imgurl:\"(.*?)\.jpg')
+        image_divs = soup.find_all('div', class_='imgpt')
+        pattern = re.compile(r'murl\":\"(.*?)\.jpg')
         for div in image_divs:
             href_str = html_parser.HTMLParser().unescape(div.a['m'])
             match = pattern.search(href_str)
