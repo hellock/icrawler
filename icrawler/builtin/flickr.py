@@ -12,20 +12,7 @@ from icrawler import Crawler, Feeder, Parser, ImageDownloader
 
 class FlickrFeeder(Feeder):
 
-    def feed(self,
-             apikey=None,
-             max_num=4000,
-             page=1,
-             user_id=None,
-             tags=None,
-             tag_mode='any',
-             text=None,
-             min_upload_date=None,
-             max_upload_date=None,
-             group_id=None,
-             sort=None,
-             extras=None,
-             per_page=100):
+    def feed(self, apikey=None, max_num=4000, **kwargs):
         if apikey is None:
             apikey = os.getenv('FLICKR_APIKEY')
             if not apikey:
@@ -42,37 +29,29 @@ class FlickrFeeder(Feeder):
             'format': 'json',
             'nojsoncallback': 1
         }
-        if user_id is not None:
-            params['user_id'] = user_id
-        if tags is not None:
-            params['tags'] = tags
-            params['tag_mode'] = tag_mode
-        if text is not None:
-            params['text'] = text
-        if min_upload_date is not None:
-            if isinstance(min_upload_date, datetime.date):
-                params['min_upload_date'] = min_upload_date.strftime(
-                    '%Y-%m-%d')
-            elif isinstance(min_upload_date, (int, str)):
-                params['min_upload_date'] = min_upload_date
+        for key in kwargs:
+            if key in ['user_id', 'tags', 'tag_mode', 'text', 'license',
+                       'sort', 'privacy_filter', 'accuracy', 'safe_search',
+                       'content_type', 'machine_tags', 'machine_tag_mode',
+                       'group_id', 'contacts', 'woe_id', 'place_id', 'has_geo',
+                       'geo_context', 'lat', 'lon', 'radius', 'radius_units',
+                       'is_commons', 'in_gallery', 'is_getty', 'extras',
+                       'per_page', 'page']:  # yapf: disable
+                params[key] = kwargs[key]
+            elif key in ['min_upload_date', 'max_upload_date',
+                         'min_taken_date', 'max_taken_date']:  # yapf: disable
+                val = kwargs[key]
+                if isinstance(val, datetime.date):
+                    params[key] = val.strftime('%Y-%m-%d')
+                elif isinstance(val, (int, str)):
+                    params[key] = val
+                else:
+                    self.logger.error('%s is invalid', key)
             else:
-                self.logger.error('min_upload_date is invalid')
-        if max_upload_date is not None:
-            if isinstance(min_upload_date, datetime.date):
-                params['max_upload_date'] = max_upload_date.strftime(
-                    '%Y-%m-%d')
-            elif isinstance(min_upload_date, (int, str)):
-                params['max_upload_date'] = max_upload_date
-            else:
-                self.logger.error('min_upload_date is invalid')
-        if group_id is not None:
-            params['group_id'] = group_id
-        if sort is not None:
-            params['sort'] = sort
-        if extras is not None:
-            params['extras'] = extras
-        params['per_page'] = per_page
+                self.logger.error('Unrecognized search param: %s', key)
         url = base_url + urlencode(params)
+        per_page = params.get('per_page', 100)
+        page = params.get('page', 1)
         page_max = int(math.ceil(max_num / per_page))
         for i in range(page, page + page_max):
             complete_url = '{}&page={}'.format(url, i)
