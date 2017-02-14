@@ -23,6 +23,7 @@ class FlickrFeeder(Feeder):
              min_upload_date=None,
              max_upload_date=None,
              group_id=None,
+             sort=None,
              extras=None,
              per_page=100):
         if apikey is None:
@@ -66,6 +67,8 @@ class FlickrFeeder(Feeder):
                 self.logger.error('min_upload_date is invalid')
         if group_id is not None:
             params['group_id'] = group_id
+        if sort is not None:
+            params['sort'] = sort
         if extras is not None:
             params['extras'] = extras
         params['per_page'] = per_page
