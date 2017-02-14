@@ -52,7 +52,7 @@ class BingImageCrawler(Crawler):
                                     'been automatically set to %d',
                                     1000 - offset)
         feeder_kwargs = dict(
-            url_template=('http://www.bing.com/images/search?qs=IM&form=QBIR&sc=8-9&sp=4&sk=IM3&'
+            url_template=('http://www.bing.com/images/search?'
                           'q={}&count=35&first={}'),
             keyword=keyword,
             offset=offset,

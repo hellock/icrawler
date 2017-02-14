@@ -11,7 +11,7 @@ from icrawler import Crawler, Feeder, Parser, ImageDownloader
 class GoogleFeeder(Feeder):
 
     def feed(self, keyword, offset, max_num, date_min, date_max):
-        base_url = 'https://www.google.com/search?site=imghp&tbm=isch&source=hp&'
+        base_url = 'https://www.google.com/search?'
         for i in range(offset, offset + max_num, 100):
             cd_min = date_min.strftime('%d/%m/%Y') if date_min else ''
             cd_max = date_max.strftime('%d/%m/%Y') if date_max else ''
