@@ -47,7 +47,9 @@ Flickr crawler is a little different.
     flickr_crawler.crawl(max_num=1000, tags='child,baby',
                          group_id='68012010@N00', min_upload_date=date(2015, 5, 1))
 
-Supported optional searching arguments are
+Supported optional searching arguments are listed in
+https://www.flickr.com/services/api/flickr.photos.search.html.
+Here are some examples.
 
 -  ``user_id`` -- The NSID of the user who's photo to search.
 -  ``tags`` -- A comma-delimited list of tags.
