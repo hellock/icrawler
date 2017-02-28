@@ -29,7 +29,11 @@ class BaiduParser(Parser):
         return url
 
     def parse(self, response):
-        content = json.loads(response.content.decode('utf-8'))
+        try:
+            content = json.loads(response.content.decode('utf-8'))
+        except:
+            self.logger.error('Fail to parse the response in json format')
+            return
         for item in content['data']:
             if 'objURL' in item:
                 img_url = self._decode_url(item['objURL'])
