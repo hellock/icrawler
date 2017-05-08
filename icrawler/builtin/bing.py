@@ -2,6 +2,7 @@
 
 import re
 
+import six
 from bs4 import BeautifulSoup
 from six.moves import html_parser
 
@@ -18,7 +19,9 @@ class BingParser(Parser):
             href_str = html_parser.HTMLParser().unescape(div.a['m'])
             match = pattern.search(href_str)
             if match:
-                img_url = '{}.jpg'.format(match.group(1))
+                name = (match.group(1)
+                        if six.PY3 else match.group(1).encode('utf-8'))
+                img_url = '{}.jpg'.format(name)
                 yield dict(file_url=img_url)
 
 
