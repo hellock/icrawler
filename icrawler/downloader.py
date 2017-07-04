@@ -203,10 +203,10 @@ class ImageDownloader(Downloader):
     """
 
     def _size_lt(self, sz1, sz2):
-        return sz1[0] < sz2[0] and sz1[1] < sz2[1]
+        return sz1[0] <= sz2[0] and sz1[1] <= sz2[1]
 
     def _size_gt(self, sz1, sz2):
-        return sz1[0] > sz2[0] and sz1[1] > sz2[1]
+        return sz1[0] >= sz2[0] and sz1[1] >= sz2[1]
 
     def keep_file(self, response, min_size=None, max_size=None):
         """Decide whether to keep the image

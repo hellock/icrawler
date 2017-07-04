@@ -52,10 +52,19 @@ class FlickrFeeder(Feeder):
         url = base_url + urlencode(params)
         per_page = params.get('per_page', 100)
         page = params.get('page', 1)
-        page_max = int(math.ceil(max_num / per_page))
+        page_max = int(math.ceil(4000.0 / per_page))
         for i in range(page, page + page_max):
+            if self.signal.get('reach_max_num'):
+                break
             complete_url = '{}&page={}'.format(url, i)
-            self.output(complete_url)
+            while True:
+                try:
+                    self.output(complete_url, block=False)
+                except:
+                    if self.signal.get('reach_max_num'):
+                        break
+                else:
+                    break
             self.logger.debug('put url to url_queue: {}'.format(complete_url))
 
 
@@ -89,10 +98,17 @@ class FlickrImageCrawler(Crawler):
         super(FlickrImageCrawler, self).__init__(
             feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
 
-    def crawl(self, max_num=1000, file_idx_offset=0, **kwargs):
+    def crawl(self,
+              max_num=1000,
+              min_size=None,
+              max_size=None,
+              file_idx_offset=0,
+              **kwargs):
         kwargs['apikey'] = self.apikey
-        kwargs['max_num'] = max_num
         super(FlickrImageCrawler, self).crawl(
             feeder_kwargs=kwargs,
             downloader_kwargs=dict(
-                max_num=max_num, file_idx_offset=file_idx_offset))
+                max_num=max_num,
+                min_size=min_size,
+                max_size=max_size,
+                file_idx_offset=file_idx_offset))
