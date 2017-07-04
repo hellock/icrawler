@@ -36,6 +36,7 @@ def test_baidu():
 def test_flickr():
     flickr_crawler = FlickrImageCrawler(
         apikey=None,
+        parser_threads=2,
         downloader_threads=4,
         storage={'root_dir': 'images/flickr'})
     flickr_crawler.crawl(

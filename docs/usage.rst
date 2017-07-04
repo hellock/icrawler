@@ -68,6 +68,30 @@ Here are some examples.
    for more details.
 -  ``per_page`` -- Number of photos to return per page.
 
+Another parameter ``size_preference`` is available for Flickr crawler, it define
+the preferred order of image sizes. Valid values are shown as follows.
+
+- original
+- large 2048: 2048 on longest side†
+- large 1600: 1600 on longest side†
+- large: 1024 on longest side*
+- medium 800: 800 on longest side†
+- medium 640: 640 on longest side
+- medium: 500 on longest side
+- small 320: 320 on longest side
+- small: 240 on longest side
+- thumbnail: 100 on longest side
+- large square: 150x150
+- square: 75x75
+
+.. note::
+
+    \* Before May 25th 2010 large photos only exist for very large original images.
+    † Medium 800, large 1600, and large 2048 photos only exist after March 1st 2012.
+
+``size_preference`` can be either a list or a string, if not specified, all
+sizes are acceptable and larger sizes are prior to smaller ones. 
+
 If you just want to crawl all the images from some website, then
 ``GreedyImageCrawler`` may be helpful.
 

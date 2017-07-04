@@ -12,12 +12,7 @@ from icrawler import Crawler, Feeder, Parser, ImageDownloader
 
 class FlickrFeeder(Feeder):
 
-    def feed(self, apikey=None, max_num=4000, **kwargs):
-        if apikey is None:
-            apikey = os.getenv('FLICKR_APIKEY')
-            if not apikey:
-                self.logger.error('apikey is not specified')
-                return
+    def feed(self, apikey, max_num=4000, **kwargs):
         if max_num > 4000:
             max_num = 4000
             self.logger.warning(
@@ -70,19 +65,38 @@ class FlickrFeeder(Feeder):
 
 class FlickrParser(Parser):
 
-    def parse(self, response):
+    def parse(self, response, apikey, size_preference=None):
         content = json.loads(response.content.decode())
         if content['stat'] != 'ok':
             return
         photos = content['photos']['photo']
         for photo in photos:
-            farm_id = photo['farm']
-            server_id = photo['server']
             photo_id = photo['id']
-            secret = photo['secret']
-            img_url = 'https://farm{}.staticflickr.com/{}/{}_{}.jpg'.format(
-                farm_id, server_id, photo_id, secret)
-            yield dict(file_url=img_url, meta=photo)
+            base_url = 'https://api.flickr.com/services/rest/?'
+            params = {
+                'method': 'flickr.photos.getSizes',
+                'api_key': apikey,
+                'photo_id': photo_id,
+                'format': 'json',
+                'nojsoncallback': 1
+            }
+            try:
+                ret = self.session.get(base_url + urlencode(params))
+                info = json.loads(ret.content.decode())
+            except:
+                continue
+            else:
+                if info['stat'] == 'ok':
+                    urls = {
+                        item['label'].lower(): item['source']
+                        for item in info['sizes']['size']
+                    }
+                else:
+                    continue
+                for sz in size_preference:
+                    if sz in urls:
+                        yield dict(file_url=urls[sz], meta=photo)
+                        break
 
 
 class FlickrImageCrawler(Crawler):
@@ -94,19 +108,41 @@ class FlickrImageCrawler(Crawler):
                  downloader_cls=ImageDownloader,
                  *args,
                  **kwargs):
+        if apikey is None:
+            apikey = os.getenv('FLICKR_APIKEY')
+            if not apikey:
+                self.logger.error('apikey is not specified')
+                return
         self.apikey = apikey
         super(FlickrImageCrawler, self).__init__(
             feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
 
     def crawl(self,
               max_num=1000,
+              size_preference=None,
               min_size=None,
               max_size=None,
               file_idx_offset=0,
               **kwargs):
         kwargs['apikey'] = self.apikey
+
+        default_order = [
+            'original', 'large 2048', 'large 1600', 'large', 'medium 800',
+            'medium 640', 'medium', 'small 320', 'small', 'thumbnail',
+            'large Square', 'square'
+        ]
+        if size_preference is None:
+            size_preference = default_order
+        elif isinstance(size_preference, str):
+            assert size_preference in default_order
+            size_preference = [size_preference]
+        else:
+            for sz in size_preference:
+                assert sz in default_order
         super(FlickrImageCrawler, self).crawl(
             feeder_kwargs=kwargs,
+            parser_kwargs=dict(
+                apikey=self.apikey, size_preference=size_preference),
             downloader_kwargs=dict(
                 max_num=max_num,
                 min_size=min_size,
