@@ -74,9 +74,8 @@ class Crawler(object):
         ``reach_max_num``.
         """
         self.signal = Signal()
-        self.signal.set(feeder_exited=False,
-                        parser_exited=False,
-                        reach_max_num=False)
+        self.signal.set(
+            feeder_exited=False, parser_exited=False, reach_max_num=False)
 
     def set_storage(self, storage):
         """Set storage backend for downloader
@@ -181,4 +180,14 @@ class Crawler(object):
             if not self.parser.is_alive():
                 self.signal.set(parser_exited=True)
             time.sleep(1)
+
+        if not self.feeder.in_queue.empty():
+            self.feeder.in_queue.queue.clear()
+        if not self.parser.in_queue.empty():
+            self.parser.in_queue.queue.clear()
+        if not self.downloader.in_queue.empty():
+            self.downloader.in_queue.queue.clear()
+        if not self.downloader.out_queue.empty():
+            self.downloader.out_queue.queue.clear()
+
         self.logger.info('Crawling task done!')

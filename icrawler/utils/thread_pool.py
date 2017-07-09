@@ -51,6 +51,7 @@ class ThreadPool(object):
         self.logger = logging.getLogger(self.name)
 
     def init_workers(self, *args, **kwargs):
+        self.workers.clear()
         for i in range(self.thread_num):
             worker = Worker(
                 target=self.worker_exec,
