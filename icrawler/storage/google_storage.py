@@ -3,7 +3,7 @@ from google.cloud import storage
 from icrawler.storage import BaseStorage
 from io import BytesIO
 
-class GSFileSystem(BaseStorage):
+class GoogleStorage(BaseStorage):
     """
        Use Google Storage file system as storage backend.
        The id is filename and data is stored as text files or binary files
