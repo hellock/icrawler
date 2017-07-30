@@ -174,12 +174,12 @@ class Crawler(object):
         self.downloader.start(**downloader_kwargs)
 
         while True:
-            if threading.active_count() <= 1:
-                break
             if not self.feeder.is_alive():
                 self.signal.set(feeder_exited=True)
             if not self.parser.is_alive():
                 self.signal.set(parser_exited=True)
+            if not self.downloader.is_alive():
+                break
             time.sleep(1)
 
         if not self.feeder.in_queue.empty():

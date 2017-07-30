@@ -75,9 +75,9 @@ class ThreadPool(object):
             self.out_queue.put(task, block, timeout)
 
     def clear_buffer(self, clear_out=False):
-        self.in_queue = []
+        self.in_queue.queue.clear()
         if clear_out:
-            self.out_queue = []
+            self.out_queue.queue.clear()
 
     def worker_exec(self, *args, **kwargs):
         raise NotImplementedError
