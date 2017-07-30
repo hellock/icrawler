@@ -51,7 +51,7 @@ class ThreadPool(object):
         self.logger = logging.getLogger(self.name)
 
     def init_workers(self, *args, **kwargs):
-        self.workers.clear()
+        self.workers = []
         for i in range(self.thread_num):
             worker = Worker(
                 target=self.worker_exec,
@@ -73,6 +73,11 @@ class ThreadPool(object):
     def output(self, task, block=True, timeout=None):
         if self.out_queue is not None:
             self.out_queue.put(task, block, timeout)
+
+    def clear_buffer(self, clear_out=False):
+        self.in_queue = []
+        if clear_out:
+            self.out_queue = []
 
     def worker_exec(self, *args, **kwargs):
         raise NotImplementedError
