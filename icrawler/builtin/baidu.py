@@ -30,7 +30,7 @@ class BaiduParser(Parser):
 
     def parse(self, response):
         try:
-            content = json.loads(response.content.decode('utf-8'))
+            content = json.loads(response.content.decode('utf-8', 'ignore'))
         except:
             self.logger.error('Fail to parse the response in json format')
             return

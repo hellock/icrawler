@@ -12,7 +12,8 @@ from icrawler import Crawler, Parser, SimpleSEFeeder, ImageDownloader
 class BingParser(Parser):
 
     def parse(self, response):
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(
+            response.content.decode('utf-8', 'ignore'), 'lxml')
         image_divs = soup.find_all('div', class_='imgpt')
         pattern = re.compile(r'murl\":\"(.*?)\.jpg')
         for div in image_divs:

@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+from icrawler import __version__
+
 
 def readme():
     with open('README.rst') as f:
@@ -8,7 +10,7 @@ def readme():
 
 setup(
     name='icrawler',
-    version='0.4.2',
+    version=__version__,
     description='A mini framework of image crawlers',
     long_description=readme(),
     keywords='image crawler spider',

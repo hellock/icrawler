@@ -32,7 +32,8 @@ class GreedyParser(Parser):
         return False
 
     def parse(self, response, domains):
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(
+            response.content.decode('utf-8', 'ignore'), 'lxml')
         tags = soup.find_all('img', src=True)
         for tag in tags:
             if re.match(self.pattern, tag['src']):

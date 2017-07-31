@@ -16,6 +16,7 @@ class GoogleFeeder(Feeder):
              max_num,
              date_min=None,
              date_max=None,
+             language=None,
              usage_rights=None):
         base_url = 'https://www.google.com/search?'
         if usage_rights and usage_rights not in ['f', 'fc', 'fm', 'fmc']:
@@ -28,10 +29,16 @@ class GoogleFeeder(Feeder):
         for i in range(offset, offset + max_num, 100):
             cd_min = date_min.strftime('%d/%m/%Y') if date_min else ''
             cd_max = date_max.strftime('%d/%m/%Y') if date_max else ''
+            lang = 'lang_' + language if language else ''
             tbs = 'cdr:1,cd_min:{},cd_max:{},sur:{}'.format(
                 cd_min, cd_max, usage_rights)
             params = dict(
-                q=keyword, ijn=int(i / 100), start=i, tbs=tbs, tbm='isch')
+                q=keyword,
+                ijn=int(i / 100),
+                start=i,
+                tbs=tbs,
+                tbm='isch',
+                lr=lang)
             url = base_url + urlencode(params)
             self.out_queue.put(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
@@ -40,7 +47,8 @@ class GoogleFeeder(Feeder):
 class GoogleParser(Parser):
 
     def parse(self, response):
-        soup = BeautifulSoup(response.content, 'lxml')
+        soup = BeautifulSoup(
+            response.content.decode('utf-8', 'ignore'), 'lxml')
         image_divs = soup.find_all('div', class_='rg_meta')
         for div in image_divs:
             meta = json.loads(div.text)
@@ -67,6 +75,7 @@ class GoogleImageCrawler(Crawler):
               date_max=None,
               min_size=None,
               max_size=None,
+              language=None,
               usage_rights=None,
               file_idx_offset=0):
         if offset + max_num > 1000:
@@ -89,6 +98,7 @@ class GoogleImageCrawler(Crawler):
             max_num=max_num,
             date_min=date_min,
             date_max=date_max,
+            language=language,
             usage_rights=usage_rights)
         downloader_kwargs = dict(
             max_num=max_num,

@@ -66,7 +66,7 @@ class FlickrFeeder(Feeder):
 class FlickrParser(Parser):
 
     def parse(self, response, apikey, size_preference=None):
-        content = json.loads(response.content.decode())
+        content = json.loads(response.content.decode('utf-8', 'ignore'))
         if content['stat'] != 'ok':
             return
         photos = content['photos']['photo']
