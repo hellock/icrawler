@@ -15,8 +15,8 @@ def test_google():
         storage={'root_dir': 'images/google'},
         log_level=logging.INFO)
     google_crawler.crawl(
-        'cloudy',
-        max_num=10,
+        'tesla',
+        max_num=100,
         date_min=date(2016, 2, 1),
         date_max=date(2016, 3, 15))
 
