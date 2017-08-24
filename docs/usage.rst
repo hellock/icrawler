@@ -33,7 +33,7 @@ engine crawlers have similar interfaces.
     baidu_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
                         min_size=None, max_size=None)
 
-.. note:: Only ``GoogleImageCrawler`` supports date range parameters.
+.. note:: Only ``GoogleImageCrawler`` supports date range parameters, and it also allows specifying languages and filtering usage rights.
 
 Flickr crawler is a little different.
 
