@@ -27,8 +27,8 @@ class GoogleFeeder(Feeder):
             raise ValueError(
                 '"usage_rights" must be one of the following: f, fc, fm, fmc')
         for i in range(offset, offset + max_num, 100):
-            cd_min = date_min.strftime('%d/%m/%Y') if date_min else ''
-            cd_max = date_max.strftime('%d/%m/%Y') if date_max else ''
+            cd_min = date_min.strftime('%m/%d/%Y') if date_min else ''
+            cd_max = date_max.strftime('%m/%d/%Y') if date_max else ''
             lang = 'lang_' + language if language else ''
             usage_rights = '' if usage_rights is None else usage_rights
             tbs = 'cdr:1,cd_min:{},cd_max:{},sur:{}'.format(cd_min, cd_max,
