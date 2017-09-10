@@ -232,7 +232,6 @@ class ImageDownloader(Downloader):
 
     def get_filename(self, task, default_ext):
         url_path = urlparse(task['file_url'])[2]
-        print(url_path)
         if '.' in url_path:
             extension = url_path.split('.')[-1]
             if extension.lower() not in [

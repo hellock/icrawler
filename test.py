@@ -16,7 +16,7 @@ def test_google():
         log_level=logging.INFO)
     google_crawler.crawl(
         'tesla',
-        max_num=100,
+        max_num=10,
         date_min=date(2016, 2, 1),
         date_max=date(2016, 3, 15))
 
