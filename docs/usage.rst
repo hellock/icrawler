@@ -33,7 +33,7 @@ engine crawlers have similar interfaces.
     baidu_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
                         min_size=None, max_size=None)
 
-.. note:: Only ``GoogleImageCrawler`` supports date range parameters.
+.. note:: Only ``GoogleImageCrawler`` supports date range parameters, and it also allows specifying languages and filtering usage rights.
 
 Flickr crawler is a little different.
 
@@ -67,6 +67,19 @@ Here are some examples.
    `here <https://www.flickr.com/services/api/flickr.photos.search.html>`__
    for more details.
 -  ``per_page`` -- Number of photos to return per page.
+
+Some advanced searching arguments, which are not updated in the `Flickr  API
+<https://www.flickr.com/services/api/flickr.photos.search.html>`__,
+are also supported. Valid arguments and values are shown as follows.
+
+-  ``color_codes`` -- A comma-delimited list of color codes, which filters the
+   results by your chosen color(s). Please see any Flickr search page for the
+   corresponding relations between the colors and the codes.
+-  ``styles`` -- A comma-delimited list of styles, including ``blackandwhite``,
+   ``depthoffield``, ``minimalism`` and ``pattern``.
+-  ``orientation`` -- A comma-delimited list of image orientation. It can be 
+   ``landscape``, ``portrait``, ``square`` and ``panorama``. The default 
+   includes all of them.
 
 Another parameter ``size_preference`` is available for Flickr crawler, it define
 the preferred order of image sizes. Valid values are shown as follows.

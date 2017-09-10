@@ -31,7 +31,8 @@ class FlickrFeeder(Feeder):
                        'group_id', 'contacts', 'woe_id', 'place_id', 'has_geo',
                        'geo_context', 'lat', 'lon', 'radius', 'radius_units',
                        'is_commons', 'in_gallery', 'is_getty', 'extras',
-                       'per_page', 'page']:  # yapf: disable
+                       'per_page', 'page',
+                       'color_codes', 'styles', 'orientation']:  # yapf: disable
                 params[key] = kwargs[key]
             elif key in ['min_upload_date', 'max_upload_date',
                          'min_taken_date', 'max_taken_date']:  # yapf: disable

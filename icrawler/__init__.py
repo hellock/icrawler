@@ -3,7 +3,7 @@ from .parser import Parser
 from .downloader import Downloader, ImageDownloader
 from .crawler import Crawler
 
-__version__ = '0.4.4'
+__version__ = '0.4.5'
 
 __all__ = [
     'Crawler', 'Downloader', 'ImageDownloader', 'Feeder', 'SimpleSEFeeder',
