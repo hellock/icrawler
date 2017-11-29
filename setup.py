@@ -1,6 +1,11 @@
 from setuptools import find_packages, setup
 
-from icrawler import __version__
+
+def get_version():
+    version_file = 'icrawler/version.py'
+    with open(version_file, 'r') as f:
+        exec(compile(f.read(), version_file, 'exec'))
+    return locals()['__version__']
 
 
 def readme():
@@ -10,7 +15,7 @@ def readme():
 
 setup(
     name='icrawler',
-    version=__version__,
+    version=get_version(),
     description='A mini framework of image crawlers',
     long_description=readme(),
     keywords='image crawler spider',
