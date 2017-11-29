@@ -20,6 +20,8 @@ Introduction
 
 Documentation: http://icrawler.readthedocs.io/
 
+Try it with ``pip install icrawler`` or ``conda install -c hellock icrawler``.
+
 This package is a mini framework of web crawlers. With modularization design,
 it can be extended conveniently. It supports media data like images and videos
 very well, and can also be applied to texts and other type of files.

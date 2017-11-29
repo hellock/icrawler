@@ -1,11 +1,17 @@
 Installation
 ============
 
-The quick way:
+The quick way (with pip):
 
 ::
 
     pip install icrawler
+
+or (with conda)
+
+::
+
+    conda install -c hellock icrawler
 
 You can also manually install it by
 
