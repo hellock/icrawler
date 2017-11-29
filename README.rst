@@ -5,8 +5,15 @@ icrawler
    :target: https://pypi.python.org/pypi/icrawler
    :alt: PyPI Version
 
+.. image:: https://anaconda.org/hellock/icrawler/badges/version.svg
+   :target: https://anaconda.org/hellock/icrawler
+   :alt: Anaconda Version
+
 .. image:: https://img.shields.io/pypi/pyversions/icrawler.svg
-   :alt: Python
+   :alt: Python Version
+
+.. image:: 	https://img.shields.io/github/license/hellock/icrawler.svg
+   :alt: License
 
 Introduction
 ------------
