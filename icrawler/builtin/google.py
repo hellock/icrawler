@@ -63,6 +63,8 @@ class GoogleFeeder(Feeder):
                 img_color = 'specific'
             elif img_color == 'blackwhite':
                 img_color = 'gray'
+            elif img_color == 'transparent':
+                img_color = 'trans'
             tbs = 'cdr:1,cd_min:{},cd_max:{},sur:{},itp:{},ic:{},isc:{}'.format(
                 cd_min, cd_max, usage_rights, img_type, img_color, img_specific)
             params = dict(
