@@ -35,21 +35,20 @@ class GoogleFeeder(Feeder):
             # clipart: clip art
             # lineart: line drawing
             # animated
-            raise ValueError(
-                '"img_type" must be one of the following: '
-                'photo, face, clipart, lineart, animated')
+            raise ValueError('"img_type" must be one of the following: '
+                             'photo, face, clipart, lineart, animated')
         if img_color and img_color not in [
-                'color', 'blackwhite', 'transparent', 'red', 'orange', 'yellow',
-                'green', 'teal', 'blue', 'purple', 'pink', 'white', 'gray',
-                'black', 'brown']:
+                'color', 'blackandwhite', 'transparent', 'red', 'orange',
+                'yellow', 'green', 'teal', 'blue', 'purple', 'pink', 'white',
+                'gray', 'black', 'brown']:
             # color: full color
-            # blackwhite: black and white
+            # blackandwhite: black and white
             # transparent: transparent
             # red, orange, yellow, green, teal, blue, purple, pink, white, gray, black, brown
             raise ValueError(
                 '"img_color" must be one of the following: '
-                'color, blackwhite, transparent, red, orange, yellow, green, teal, '
-                'blue, purple, pink, white, gray, black, brown')
+                'color, blackandwhite, transparent, red, orange, yellow, '
+                'green, teal, blue, purple, pink, white, gray, black, brown')
         for i in range(offset, offset + max_num, 100):
             cd_min = date_min.strftime('%m/%d/%Y') if date_min else ''
             cd_max = date_max.strftime('%m/%d/%Y') if date_max else ''
@@ -58,15 +57,16 @@ class GoogleFeeder(Feeder):
             img_type = '' if img_type is None else img_type
             img_color = '' if img_color is None else img_color
             img_specific = ''
-            if img_color not in ['', 'color', 'blackwhite', 'transparent']:
+            if img_color not in ['', 'color', 'blackandwhite', 'transparent']:
                 img_specific = img_color
                 img_color = 'specific'
-            elif img_color == 'blackwhite':
+            elif img_color == 'blackandwhite':
                 img_color = 'gray'
             elif img_color == 'transparent':
                 img_color = 'trans'
             tbs = 'cdr:1,cd_min:{},cd_max:{},sur:{},itp:{},ic:{},isc:{}'.format(
-                cd_min, cd_max, usage_rights, img_type, img_color, img_specific)
+                cd_min, cd_max, usage_rights, img_type, img_color,
+                img_specific)
             params = dict(
                 q=keyword,
                 ijn=int(i / 100),

@@ -33,7 +33,16 @@ engine crawlers have similar interfaces.
     baidu_crawler.crawl(keyword='sunny', offset=0, max_num=1000,
                         min_size=None, max_size=None)
 
-.. note:: Only ``GoogleImageCrawler`` supports date range parameters, and it also allows specifying languages and filtering usage rights.
+``GoogleImageCrawler`` supports advanced searching such as specifying
+date range, language, image type, color and filtering usage rights.
+Optional arguments include
+
+- ``date_min`` -- date object of python's built-in ``datetime`` module. e.g. ``date(2017, 1, 1)``.
+- ``date_max`` -- same as ``date_min``.
+- ``language`` -- e.g. "us", "jp".
+- ``img_type`` -- "photo", "face", "clipart", "lineart", "animated".
+- ``img_color`` -- "color", "blackandwhite", "transparent", "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink", "white", "gray", "black", "brown".
+- ``usage_rights`` -- "f" (non-commercial reuse), "fm" (non-commercial reuse with modification), "fc" (reuse), "fmc" (reuse with modification).
 
 Flickr crawler is a little different.
 
