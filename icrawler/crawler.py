@@ -35,7 +35,10 @@ class Crawler(object):
                  downloader_threads=1,
                  storage={'backend': 'FileSystem',
                           'root_dir': 'images'},
-                 log_level=logging.INFO):
+                 log_level=logging.INFO,
+                 extra_feeder_args=None,
+                 extra_parser_args=None,
+                 extra_downloader_args=None):
         """Init components with class names and other arguments.
 
         Args:
@@ -60,10 +63,17 @@ class Crawler(object):
         # set storage
         self.set_storage(storage)
         # set feeder, parser and downloader
-        self.feeder = feeder_cls(feeder_threads, self.signal, self.session)
-        self.parser = parser_cls(parser_threads, self.signal, self.session)
+        feeder_kwargs = {} if extra_feeder_args is None else extra_feeder_args
+        parser_kwargs = {} if extra_parser_args is None else extra_parser_args
+        downloader_kwargs = ({} if extra_downloader_args is None else
+                             extra_downloader_args)
+        self.feeder = feeder_cls(feeder_threads, self.signal, self.session,
+                                 **feeder_kwargs)
+        self.parser = parser_cls(parser_threads, self.signal, self.session,
+                                 **parser_kwargs)
         self.downloader = downloader_cls(downloader_threads, self.signal,
-                                         self.session, self.storage)
+                                         self.session, self.storage,
+                                         **downloader_kwargs)
         # connect all components
         self.feeder.connect(self.parser).connect(self.downloader)
 
@@ -74,9 +84,8 @@ class Crawler(object):
         ``reach_max_num``.
         """
         self.signal = Signal()
-        self.signal.set(feeder_exited=False,
-                        parser_exited=False,
-                        reach_max_num=False)
+        self.signal.set(
+            feeder_exited=False, parser_exited=False, reach_max_num=False)
 
     def set_storage(self, storage):
         """Set storage backend for downloader

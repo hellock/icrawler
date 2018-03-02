@@ -90,7 +90,7 @@ class Downloader(ThreadPool):
         else:
             return False
 
-    def keep_file(self, response, **kwargs):
+    def keep_file(self, task, response, **kwargs):
         return True
 
     def download(self, task, default_ext, timeout=5, max_retry=3, **kwargs):
@@ -103,6 +103,8 @@ class Downloader(ThreadPool):
             **kwargs: reserved arguments for overriding.
         """
         file_url = task['file_url']
+        task['success'] = False
+        task['filename'] = None
         retry = max_retry
         while retry > 0 and not self.signal.get('reach_max_num'):
             try:
@@ -119,13 +121,15 @@ class Downloader(ThreadPool):
                     self.logger.error('Response status code %d, file %s',
                                       response.status_code, file_url)
                     break
-                elif not self.keep_file(response, **kwargs):
+                elif not self.keep_file(task, response, **kwargs):
                     break
                 with self.lock:
                     self.fetched_num += 1
                     filename = self.get_filename(task, default_ext)
                 self.logger.info('image #%s\t%s', self.fetched_num, file_url)
                 self.storage.write(filename, response.content)
+                task['success'] = True
+                task['filename'] = filename
                 break
             finally:
                 retry -= 1
@@ -208,7 +212,7 @@ class ImageDownloader(Downloader):
     def _size_gt(self, sz1, sz2):
         return max(sz1) >= max(sz2) and min(sz1) >= min(sz2)
 
-    def keep_file(self, response, min_size=None, max_size=None):
+    def keep_file(self, task, response, min_size=None, max_size=None):
         """Decide whether to keep the image
 
         Compare image size with ``min_size`` and ``max_size`` to decide.
@@ -224,6 +228,7 @@ class ImageDownloader(Downloader):
             img = Image.open(BytesIO(response.content))
         except (IOError, OSError):
             return False
+        task['img_size'] = img.size
         if min_size and not self._size_gt(img.size, min_size):
             return False
         if max_size and not self._size_lt(img.size, max_size):
