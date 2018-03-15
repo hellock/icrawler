@@ -1,5 +1,4 @@
 import json
-import requests
 from collections import OrderedDict
 
 from six.moves.queue import Queue

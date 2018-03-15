@@ -24,7 +24,7 @@ def test_google():
 def test_bing():
     bing_crawler = BingImageCrawler(
         storage={'root_dir': 'images/bing'}, log_level=logging.DEBUG)
-    bing_crawler.crawl('iqos', max_num=100, img_type='photo')
+    bing_crawler.crawl('sunny', max_num=10, img_type='photo')
 
 
 def test_baidu():
