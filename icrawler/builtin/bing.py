@@ -58,7 +58,7 @@ class BingFeeder(Feeder):
                 'color, bw, red, orange, yellow, '
                 'green, teal, blue, purple, pink, white, gray, black, brown')
         # Fix codes for image color
-        colorprefix = 'color2-'
+        color_prefix = 'color2-'
         if img_color and img_color in [ 'color', 'bw']:
             img_color = color_prefix + img_color
         elif img_color:
@@ -71,7 +71,7 @@ class BingFeeder(Feeder):
             # tall : height more than width
             raise ValueError('"img_layout" must be one of the following: square, wide, tall')
         # Fix layout prefix
-        layout_prefix = 'layout-'    
+        layout_prefix = 'aspect-' 
         if img_layout:
             img_layout = layout_prefix + img_layout
 
