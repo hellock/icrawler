@@ -6,15 +6,12 @@ crawler
 
 .. automodule:: icrawler.crawler
     :members:
-    :inherited-members:
-    :show-inheritance:
 
 feeder
 ------
 
 .. automodule:: icrawler.feeder
     :members:
-    :inherited-members:
     :show-inheritance:
 
 parser
@@ -22,7 +19,6 @@ parser
 
 .. automodule:: icrawler.parser
     :members:
-    :inherited-members:
     :show-inheritance:
 
 downloader
@@ -30,7 +26,6 @@ downloader
 
 .. automodule:: icrawler.downloader
     :members:
-    :inherited-members:
     :show-inheritance:
 
 storage
@@ -46,5 +41,4 @@ utils
 
 .. automodule:: icrawler.utils
     :members:
-    :inherited-members:
     :show-inheritance:

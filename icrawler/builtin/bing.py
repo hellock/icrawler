@@ -7,102 +7,109 @@ from bs4 import BeautifulSoup
 from six.moves import html_parser
 
 from icrawler import Crawler, Parser, Feeder, ImageDownloader
+from icrawler.builtin.filter import Filter
 
 
 class BingFeeder(Feeder):
 
-    def feed(self,
-             keyword,
-             offset,
-             max_num,
-             img_type=None,
-             img_layout=None,
-             img_people=None,
-             img_color=None,
-             img_license=None,
-             img_age=None):
-        base_url = 'https://www.bing.com/images/search?scope=images&q={}&first={}&qft='
-        
-        if img_license and img_license not in ['licenseType-Any', 'license-L2_L3_L4_L5_L6_L7', 'license-L2_L3_L4', 
-                                       'license-L2_L3_L5_L6', 'license-L1',
-                                       'license-L2_L3']:
-            # All Creative Commons - licenseType-Any
-            # Public domain - license-L1
-            # Free to share and use - license-L2_L3_L4_L5_L6_L7
-            # Free to share and use commercially - license-L2_L3_L4
-            # Free to modify, share, and use - license-L2_L3_L5_L6
-            # Free to modify, share, and use commercially - license-L2_L3
-            raise ValueError(
-                ''' "img_license" must be one of the following: licenseType-Any, license-L2_L3_L4_L5_L6_L7, 
-                license-L2_L3_L4, license-L2_L3_L5_L6, license-L2_L3, 'license-L1' ''')
-        
-        if img_type and img_type not in [
-                'photo', 'clipart', 'transparent', 'animatedgif']:
-            # photo - photograph
-            # clipart: clip art
-            # animatedgif - gif
-            # transparent - 
-            raise ValueError('"img_type" must be one of the following: '
-                             'photo, clipart, transparent, animatedgif')
-        
-        if img_color and img_color not in [
-                'color', 'bw', 'red', 'orange',
-                'yellow', 'green', 'teal', 'blue', 'purple', 'pink', 'white',
-                'gray', 'black', 'brown']:
-            # color: full color
-            # blackandwhite: black and white
-            # transparent: transparent
-            # red, orange, yellow, green, teal, blue, purple, pink, white, gray, black, brown
-            raise ValueError(
-                '"img_color" must be one of the following: '
-                'color, bw, red, orange, yellow, '
-                'green, teal, blue, purple, pink, white, gray, black, brown')
-        # Fix codes for image color
-        color_prefix = 'color2-'
-        if img_color and img_color in [ 'color', 'bw']:
-            img_color = color_prefix + img_color
-        elif img_color:
-            img_color = color_prefix + 'FGcls_' + img_color.upper()
-            
-            
-        if img_layout and img_layout not in ['square', 'wide', 'tall']:
-            # square : square
-            # wide : width more than height
-            # tall : height more than width
-            raise ValueError('"img_layout" must be one of the following: square, wide, tall')
-        # Fix layout prefix
-        layout_prefix = 'aspect-' 
-        if img_layout:
-            img_layout = layout_prefix + img_layout
+    def get_filter(self):
+        search_filter = Filter()
 
-        if img_people and img_people not in ['face', 'portrait']:
-            # face - Just face
-            # portrait - face and shoulders
-            raise ValueError('"img_layout" must be one of: face, portrait')
-        # Fix people prefix
-        people_prefix = 'face-'
-        if img_people:
-            img_people = people_prefix + img_people
+        # type filter
+        def format_type(img_type):
+            prefix = '+filterui:photo-'
+            return (prefix + 'animatedgif'
+                    if img_type == 'animated' else prefix + img_type)
 
-        if img_age and img_age.isdigit():
-            # Number of minutes in the past from the current moment that you want to look at
-            raise ValueError('"img_age" should be a number')
-        # fix age prefix
-        age_prefix = 'age-tl'
-        if img_age:
-            img_age = age_prefix + img_age 
+        type_choices = [
+            'photo', 'clipart', 'linedrawing', 'transparent', 'animated'
+        ]
+        search_filter.add_rule('type', format_type, type_choices)
+
+        # color filter
+        def format_color(color):
+            prefix = '+filterui:color2-'
+            if color == 'color':
+                return prefix + 'color'
+            elif color == 'blackandwhite':
+                return prefix + 'bw'
+            else:
+                return prefix + 'FGcls_' + color.upper()
+
+        color_choices = [
+            'color', 'blackandwhite', 'red', 'orange', 'yellow', 'green',
+            'teal', 'blue', 'purple', 'pink', 'white', 'gray', 'black', 'brown'
+        ]
+        search_filter.add_rule('color', format_color, color_choices)
+
+        # size filter
+        def format_size(size):
+            if size in ['large', 'medium', 'small']:
+                return '+filterui:imagesize-' + size
+            elif size == 'extralarge':
+                return '+filterui:imagesize-wallpaper'
+            elif size.startswith('>'):
+                wh = size[1:].split('x')
+                assert len(wh) == 2
+                return '+filterui:imagesize-custom_{}_{}'.format(*wh)
+            else:
+                raise ValueError(
+                    'filter option "size" must be one of the following: '
+                    'extralarge, large, medium, small, >[]x[] '
+                    '([] is an integer)')
+
+        search_filter.add_rule('size', format_size)
+
+        # licence filter
+        license_code = {
+            'creativecommons': 'licenseType-Any',
+            'publicdomain': 'license-L1',
+            'noncommercial': 'license-L2_L3_L4_L5_L6_L7',
+            'commercial': 'license-L2_L3_L4',
+            'noncommercial,modify': 'license-L2_L3_L5_L6',
+            'commercial,modify': 'license-L2_L3'
+        }
+
+        def format_license(license):
+            return '+filterui:' + license_code[license]
+
+        license_choices = list(license_code.keys())
+        search_filter.add_rule('license', format_license, license_choices)
+
+        # layout filter
+        layout_choices = ['square', 'wide', 'tall']
+        search_filter.add_rule('layout', lambda x: '+filterui:aspect-' + x,
+                               layout_choices)
+
+        # people filter
+        people_choices = ['face', 'portrait']
+        search_filter.add_rule('people', lambda x: '+filterui:face-' + x,
+                               people_choices)
+
+        # date filter
+        date_minutes = {
+            'pastday': 1440,
+            'pastweek': 10080,
+            'pastmonth': 43200,
+            'pastyear': 525600
+        }
+
+        def format_date(date):
+            return '+filterui:age-lt' + str(date_minutes[date])
+
+        date_choices = list(date_minutes.keys())
+        search_filter.add_rule('date', format_date, date_choices)
+
+        return search_filter
+
+    def feed(self, keyword, offset, max_num, filters=None):
+        base_url = 'https://www.bing.com/images/async?q={}&first={}'
+        self.filter = self.get_filter()
+        filter_str = self.filter.apply(filters)
+        filter_str = '&qft=' + filter_str if filter_str else ''
 
         for i in range(offset, offset + max_num, 20):
-            img_license = '' if img_license is None else img_license
-            img_type = '' if img_type is None else img_type
-            img_color = '' if img_color is None else img_color
-            img_people = '' if img_people is None else img_people
-            img_layout = '' if img_layout is None else img_layout
-            img_age = '' if img_age is None else img_age
-            url = base_url.format(keyword, i)
-            for property in [img_license, img_type, img_color, img_people, img_layout, img_age]:
-                if property:
-                    url = url + '+filterui:' + property
+            url = base_url.format(keyword, i) + filter_str
             self.out_queue.put(url)
             self.logger.debug('put url to url_queue: {}'.format(url))
 
@@ -137,16 +144,11 @@ class BingImageCrawler(Crawler):
 
     def crawl(self,
               keyword,
+              filters=None,
               offset=0,
               max_num=1000,
               min_size=None,
               max_size=None,
-              img_type=None,
-              img_layout=None,
-              img_people=None,
-              img_color=None,
-              img_license=None,
-              img_age=None,
               file_idx_offset=0):
         if offset + max_num > 1000:
             if offset > 1000:
@@ -160,15 +162,7 @@ class BingImageCrawler(Crawler):
                                     'been automatically set to %d',
                                     1000 - offset)
         feeder_kwargs = dict(
-            keyword=keyword,
-            offset=offset,
-            max_num=max_num,
-            img_type=img_type,
-            img_layout=img_layout,
-            img_people=img_people,
-            img_color=img_color,
-            img_license=img_license,
-            img_age=img_age)
+            keyword=keyword, offset=offset, max_num=max_num, filters=filters)
         downloader_kwargs = dict(
             max_num=max_num,
             min_size=min_size,

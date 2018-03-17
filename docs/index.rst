@@ -16,6 +16,8 @@ Documentation index
    :maxdepth: 2
    
    install.rst
-   usage.rst
+   builtin.rst
+   extend.rst
    proxy.rst
    api.rst
+   release_notes.rst

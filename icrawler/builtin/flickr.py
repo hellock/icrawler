@@ -112,8 +112,7 @@ class FlickrImageCrawler(Crawler):
         if apikey is None:
             apikey = os.getenv('FLICKR_APIKEY')
             if not apikey:
-                self.logger.error('apikey is not specified')
-                return
+                raise RuntimeError('apikey is not specified')
         self.apikey = apikey
         super(FlickrImageCrawler, self).__init__(
             feeder_cls, parser_cls, downloader_cls, *args, **kwargs)

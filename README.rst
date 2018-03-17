@@ -23,43 +23,62 @@ Documentation: http://icrawler.readthedocs.io/
 Try it with ``pip install icrawler`` or ``conda install -c hellock icrawler``.
 
 This package is a mini framework of web crawlers. With modularization design,
-it can be extended conveniently. It supports media data like images and videos
+it is easy to use and extend. It supports media data like images and videos
 very well, and can also be applied to texts and other type of files.
 Scrapy is heavy and powerful, while icrawler is tiny and flexible.
 
-With this package, you can write a multiple thread crawler easily by
-focusing on the contents you want to crawl, avoiding some troublesome problems like
+With this package, you can write a multiple thread crawler easily by focusing on
+the contents you want to crawl, keeping away from troublesome problems like
 exception handling, thread scheduling and communication.
 
-It also provides built-in crawlers for popular image sites like flickr and
-search engines such as Google, Bing and Baidu. If you want to add your own
-crawlers into built-in, welcome for pull requests.
+It also provides built-in crawlers for popular image sites like **Flickr** and
+search engines such as **Google**, **Bing** and **Baidu**.
+(Thank all the contributors and pull requests are always welcome!)
 
 Requirements
 ------------
 
 Python 2.7+ or 3.4+ (recommended).
 
-Samples
--------
+Examples
+--------
 
-Using builtin crawlers is very simple.
+Using built-in crawlers is very simple. A minimal example is shown as follows.
 
 .. code:: python
 
     from icrawler.builtin import GoogleImageCrawler
 
-    google_crawler = GoogleImageCrawler(parser_threads=2, downloader_threads=4,
-                                        storage={'root_dir': 'your_image_dir'})
-    google_crawler.crawl(keyword='sunny', max_num=1000,
-                         date_min=None, date_max=None,
-                         min_size=(200,200), max_size=None)
+    google_crawler = GoogleImageCrawler(storage={'root_dir': 'your_image_dir'})
+    google_crawler.crawl(keyword='cat', max_num=100)
+
+You can also configurate number of threads and apply advanced search options.
+(Note: compatible with 0.6.0 and later versions)
+
+.. code:: python
+
+    from icrawler.builtin import GoogleImageCrawler
+
+    google_crawler = GoogleImageCrawler(
+        feeder_threads=1,
+        parser_threads=2,
+        downloader_threads=4,
+        storage={'root_dir': 'your_image_dir'})
+    filters = dict(
+        size='large',
+        color='orange',
+        license='commercial,modify',
+        date=((2017, 1, 1), (2017, 11, 30)))
+    google_crawler.crawl(keyword='cat', filters=filters, max_num=1000, file_idx_offset=0)
+
+For more advanced usage about built-in crawlers, please refer to the
+`documentation <http://icrawler.readthedocs.io/en/latest/builtin.html>`_.
 
 Writing your own crawlers with this framework is also convenient, see the
-`tutorials <http://icrawler.readthedocs.io/en/latest/usage.html#write-your-own>`_.
+`tutorials <http://icrawler.readthedocs.io/en/latest/extend.html>`_.
 
-Structure
----------
+Architecture
+------------
 
 A crawler consists of 3 main components (Feeder, Parser and Downloader),
 they are connected with each other with FIFO queues. The workflow is shown in

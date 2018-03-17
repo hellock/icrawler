@@ -33,8 +33,10 @@ class Crawler(object):
                  feeder_threads=1,
                  parser_threads=1,
                  downloader_threads=1,
-                 storage={'backend': 'FileSystem',
-                          'root_dir': 'images'},
+                 storage={
+                     'backend': 'FileSystem',
+                     'root_dir': 'images'
+                 },
                  log_level=logging.INFO,
                  extra_feeder_args=None,
                  extra_parser_args=None,
@@ -155,20 +157,27 @@ class Crawler(object):
         self.logger = logging.getLogger(__name__)
         logging.getLogger('requests').setLevel(logging.WARNING)
 
-    def crawl(self, feeder_kwargs={}, parser_kwargs={}, downloader_kwargs={}):
+    def crawl(self,
+              feeder_kwargs=None,
+              parser_kwargs=None,
+              downloader_kwargs=None):
         """Start crawling
 
         This method will start feeder, parser and download and wait
         until all threads exit.
 
         Args:
-            feeder_kwargs (dict): Arguments to be passed to ``feeder.start()``
-            parser_kwargs (dict): Arguments to be passed to ``parser.start()``
-            downloader_kwargs (dict): Arguments to be passed to
+            feeder_kwargs (dict, optional): Arguments to be passed to ``feeder.start()``
+            parser_kwargs (dict, optional): Arguments to be passed to ``parser.start()``
+            downloader_kwargs (dict, optional): Arguments to be passed to
                 ``downloader.start()``
         """
         self.signal.reset()
         self.logger.info('start crawling...')
+
+        feeder_kwargs = {} if feeder_kwargs is None else feeder_kwargs
+        parser_kwargs = {} if parser_kwargs is None else parser_kwargs
+        downloader_kwargs = {} if downloader_kwargs is None else downloader_kwargs
 
         self.logger.info('starting %d feeder threads...',
                          self.feeder.thread_num)
