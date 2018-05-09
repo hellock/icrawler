@@ -6,6 +6,7 @@ from PIL import Image
 from six import BytesIO
 from six.moves import queue
 from six.moves.urllib.parse import urlparse
+import os.path
 
 from icrawler.utils import ThreadPool
 
@@ -28,7 +29,7 @@ class Downloader(ThreadPool):
         storage (BaseStorage): storage backend.
     """
 
-    def __init__(self, thread_num, signal, session, storage):
+    def __init__(self, thread_num, signal, session, storage, skip_download_existing=True):
         """Init Parser with some shared variables."""
         super(Downloader, self).__init__(
             thread_num, out_queue=None, name='downloader')
@@ -37,6 +38,7 @@ class Downloader(ThreadPool):
         self.storage = storage
         self.file_idx_offset = 0
         self.clear_status()
+        self.skip_download_existing = skip_download_existing
 
     def clear_status(self):
         """Reset fetched_num to 0."""
@@ -106,6 +108,9 @@ class Downloader(ThreadPool):
         task['success'] = False
         task['filename'] = None
         retry = max_retry
+        if self.skip_download_existing and os.path.exists(self.get_filename(task, default_ext)):
+            return
+
         while retry > 0 and not self.signal.get('reach_max_num'):
             try:
                 response = self.session.get(file_url, timeout=timeout)
@@ -198,7 +203,7 @@ class Downloader(ThreadPool):
                 self.in_queue.task_done()
         self.logger.info('thread {} exit'.format(current_thread().name))
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.logger.info('all downloader threads exited')
 
 
