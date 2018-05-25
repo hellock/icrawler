@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os.path
 from threading import current_thread
 
 from PIL import Image
@@ -93,7 +94,13 @@ class Downloader(ThreadPool):
     def keep_file(self, task, response, **kwargs):
         return True
 
-    def download(self, task, default_ext, timeout=5, max_retry=3, **kwargs):
+    def download(self,
+                 task,
+                 default_ext,
+                 timeout=5,
+                 max_retry=3,
+                 overwrite=False,
+                 **kwargs):
         """Download the image and save it to the corresponding path.
 
         Args:
@@ -106,6 +113,16 @@ class Downloader(ThreadPool):
         task['success'] = False
         task['filename'] = None
         retry = max_retry
+
+        if not overwrite:
+            with self.lock:
+                self.fetched_num += 1
+                filename = self.get_filename(task, default_ext)
+                if self.storage.exists(filename):
+                    self.logger.info('skip downloading file %s', filename)
+                    return
+                self.fetched_num -= 1
+
         while retry > 0 and not self.signal.get('reach_max_num'):
             try:
                 response = self.session.get(file_url, timeout=timeout)
@@ -177,7 +194,8 @@ class Downloader(ThreadPool):
         while True:
             if self.signal.get('reach_max_num'):
                 self.logger.info('downloaded images reach max num, thread %s'
-                                 ' is ready to exit', current_thread().name)
+                                 ' is ready to exit',
+                                 current_thread().name)
                 break
             try:
                 task = self.in_queue.get(timeout=queue_timeout)
@@ -198,7 +216,7 @@ class Downloader(ThreadPool):
                 self.in_queue.task_done()
         self.logger.info('thread {} exit'.format(current_thread().name))
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.logger.info('all downloader threads exited')
 
 

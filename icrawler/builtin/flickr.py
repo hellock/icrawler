@@ -123,6 +123,7 @@ class FlickrImageCrawler(Crawler):
               min_size=None,
               max_size=None,
               file_idx_offset=0,
+              overwrite=False,
               **kwargs):
         kwargs['apikey'] = self.apikey
 
@@ -147,4 +148,5 @@ class FlickrImageCrawler(Crawler):
                 max_num=max_num,
                 min_size=min_size,
                 max_size=max_size,
-                file_idx_offset=file_idx_offset))
+                file_idx_offset=file_idx_offset,
+                overwrite=overwrite))

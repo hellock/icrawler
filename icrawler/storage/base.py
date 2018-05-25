@@ -19,6 +19,18 @@ class BaseStorage(object):
         return
 
     @abstractmethod
+    def exists(self, id):
+        """Check the existence of some data
+
+        Args:
+            id (str): unique id of the data in the storage
+
+        Returns:
+            bool: whether the data exists
+        """
+        return False
+
+    @abstractmethod
     def max_file_idx(self):
         """Get the max existing file index
 
