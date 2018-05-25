@@ -1,22 +1,18 @@
+import os.path as osp
 from setuptools import find_packages, setup
 
 
 def get_version():
-    version_file = 'icrawler/version.py'
+    version_file = osp.join(osp.dirname(__file__), 'icrawler/version.py')
     with open(version_file, 'r') as f:
         exec(compile(f.read(), version_file, 'exec'))
     return locals()['__version__']
 
 
 def readme():
-    with open('README.rst') as f:
+    filename = osp.join(osp.dirname(__file__), 'README.rst')
+    with open(filename, 'r') as f:
         return f.read()
-
-
-def requirements():
-    with open('requirements.txt', 'r') as f:
-        install_requires = [line for line in f]
-    return install_requires
 
 
 setup(
@@ -44,6 +40,12 @@ setup(
     author='Kai Chen',
     author_email='chenkaidev@gmail.com',
     license='MIT',
-    install_requires=requirements(),
+    install_requires=[
+        'beautifulsoup4>=4.4.1',
+        'lxml',
+        'requests>=2.9.1',
+        'six>=1.10.0',
+        'Pillow'
+    ],
     zip_safe=False
 )  # yapf: disable

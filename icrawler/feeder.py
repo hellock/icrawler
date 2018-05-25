@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from os import path
+import os.path as osp
 from threading import current_thread
 
 from icrawler.utils import ThreadPool
@@ -52,7 +52,7 @@ class UrlListFeeder(Feeder):
 
     def feed(self, url_list, offset=0, max_num=0):
         if isinstance(url_list, str):
-            if path.isfile(url_list):
+            if osp.isfile(url_list):
                 with open(url_list, 'r') as fin:
                     url_list = [line.rstrip('\n') for line in fin]
             else:
