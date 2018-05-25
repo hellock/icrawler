@@ -26,6 +26,9 @@ class FileSystem(BaseStorage):
         with open(filepath, mode) as fout:
             fout.write(data)
 
+    def exists(self, id):
+        return path.exists(path.join(self.root_dir, id))
+
     def max_file_idx(self):
         max_idx = 0
         for filename in listdir(self.root_dir):

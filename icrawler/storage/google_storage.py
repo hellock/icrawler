@@ -29,5 +29,9 @@ class GoogleStorage(BaseStorage):
         data_buffer = BytesIO(data)
         blob.upload_from_file(file_obj=data_buffer, size=len(data))
 
+    def exists(self, id):
+        blob = self.bucket.blob(self.folder_str + '/' + id)
+        return blob.exists()
+
     def max_file_idx(self):
         return len(self.bucket.list_blobs(prefix=self.folder_str))
