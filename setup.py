@@ -13,6 +13,12 @@ def readme():
         return f.read()
 
 
+def requirements():
+    with open('requirements.txt', 'r') as f:
+        install_requires = [line for line in f]
+    return install_requires
+
+
 setup(
     name='icrawler',
     version=get_version(),
@@ -21,7 +27,7 @@ setup(
     keywords='image crawler spider',
     packages=find_packages(),
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
@@ -38,12 +44,6 @@ setup(
     author='Kai Chen',
     author_email='chenkaidev@gmail.com',
     license='MIT',
-    install_requires=[
-        'beautifulsoup4>=4.4.1',
-        'lxml',
-        'Pillow',
-        'requests>=2.9.1',
-        'six>=1.10.0'
-    ],
+    install_requires=requirements(),
     zip_safe=False
 )  # yapf: disable
