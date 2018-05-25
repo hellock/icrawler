@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import os.path
 from threading import current_thread
 
 from PIL import Image
 from six import BytesIO
 from six.moves import queue
 from six.moves.urllib.parse import urlparse
-import os.path
 
 from icrawler.utils import ThreadPool
 
@@ -29,7 +29,7 @@ class Downloader(ThreadPool):
         storage (BaseStorage): storage backend.
     """
 
-    def __init__(self, thread_num, signal, session, storage, skip_download_existing=True):
+    def __init__(self, thread_num, signal, session, storage):
         """Init Parser with some shared variables."""
         super(Downloader, self).__init__(
             thread_num, out_queue=None, name='downloader')
@@ -38,7 +38,6 @@ class Downloader(ThreadPool):
         self.storage = storage
         self.file_idx_offset = 0
         self.clear_status()
-        self.skip_download_existing = skip_download_existing
 
     def clear_status(self):
         """Reset fetched_num to 0."""
@@ -95,7 +94,13 @@ class Downloader(ThreadPool):
     def keep_file(self, task, response, **kwargs):
         return True
 
-    def download(self, task, default_ext, timeout=5, max_retry=3, **kwargs):
+    def download(self,
+                 task,
+                 default_ext,
+                 timeout=5,
+                 max_retry=3,
+                 overwrite=False,
+                 **kwargs):
         """Download the image and save it to the corresponding path.
 
         Args:
@@ -108,8 +113,15 @@ class Downloader(ThreadPool):
         task['success'] = False
         task['filename'] = None
         retry = max_retry
-        if self.skip_download_existing and os.path.exists(self.get_filename(task, default_ext)):
-            return
+
+        if not overwrite:
+            with self.lock:
+                self.fetched_num += 1
+                filename = self.get_filename(task, default_ext)
+                if self.storage.exists(filename):
+                    self.logger.info('skip downloading file %s', filename)
+                    return
+                self.fetched_num -= 1
 
         while retry > 0 and not self.signal.get('reach_max_num'):
             try:
@@ -182,7 +194,8 @@ class Downloader(ThreadPool):
         while True:
             if self.signal.get('reach_max_num'):
                 self.logger.info('downloaded images reach max num, thread %s'
-                                 ' is ready to exit', current_thread().name)
+                                 ' is ready to exit',
+                                 current_thread().name)
                 break
             try:
                 task = self.in_queue.get(timeout=queue_timeout)

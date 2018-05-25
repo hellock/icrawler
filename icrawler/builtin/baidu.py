@@ -145,7 +145,8 @@ class BaiduImageCrawler(Crawler):
               max_num=1000,
               min_size=None,
               max_size=None,
-              file_idx_offset=0):
+              file_idx_offset=0,
+              overwrite=False):
         if offset + max_num > 1000:
             if offset > 1000:
                 self.logger.error('Offset cannot exceed 1000, otherwise you '
@@ -165,6 +166,7 @@ class BaiduImageCrawler(Crawler):
             max_num=max_num,
             min_size=min_size,
             max_size=max_size,
-            file_idx_offset=file_idx_offset)
+            file_idx_offset=file_idx_offset,
+            overwrite=overwrite)
         super(BaiduImageCrawler, self).crawl(
             feeder_kwargs=feeder_kwargs, downloader_kwargs=downloader_kwargs)

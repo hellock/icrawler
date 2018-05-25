@@ -11,14 +11,16 @@ class PseudoParser(Parser):
         while True:
             if self.signal.get('reach_max_num'):
                 self.logger.info('downloaded image reached max num, thread %s'
-                                 ' exit', threading.current_thread().name)
+                                 ' exit',
+                                 threading.current_thread().name)
                 break
             try:
                 url = self.in_queue.get(timeout=queue_timeout)
             except queue.Empty:
                 if self.signal.get('feeder_exited'):
                     self.logger.info('no more page urls to parse, thread %s'
-                                     ' exit', threading.current_thread().name)
+                                     ' exit',
+                                     threading.current_thread().name)
                     break
                 else:
                     self.logger.info('%s is waiting for new page urls',
@@ -44,9 +46,12 @@ class UrlListCrawler(Crawler):
         super(UrlListCrawler, self).__init__(feeder_cls, parser_cls,
                                              downloader_cls, *args, **kwargs)
 
-    def crawl(self, url_list, max_num=1000, file_idx_offset=0):
+    def crawl(self, url_list, max_num=1000, file_idx_offset=0,
+              overwrite=False):
         feeder_kwargs = dict(url_list=url_list)
         downloader_kwargs = dict(
-            file_idx_offset=file_idx_offset, max_num=max_num)
+            file_idx_offset=file_idx_offset,
+            max_num=max_num,
+            overwrite=overwrite)
         super(UrlListCrawler, self).crawl(
             feeder_kwargs=feeder_kwargs, downloader_kwargs=downloader_kwargs)
