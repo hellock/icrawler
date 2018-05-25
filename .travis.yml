@@ -1,25 +1,21 @@
 language: python
-
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
 install:
-  - pip install .
-
+- pip install .
 script: pytest
-
 deploy:
   provider: pypi
   user: kchen
   password:
-    secure: FxdvBxjCGG+nQTMNnNBHkDLL5OPtFtL8FVR1EATs2kvkMPgo73ukoAZq0IE1J+WN0ZU3tvYb/3khVt+1Z9iNIll3yDcaE4nf5joIjGjAUk4Gj6FxceFSVGdqb2TQ83HspLMi14CsBRJKm+azpjXsWg6BqP/Hv54Lb1JokkszNettbmaAyOyBPlwjWPWgu1DTgr2HD0maDjFF2xAEn38QOUfOnuOlMRaxu9DrggIp5m5Jvn7bg/fak6bnZ1oyOQoAv4WSWk2CbFa1kqMhX4lROyIts34GhIN81xstBBXtr+lpsNljADcz+P0Gg7KDq5la2+fq1A4pW8slMShU/56Bp5xrsMd/AEl5p2uElh5WC50gG9xuXxBZGVvM8NlepaQM7G+e/o8cAcIylrVZCjS9NLPPyss1/9dkElmfhVP4RJ3ozT+kX3sDjxbEBCfnPAgEpfZN9ubCpWT737SnIdJJGi1z9yMl0P+k50E1hCIBQGPQuiAReR4fjKq29wl+n/GR5aQ5k66tEwMinMU/WFddy78gB+HLU2C/MZF5OCWvW0tuS0rouAI9DMonTxWJlBKMg3t7owlM1xCHt5LuQclqjp9TMiZp600Y20YHxt8iFW8zsidE/Xc0fZ9JG9LXc1/u+1Fdt5cmJNJ2DR/FG3442q8Fh6Z6YOrkzd+ZPzYLlhA=
+    secure: L8uHglgU3vzBsrlCGA2tzVG16tNDQnlxQn6WoXg8udjFO2QhRDl6mTPnVUGsKL4JwrTRIlBri4cd46o87EjsincxLk8tVWjCAW1iQNvOt3wBDxDpoDvhyAWb679QDoUcaZVuQyNJYMEdhU32OuVp7/5uBMZ6gofmbKxTTjpmAvRExa3M5EoLJoq0Mff4feHiLbvAuTEAatpAxzaBrhsO7fKE8xsTEdMGPVZ4isTG5ZdmBNALMWhaGy0e7TrvY6etgH8RLFuVI19BcJ9Oq3nNP6A/yat1i5+taNTA4lJYRVXdwucMs1arFoMC0E/wJhwQHPM6cm11fmu68ZdS4xw/Ad2xJgjqUFCN7SvXxv0mxz2tleFExos45M6Mnh+3OpMwsq9Lg4DtZw5oVhDE40YkJyMYLPZpTkrwxZKXvpQiqxndxQqR2uVZLkWUBnfbvBKyAeAWrMpwyt3zSzRyp1tLAw7XPh5q1Q1vRg48HK7yN62ElvxqUkC8TalyZfgUvj1+nYoX9vN/bfrifhrzTOm7HUOOm+lGEdu6FGOC+qo8pV6lp8VTuVvkLhLrQA4W0EaxkB0CqUCmAyBJCecgAXOcx70pD+sUJBgLEMn5t4xQdfoh3V1B6EclVhjcixozWv11hnVqw7DVRoDN717VK1/RqYk0FQTXQPyChVivVgXXeFk=
   on:
     branch: master
     tags: true
-    python: "3.5"
+    python: '3.5'
   distributions: sdist bdist_wheel
   skip_cleanup: true
   skip_upload_docs: true
