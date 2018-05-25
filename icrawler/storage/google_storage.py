@@ -3,7 +3,7 @@ from io import BytesIO
 
 
 class GoogleStorage(BaseStorage):
-    """Use Google Storage as storage backend.
+    """Google Storage backend.
 
     The id is filename and data is stored as text files or binary files.
     The root_dir is the bucket address such as gs://<your_bucket>/<your_directory>.
@@ -12,7 +12,7 @@ class GoogleStorage(BaseStorage):
     def __init__(self, root_dir):
         try:
             from google.cloud import storage
-        except:
+        except ImportError:
             print('GoogleStorage backend requires the package '
                   '"google-cloud-storage", execute '
                   '"pip install google-cloud-storage" to install it.')

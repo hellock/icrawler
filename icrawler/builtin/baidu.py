@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-import re
 
 from icrawler import Crawler, Feeder, Parser, ImageDownloader
 from icrawler.builtin.filter import Filter

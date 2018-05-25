@@ -1,6 +1,11 @@
 Release notes
 =============
 
+0.6.1 (2018-05-25)
+------------------
+
+- **New**: Add an option to skip downloading when the file already exists.
+
 0.6.0 (2018-03-17)
 ------------------
 

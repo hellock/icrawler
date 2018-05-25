@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from os import listdir, makedirs, path
+import os
+import os.path as osp
+
+import six
 
 from icrawler.storage import BaseStorage
 
@@ -15,26 +18,26 @@ class FileSystem(BaseStorage):
         self.root_dir = root_dir
 
     def write(self, id, data):
-        filepath = path.join(self.root_dir, id)
-        folder = path.dirname(filepath)
-        if not path.isdir(folder):
+        filepath = osp.join(self.root_dir, id)
+        folder = osp.dirname(filepath)
+        if not osp.isdir(folder):
             try:
-                makedirs(folder)
-            except:
+                os.makedirs(folder)
+            except OSError:
                 pass
-        mode = 'w' if isinstance(data, str) else 'wb'
+        mode = 'w' if isinstance(data, six.string_types) else 'wb'
         with open(filepath, mode) as fout:
             fout.write(data)
 
     def exists(self, id):
-        return path.exists(path.join(self.root_dir, id))
+        return osp.exists(osp.join(self.root_dir, id))
 
     def max_file_idx(self):
         max_idx = 0
-        for filename in listdir(self.root_dir):
+        for filename in os.listdir(self.root_dir):
             try:
-                idx = int(path.splitext(filename)[0])
-            except:
+                idx = int(osp.splitext(filename)[0])
+            except ValueError:
                 continue
             if idx > max_idx:
                 max_idx = idx

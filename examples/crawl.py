@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os.path as osp
 from argparse import ArgumentParser
 
 from icrawler.builtin import (BaiduImageCrawler, BingImageCrawler,
@@ -71,7 +72,8 @@ def test_urllist():
     print('start testing UrlListCrawler')
     urllist_crawler = UrlListCrawler(
         downloader_threads=3, storage={'root_dir': 'images/urllist'})
-    urllist_crawler.crawl('test_data/test_list.txt')
+    filelist = osp.join(osp.dirname(__file__), 'filelist_demo.txt')
+    urllist_crawler.crawl(filelist)
 
 
 def main():

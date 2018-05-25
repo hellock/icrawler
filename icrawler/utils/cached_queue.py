@@ -24,7 +24,7 @@ class CachedQueue(Queue, object):
             self.cache_capacity = 0
         self._cache = OrderedDict()
 
-    def check_dup(self, item):
+    def is_duplicated(self, item):
         """Check whether the item has been in the cache
 
         If the item has not been seen before, then hash it and put it into
@@ -55,7 +55,7 @@ class CachedQueue(Queue, object):
     def put(self, item, block=True, timeout=None, dup_callback=None):
         """Put an item to queue if it is not duplicated.
         """
-        if not self.check_dup(item):
+        if not self.is_duplicated(item):
             super(CachedQueue, self).put(item, block, timeout)
         else:
             if dup_callback:

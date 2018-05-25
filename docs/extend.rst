@@ -123,7 +123,7 @@ The simplest way is to override some methods of Feeder, Parser and Downloader cl
    .. code:: python
 
        downloader.download(self, task, default_ext, timeout=5, max_retry=3,
-                           **kwargs)
+                           overwrite=False, **kwargs)
 
    You can retrieve tasks from ``task_queue`` and then do what you want
    to do.

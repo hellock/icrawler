@@ -3,7 +3,6 @@
 
 import logging
 import sys
-import threading
 import time
 from importlib import import_module
 
@@ -54,15 +53,10 @@ class Crawler(object):
             log_level: logging level for the logger
         """
 
-        # set logger
         self.set_logger(log_level)
-        # set proxy pool
         self.set_proxy_pool()
-        # set session
         self.set_session()
-        # init signal
         self.init_signal()
-        # set storage
         self.set_storage(storage)
         # set feeder, parser and downloader
         feeder_kwargs = {} if extra_feeder_args is None else extra_feeder_args
@@ -78,6 +72,15 @@ class Crawler(object):
                                          **downloader_kwargs)
         # connect all components
         self.feeder.connect(self.parser).connect(self.downloader)
+
+    def set_logger(self, log_level=logging.INFO):
+        """Configure the logger with log_level."""
+        logging.basicConfig(
+            format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+            level=log_level,
+            stream=sys.stderr)
+        self.logger = logging.getLogger(__name__)
+        logging.getLogger('requests').setLevel(logging.WARNING)
 
     def init_signal(self):
         """Init signal
@@ -147,15 +150,6 @@ class Crawler(object):
 
         self.session = Session(self.proxy_pool)
         self.session.headers.update(headers)
-
-    def set_logger(self, log_level=logging.INFO):
-        """Configure the logger with log_level."""
-        logging.basicConfig(
-            format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-            level=log_level,
-            stream=sys.stderr)
-        self.logger = logging.getLogger(__name__)
-        logging.getLogger('requests').setLevel(logging.WARNING)
 
     def crawl(self,
               feeder_kwargs=None,
