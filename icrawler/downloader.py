@@ -115,12 +115,11 @@ class Downloader(ThreadPool):
 
         if not overwrite:
             with self.lock:
-                self.fetched_num += 1
                 filename = self.get_filename(task, default_ext)
                 if self.storage.exists(filename):
                     self.logger.info('skip downloading file %s', filename)
+                    self.fetched_num += 1
                     return
-                self.fetched_num -= 1
 
         while retry > 0 and not self.signal.get('reach_max_num'):
             try:
