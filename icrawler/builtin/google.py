@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 
 from bs4 import BeautifulSoup
 from six.moves.urllib.parse import urlencode
@@ -143,11 +144,21 @@ class GoogleParser(Parser):
     def parse(self, response):
         soup = BeautifulSoup(
             response.content.decode('utf-8', 'ignore'), 'lxml')
-        image_divs = soup.find_all('div', class_='rg_meta')
+        image_divs = soup.find_all('script')
         for div in image_divs:
-            meta = json.loads(div.text)
-            if 'ou' in meta:
-                yield dict(file_url=meta['ou'])
+            txt = div.text
+            if not txt.startswith('AF_initDataCallback'):
+                continue
+            if "key: 'ds:2'" not in txt:
+                continue
+
+            txt = re.sub(r"^AF_initDataCallback\({.*key: 'ds:(\d)'.+data:function\(\){return (.+)}}\);?$",
+                         "\\2", txt, 0, re.DOTALL)
+            meta = json.loads(txt)
+            data = meta[31][0][12][2]
+
+            uris = [img[1][3][0] for img in data if img[0] == 1]
+            return [{'file_url': uri} for uri in uris]
 
 
 class GoogleImageCrawler(Crawler):
