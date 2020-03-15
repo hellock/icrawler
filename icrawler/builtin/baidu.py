@@ -111,7 +111,8 @@ class BaiduParser(Parser):
 
     def parse(self, response):
         try:
-            content = response.content.decode('utf-8', 'ignore')
+            content = response.content.decode('utf-8',
+                                              'ignore').replace("\\'", "'")
             content = json.loads(content, strict=False)
         except:
             self.logger.error('Fail to parse the response in json format')
@@ -134,8 +135,9 @@ class BaiduImageCrawler(Crawler):
                  downloader_cls=ImageDownloader,
                  *args,
                  **kwargs):
-        super(BaiduImageCrawler, self).__init__(
-            feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
+        super(BaiduImageCrawler,
+              self).__init__(feeder_cls, parser_cls, downloader_cls, *args,
+                             **kwargs)
 
     def crawl(self,
               keyword,
@@ -153,10 +155,10 @@ class BaiduImageCrawler(Crawler):
                 return
             elif max_num > 1000:
                 max_num = 1000 - offset
-                self.logger.warning('Due to Baidu\'s limitation, you can only '
-                                    'get the first 1000 result. "max_num" has '
-                                    'been automatically set to %d',
-                                    1000 - offset)
+                self.logger.warning(
+                    'Due to Baidu\'s limitation, you can only '
+                    'get the first 1000 result. "max_num" has '
+                    'been automatically set to %d', 1000 - offset)
         else:
             pass
         feeder_kwargs = dict(
