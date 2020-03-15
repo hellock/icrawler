@@ -2,9 +2,9 @@ language: python
 
 python:
   - '2.7'
-  - '3.4'
   - '3.5'
   - '3.6'
+  - '3.7'
 
 install:
 - pip install .
@@ -19,7 +19,7 @@ deploy:
   on:
     branch: master
     tags: true
-    python: '3.5'
+    python: '3.7'
   distributions: sdist bdist_wheel
   skip_cleanup: true
   skip_upload_docs: true
