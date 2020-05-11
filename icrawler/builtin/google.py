@@ -146,8 +146,8 @@ class GoogleParser(Parser):
             response.content.decode('utf-8', 'ignore'), 'lxml')
         image_divs = soup.find_all('script')
         for div in image_divs:
-            txt = div.text
-            if not txt.startswith('AF_initDataCallback'):
+            txt = div.string
+            if txt is None or not txt.startswith('AF_initDataCallback'):
                 continue
             if 'ds:1' not in txt:
                 continue
