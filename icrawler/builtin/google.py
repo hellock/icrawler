@@ -151,7 +151,7 @@ class GoogleParser(Parser):
                 continue
             if 'ds:1' not in txt:
                 continue
-            txt = re.sub(r"^AF_initDataCallback\({.*key: 'ds:(\d)'.+data:function\(\){return (.+)}}\);?$",
+            txt = re.sub(r"^AF_initDataCallback\({.*key: 'ds:(\d)'.+data:(.+)}\);?$",
                          "\\2", txt, 0, re.DOTALL)
 
             meta = json.loads(txt)
