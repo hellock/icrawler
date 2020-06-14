@@ -55,7 +55,7 @@ class FlickrFeeder(Feeder):
             complete_url = '{}&page={}'.format(url, i)
             while True:
                 try:
-                    self.output(complete_url, block=False)
+                    self.output(complete_url, block=True)
                 except:
                     if self.signal.get('reach_max_num'):
                         break
