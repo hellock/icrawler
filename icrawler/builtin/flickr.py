@@ -89,7 +89,7 @@ class FlickrParser(Parser):
             else:
                 if info['stat'] == 'ok':
                     urls = {
-                        item['label'].lower(): item['source']
+                        str(item['label']).lower(): item['source']
                         for item in info['sizes']['size']
                     }
                 else:
