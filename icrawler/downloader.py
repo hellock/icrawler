@@ -243,7 +243,7 @@ class ImageDownloader(Downloader):
         """
         try:
             img = Image.open(BytesIO(response.content))
-        except (IOError, OSError):
+        except (IOError, OSError, Image.DecompressionBombWarning, Image.DecompressionBombError, UserWarning):
             return False
         task['img_size'] = img.size
         if min_size and not self._size_gt(img.size, min_size):
