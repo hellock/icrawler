@@ -141,9 +141,9 @@ class Crawler(object):
         if headers is None:
             headers = {
                 'User-Agent':
-                ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3)'
+                ('Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
                  ' AppleWebKit/537.36 (KHTML, like Gecko) '
-                 'Chrome/48.0.2564.116 Safari/537.36')
+                 'Chrome/88.0.4324.104 Safari/537.36')
             }
         elif not isinstance(headers, dict):
             raise TypeError('"headers" must be a dict object')
