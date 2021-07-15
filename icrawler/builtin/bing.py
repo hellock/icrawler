@@ -4,7 +4,7 @@ import re
 
 import six
 from bs4 import BeautifulSoup
-from six.moves import html_parser
+import html
 
 from icrawler import Crawler, Parser, Feeder, ImageDownloader
 from icrawler.builtin.filter import Filter
@@ -122,7 +122,7 @@ class BingParser(Parser):
         image_divs = soup.find_all('div', class_='imgpt')
         pattern = re.compile(r'murl\":\"(.*?)\.jpg')
         for div in image_divs:
-            href_str = html_parser.HTMLParser().unescape(div.a['m'])
+            href_str = html.unescape(div.a['m'])
             match = pattern.search(href_str)
             if match:
                 name = (match.group(1)
