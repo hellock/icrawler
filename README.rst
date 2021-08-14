@@ -38,7 +38,7 @@ search engines such as **Google**, **Bing** and **Baidu**.
 Requirements
 ------------
 
-Python 2.7+ or 3.5+ (recommended).
+Python 3.5+ (recommended).
 
 Examples
 --------
