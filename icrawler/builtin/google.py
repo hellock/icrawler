@@ -93,10 +93,16 @@ class GoogleFeeder(Feeder):
 
         # date filter
         def format_date(date):
-            if date == 'pastday':
+            if date == 'anytime':
+                return ''
+            elif date == 'pastday':
                 return 'qdr:d'
             elif date == 'pastweek':
                 return 'qdr:w'
+            elif date == 'pastmonth':
+                return 'qdr:m'
+            elif date == 'pastyear':
+                return 'qdr:y'
             elif isinstance(date, tuple):
                 assert len(date) == 2
                 date_range = []
