@@ -122,7 +122,10 @@ class BingParser(Parser):
         image_divs = soup.find_all('div', class_='imgpt')
         pattern = re.compile(r'murl\":\"(.*?)\.jpg')
         for div in image_divs:
-            href_str = html.unescape(div.a['m'])
+            try:
+                href_str = html.unescape(div.a['m'])
+            except KeyError:
+                continue
             match = pattern.search(href_str)
             if match:
                 name = (match.group(1)
