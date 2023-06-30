@@ -85,7 +85,7 @@ they are connected with each other with FIFO queues. The workflow is shown in
 the following figure.
 
 .. figure:: http://7xopqn.com1.z0.glb.clouddn.com/workflow.png
-   :alt: 
+   :alt:
 
 -  ``url_queue`` stores the url of pages which may contain images
 -  ``task_queue`` stores the image url as well as any meta data you

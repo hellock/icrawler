@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import os.path as osp
 
@@ -25,7 +23,7 @@ class FileSystem(BaseStorage):
                 os.makedirs(folder)
             except OSError:
                 pass
-        mode = 'w' if isinstance(data, six.string_types) else 'wb'
+        mode = "w" if isinstance(data, str) else "wb"
         with open(filepath, mode) as fout:
             fout.write(data)
 

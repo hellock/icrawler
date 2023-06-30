@@ -33,3 +33,6 @@ README.md
 
 # Local test scripts
 icrawler/utils/test_proxy.py
+
+# version
+icrawler/version.py

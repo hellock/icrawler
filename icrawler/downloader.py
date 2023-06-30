@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
+import queue
+from io import BytesIO
 from threading import current_thread
+from urllib.parse import urlparse
 
 from PIL import Image
-from six import BytesIO
-from six.moves import queue
-from six.moves.urllib.parse import urlparse
 
 from icrawler.utils import ThreadPool
 
@@ -30,8 +28,7 @@ class Downloader(ThreadPool):
 
     def __init__(self, thread_num, signal, session, storage):
         """Init Parser with some shared variables."""
-        super(Downloader, self).__init__(
-            thread_num, out_queue=None, name='downloader')
+        super().__init__(thread_num, out_queue=None, name="downloader")
         self.signal = signal
         self.session = session
         self.storage = storage
@@ -53,7 +50,7 @@ class Downloader(ThreadPool):
         """
         if isinstance(file_idx_offset, int):
             self.file_idx_offset = file_idx_offset
-        elif file_idx_offset == 'auto':
+        elif file_idx_offset == "auto":
             self.file_idx_offset = self.storage.max_file_idx()
         else:
             raise ValueError('"file_idx_offset" must be an integer or `auto`')
@@ -72,10 +69,10 @@ class Downloader(ThreadPool):
         Output:
             Filename with extension.
         """
-        url_path = urlparse(task['file_url'])[2]
-        extension = url_path.split('.')[-1] if '.' in url_path else default_ext
+        url_path = urlparse(task["file_url"])[2]
+        extension = url_path.split(".")[-1] if "." in url_path else default_ext
         file_idx = self.fetched_num + self.file_idx_offset
-        return '{:06d}.{}'.format(file_idx, extension)
+        return f"{file_idx:06d}.{extension}"
 
     def reach_max_num(self):
         """Check if downloaded images reached max num.
@@ -83,7 +80,7 @@ class Downloader(ThreadPool):
         Returns:
             bool: if downloaded images reached max num.
         """
-        if self.signal.get('reach_max_num'):
+        if self.signal.get("reach_max_num"):
             return True
         if self.max_num > 0 and self.fetched_num >= self.max_num:
             return True
@@ -93,13 +90,7 @@ class Downloader(ThreadPool):
     def keep_file(self, task, response, **kwargs):
         return True
 
-    def download(self,
-                 task,
-                 default_ext,
-                 timeout=5,
-                 max_retry=3,
-                 overwrite=False,
-                 **kwargs):
+    def download(self, task, default_ext, timeout=5, max_retry=3, overwrite=False, **kwargs):
         """Download the image and save it to the corresponding path.
 
         Args:
@@ -108,9 +99,9 @@ class Downloader(ThreadPool):
             max_retry (int): the max retry times if the request fails.
             **kwargs: reserved arguments for overriding.
         """
-        file_url = task['file_url']
-        task['success'] = False
-        task['filename'] = None
+        file_url = task["file_url"]
+        task["success"] = False
+        task["filename"] = None
         retry = max_retry
 
         if not overwrite:
@@ -118,34 +109,36 @@ class Downloader(ThreadPool):
                 self.fetched_num += 1
                 filename = self.get_filename(task, default_ext)
                 if self.storage.exists(filename):
-                    self.logger.info('skip downloading file %s', filename)
+                    self.logger.info("skip downloading file %s", filename)
                     return
                 self.fetched_num -= 1
 
-        while retry > 0 and not self.signal.get('reach_max_num'):
+        while retry > 0 and not self.signal.get("reach_max_num"):
             try:
                 response = self.session.get(file_url, timeout=timeout)
             except Exception as e:
-                self.logger.error('Exception caught when downloading file %s, '
-                                  'error: %s, remaining retry times: %d',
-                                  file_url, e, retry - 1)
+                self.logger.error(
+                    "Exception caught when downloading file %s, " "error: %s, remaining retry times: %d",
+                    file_url,
+                    e,
+                    retry - 1,
+                )
             else:
                 if self.reach_max_num():
                     self.signal.set(reach_max_num=True)
                     break
                 elif response.status_code != 200:
-                    self.logger.error('Response status code %d, file %s',
-                                      response.status_code, file_url)
+                    self.logger.error("Response status code %d, file %s", response.status_code, file_url)
                     break
                 elif not self.keep_file(task, response, **kwargs):
                     break
                 with self.lock:
                     self.fetched_num += 1
                     filename = self.get_filename(task, default_ext)
-                self.logger.info('image #%s\t%s', self.fetched_num, file_url)
+                self.logger.info("image #%s\t%s", self.fetched_num, file_url)
                 self.storage.write(filename, response.content)
-                task['success'] = True
-                task['filename'] = filename
+                task["success"] = True
+                task["filename"] = filename
                 break
             finally:
                 retry -= 1
@@ -168,14 +161,9 @@ class Downloader(ThreadPool):
         self.init_workers(*args, **kwargs)
         for worker in self.workers:
             worker.start()
-            self.logger.debug('thread %s started', worker.name)
+            self.logger.debug("thread %s started", worker.name)
 
-    def worker_exec(self,
-                    max_num,
-                    default_ext='',
-                    queue_timeout=5,
-                    req_timeout=5,
-                    **kwargs):
+    def worker_exec(self, max_num, default_ext="", queue_timeout=5, req_timeout=5, **kwargs):
         """Target method of workers.
 
         Get task from ``task_queue`` and then download files and process meta
@@ -191,37 +179,33 @@ class Downloader(ThreadPool):
         """
         self.max_num = max_num
         while True:
-            if self.signal.get('reach_max_num'):
-                self.logger.info('downloaded images reach max num, thread %s'
-                                 ' is ready to exit',
-                                 current_thread().name)
+            if self.signal.get("reach_max_num"):
+                self.logger.info(
+                    "downloaded images reach max num, thread %s" " is ready to exit", current_thread().name
+                )
                 break
             try:
                 task = self.in_queue.get(timeout=queue_timeout)
             except queue.Empty:
-                if self.signal.get('parser_exited'):
-                    self.logger.info('no more download task for thread %s',
-                                     current_thread().name)
+                if self.signal.get("parser_exited"):
+                    self.logger.info("no more download task for thread %s", current_thread().name)
                     break
                 else:
-                    self.logger.info('%s is waiting for new download tasks',
-                                     current_thread().name)
+                    self.logger.info("%s is waiting for new download tasks", current_thread().name)
             except:
-                self.logger.error('exception in thread %s',
-                                  current_thread().name)
+                self.logger.error("exception in thread %s", current_thread().name)
             else:
                 self.download(task, default_ext, req_timeout, **kwargs)
                 self.process_meta(task)
                 self.in_queue.task_done()
-        self.logger.info('thread {} exit'.format(current_thread().name))
+        self.logger.info(f"thread {current_thread().name} exit")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.logger.info('all downloader threads exited')
+        self.logger.info("all downloader threads exited")
 
 
 class ImageDownloader(Downloader):
-    """Downloader specified for images.
-    """
+    """Downloader specified for images."""
 
     def _size_lt(self, sz1, sz2):
         return max(sz1) <= max(sz2) and min(sz1) <= min(sz2)
@@ -243,9 +227,9 @@ class ImageDownloader(Downloader):
         """
         try:
             img = Image.open(BytesIO(response.content))
-        except (IOError, OSError):
+        except OSError:
             return False
-        task['img_size'] = img.size
+        task["img_size"] = img.size
         if min_size and not self._size_gt(img.size, min_size):
             return False
         if max_size and not self._size_lt(img.size, max_size):
@@ -253,23 +237,15 @@ class ImageDownloader(Downloader):
         return True
 
     def get_filename(self, task, default_ext):
-        url_path = urlparse(task['file_url'])[2]
-        if '.' in url_path:
-            extension = url_path.split('.')[-1]
-            if extension.lower() not in [
-                    'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'gif', 'ppm', 'pgm'
-            ]:
+        url_path = urlparse(task["file_url"])[2]
+        if "." in url_path:
+            extension = url_path.split(".")[-1]
+            if extension.lower() not in ["jpg", "jpeg", "png", "bmp", "tiff", "gif", "ppm", "pgm"]:
                 extension = default_ext
         else:
             extension = default_ext
         file_idx = self.fetched_num + self.file_idx_offset
-        return '{:06d}.{}'.format(file_idx, extension)
+        return f"{file_idx:06d}.{extension}"
 
-    def worker_exec(self,
-                    max_num,
-                    default_ext='jpg',
-                    queue_timeout=5,
-                    req_timeout=5,
-                    **kwargs):
-        super(ImageDownloader, self).worker_exec(
-            max_num, default_ext, queue_timeout, req_timeout, **kwargs)
+    def worker_exec(self, max_num, default_ext="jpg", queue_timeout=5, req_timeout=5, **kwargs):
+        super().worker_exec(max_num, default_ext, queue_timeout, req_timeout, **kwargs)
