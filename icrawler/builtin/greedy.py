@@ -4,7 +4,7 @@ from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 
-from icrawler import Crawler, Feeder, ImageDownloader, Parser
+from .. import Crawler, Feeder, ImageDownloader, Parser
 
 
 class GreedyFeeder(Feeder):

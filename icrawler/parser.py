@@ -4,7 +4,7 @@ import time
 from threading import current_thread
 from urllib.parse import urlsplit
 
-from icrawler.utils import ThreadPool
+from .utils import ThreadPool
 
 
 class Parser(ThreadPool):
@@ -36,7 +36,7 @@ class Parser(ThreadPool):
         :Example:
 
         >>> task = {}
-        >>> self.output(task)
+        >>> self.output(task)  # doctest: +SKIP
         """
         raise NotImplementedError
 

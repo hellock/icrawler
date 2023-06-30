@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from PIL import Image
 
-from icrawler.utils import ThreadPool
+from .utils import ThreadPool
 
 
 class Downloader(ThreadPool):

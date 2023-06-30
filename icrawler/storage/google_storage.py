@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from icrawler.storage import BaseStorage
+from .base import BaseStorage
 
 
 class GoogleStorage(BaseStorage):

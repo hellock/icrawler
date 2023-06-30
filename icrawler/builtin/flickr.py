@@ -4,7 +4,7 @@ import math
 import os
 from urllib.parse import urlencode
 
-from icrawler import Crawler, Feeder, ImageDownloader, Parser
+from .. import Crawler, Feeder, ImageDownloader, Parser
 
 
 class FlickrFeeder(Feeder):
