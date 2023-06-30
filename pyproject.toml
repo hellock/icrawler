@@ -1,0 +1,107 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools",
+  "setuptools-scm",
+]
+
+[project]
+name = "icrawler"
+description = "A multi-thread crawler framework with many builtin image crawlers provided."
+readme = "README.md"
+keywords = [
+  "Crawler",
+]
+license = {file = "LICENSE"}
+maintainers = [
+    {name = "Kai Chen", email = "chenkaidev@gmail.com"},
+    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+]
+authors = [
+    {name = "Kai Chen", email = "chenkaidev@gmail.com"},
+    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+]
+requires-python = ">=3.7"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities",
+]
+dynamic = [
+  "version",
+]
+dependencies = [
+  "pyyaml",
+]
+[project.urls]
+documentation = "https://icrawler.readthedocs.io/"
+homepage = "https://icrawler.readthedocs.io/"
+repository = "https://github.com/hellock/icrawler"
+
+[tool.setuptools]
+packages = ["icrawler"]
+
+[tool.setuptools_scm]
+write_to = "icrawler/version.py"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+line_length = 120
+profile = "black"
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --cov"
+
+[tool.coverage.run]
+branch = true
+omit = ["tests/*", "setup.py"]
+
+[tool.coverage.paths]
+source = ["icrawler"]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = """
+  E0012,
+  E0401,
+  R0201,
+  R0801,
+"""
+
+[tool.pylint.reports]
+output-format = "colorized"
+
+[tool.pylint.main]
+fail-under = 9.8

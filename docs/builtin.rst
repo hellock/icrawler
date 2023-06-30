@@ -14,7 +14,7 @@ Search engine crawlers
 ----------------------
 
 The search engine crawlers (Google, Bing, Baidu) have universal APIs.
-Here is an example of how to use the built-in crawlers. 
+Here is an example of how to use the built-in crawlers.
 
 .. code:: python
 
@@ -77,7 +77,7 @@ When using ``GoogleImageCrawler``, language can be specified via the argument ``
     to view the result page. The limitation is usually 1000 for many search engines such as google and bing. To crawl more than 1000 images with a single keyword, we can specify different date ranges.
 
     .. code:: python
-    
+
         google_crawler.crawl(
             keyword='cat',
             filters={'date': ((2016, 1, 1), (2016, 6, 30))},
@@ -134,8 +134,8 @@ are also supported. Valid arguments and values are shown as follows.
    corresponding relations between the colors and the codes.
 -  ``styles`` -- A comma-delimited list of styles, including ``blackandwhite``,
    ``depthoffield``, ``minimalism`` and ``pattern``.
--  ``orientation`` -- A comma-delimited list of image orientation. It can be 
-   ``landscape``, ``portrait``, ``square`` and ``panorama``. The default 
+-  ``orientation`` -- A comma-delimited list of image orientation. It can be
+   ``landscape``, ``portrait``, ``square`` and ``panorama``. The default
    includes all of them.
 
 Another parameter ``size_preference`` is available for Flickr crawler, it define
@@ -155,7 +155,7 @@ the preferred order of image sizes. Valid values are shown as follows.
 - square: 75x75
 
 ``size_preference`` can be either a list or a string, if not specified, all
-sizes are acceptable and larger sizes are prior to smaller ones. 
+sizes are acceptable and larger sizes are prior to smaller ones.
 
 .. note::
 
@@ -174,7 +174,7 @@ If you just want to crawl all the images from some website, then
     from icrawler.builtin import GreedyImageCrawler
 
     greedy_crawler = GreedyImageCrawler(storage={'root_dir': 'your_image_dir'})
-    greedy_crawler.crawl(domains='http://www.bbc.com/news', max_num=0, 
+    greedy_crawler.crawl(domains='http://www.bbc.com/news', max_num=0,
                          min_size=None, max_size=None)
 
 The argument ``domains`` can be either an url string or list.

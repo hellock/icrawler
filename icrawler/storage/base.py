@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 from abc import ABCMeta, abstractmethod
 
 
-class BaseStorage(object):
+class BaseStorage:
     """Base class of backend storage"""
 
     __metaclass__ = ABCMeta

@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-
-class Signal(object):
+class Signal:
     """Signal class
 
     Provides interfaces for set and get some globally shared variables(signals).

@@ -5,9 +5,8 @@ from .cached_queue import CachedQueue
 
 
 class Worker(Thread):
-
     def __init__(self, *args, **kwargs):
-        super(Worker, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.daemon = True
         self.quit = False
 
@@ -15,7 +14,7 @@ class Worker(Thread):
         self.quit = True
 
 
-class ThreadPool(object):
+class ThreadPool:
     """Simple implementation of a thread pool
 
     This is the base class of :class:`Feeder`, :class:`Parser` and
@@ -41,10 +40,8 @@ class ThreadPool(object):
 
     def __init__(self, thread_num, in_queue=None, out_queue=None, name=None):
         self.thread_num = thread_num
-        self.in_queue = (in_queue
-                         if in_queue else CachedQueue(5 * self.thread_num))
-        self.out_queue = (out_queue
-                          if out_queue else CachedQueue(5 * self.thread_num))
+        self.in_queue = in_queue if in_queue else CachedQueue(5 * self.thread_num)
+        self.out_queue = out_queue if out_queue else CachedQueue(5 * self.thread_num)
         self.name = name if name else __name__
         self.workers = []
         self.lock = Lock()
@@ -53,17 +50,13 @@ class ThreadPool(object):
     def init_workers(self, *args, **kwargs):
         self.workers = []
         for i in range(self.thread_num):
-            worker = Worker(
-                target=self.worker_exec,
-                name='{}-{:03d}'.format(self.name, i + 1),
-                args=args,
-                kwargs=kwargs)
+            worker = Worker(target=self.worker_exec, name=f"{self.name}-{i + 1:03d}", args=args, kwargs=kwargs)
             self.workers.append(worker)
 
     def start(self, *args, **kwargs):
         self.init_workers(*args, **kwargs)
         for worker in self.workers:
-            self.logger.debug('thread %s started', worker.name)
+            self.logger.debug("thread %s started", worker.name)
             worker.start()
 
     def input(self, task, block=True, timeout=None):

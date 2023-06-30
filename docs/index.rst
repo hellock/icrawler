@@ -14,7 +14,7 @@ Documentation index
 
 .. toctree::
    :maxdepth: 2
-   
+
    install.rst
    builtin.rst
    extend.rst

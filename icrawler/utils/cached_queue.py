@@ -1,10 +1,9 @@
 import json
 from collections import OrderedDict
+from queue import Queue
 
-from six.moves.queue import Queue
 
-
-class CachedQueue(Queue, object):
+class CachedQueue(Queue):
     """Queue with cache
 
     This queue is used in :class:`ThreadPool`, it enables parser and downloader
@@ -17,9 +16,9 @@ class CachedQueue(Queue, object):
     """
 
     def __init__(self, *args, **kwargs):
-        super(CachedQueue, self).__init__(*args, **kwargs)
-        if 'cache_capacity' in kwargs:
-            self.cache_capacity = kwargs['cache_capacity']
+        super().__init__(*args, **kwargs)
+        if "cache_capacity" in kwargs:
+            self.cache_capacity = kwargs["cache_capacity"]
         else:
             self.cache_capacity = 0
         self._cache = OrderedDict()
@@ -46,17 +45,15 @@ class CachedQueue(Queue, object):
         if hashable_item in self._cache:
             return True
         else:
-            if self.cache_capacity > 0 and len(
-                    self._cache) >= self.cache_capacity:
+            if self.cache_capacity > 0 and len(self._cache) >= self.cache_capacity:
                 self._cache.popitem(False)
             self._cache[hashable_item] = 1
             return False
 
     def put(self, item, block=True, timeout=None, dup_callback=None):
-        """Put an item to queue if it is not duplicated.
-        """
+        """Put an item to queue if it is not duplicated."""
         if not self.is_duplicated(item):
-            super(CachedQueue, self).put(item, block, timeout)
+            super().put(item, block, timeout)
         else:
             if dup_callback:
                 dup_callback(item)

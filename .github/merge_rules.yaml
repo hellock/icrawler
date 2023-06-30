@@ -1,0 +1,7 @@
+- name: merge
+  patterns:
+    - icrawler/**
+  approved_by:
+    - ZhiyuanChen
+  mandatory_checks_name:
+    - push

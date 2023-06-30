@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Crawler base class"""
 
 import logging
@@ -12,7 +11,7 @@ from icrawler.storage import BaseStorage
 from icrawler.utils import ProxyPool, Session, Signal
 
 
-class Crawler(object):
+class Crawler:
     """Base class for crawlers
 
     Attributes:
@@ -25,21 +24,20 @@ class Crawler(object):
         logger (Logger): A Logger object used for logging
     """
 
-    def __init__(self,
-                 feeder_cls=Feeder,
-                 parser_cls=Parser,
-                 downloader_cls=Downloader,
-                 feeder_threads=1,
-                 parser_threads=1,
-                 downloader_threads=1,
-                 storage={
-                     'backend': 'FileSystem',
-                     'root_dir': 'images'
-                 },
-                 log_level=logging.INFO,
-                 extra_feeder_args=None,
-                 extra_parser_args=None,
-                 extra_downloader_args=None):
+    def __init__(
+        self,
+        feeder_cls=Feeder,
+        parser_cls=Parser,
+        downloader_cls=Downloader,
+        feeder_threads=1,
+        parser_threads=1,
+        downloader_threads=1,
+        storage={"backend": "FileSystem", "root_dir": "images"},
+        log_level=logging.INFO,
+        extra_feeder_args=None,
+        extra_parser_args=None,
+        extra_downloader_args=None,
+    ):
         """Init components with class names and other arguments.
 
         Args:
@@ -61,26 +59,22 @@ class Crawler(object):
         # set feeder, parser and downloader
         feeder_kwargs = {} if extra_feeder_args is None else extra_feeder_args
         parser_kwargs = {} if extra_parser_args is None else extra_parser_args
-        downloader_kwargs = ({} if extra_downloader_args is None else
-                             extra_downloader_args)
-        self.feeder = feeder_cls(feeder_threads, self.signal, self.session,
-                                 **feeder_kwargs)
-        self.parser = parser_cls(parser_threads, self.signal, self.session,
-                                 **parser_kwargs)
-        self.downloader = downloader_cls(downloader_threads, self.signal,
-                                         self.session, self.storage,
-                                         **downloader_kwargs)
+        downloader_kwargs = {} if extra_downloader_args is None else extra_downloader_args
+        self.feeder = feeder_cls(feeder_threads, self.signal, self.session, **feeder_kwargs)
+        self.parser = parser_cls(parser_threads, self.signal, self.session, **parser_kwargs)
+        self.downloader = downloader_cls(
+            downloader_threads, self.signal, self.session, self.storage, **downloader_kwargs
+        )
         # connect all components
         self.feeder.connect(self.parser).connect(self.downloader)
 
     def set_logger(self, log_level=logging.INFO):
         """Configure the logger with log_level."""
         logging.basicConfig(
-            format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-            level=log_level,
-            stream=sys.stderr)
+            format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=log_level, stream=sys.stderr
+        )
         self.logger = logging.getLogger(__name__)
-        logging.getLogger('requests').setLevel(logging.WARNING)
+        logging.getLogger("requests").setLevel(logging.WARNING)
 
     def init_signal(self):
         """Init signal
@@ -89,8 +83,7 @@ class Crawler(object):
         ``reach_max_num``.
         """
         self.signal = Signal()
-        self.signal.set(
-            feeder_exited=False, parser_exited=False, reach_max_num=False)
+        self.signal.set(feeder_exited=False, parser_exited=False, reach_max_num=False)
 
     def set_storage(self, storage):
         """Set storage backend for downloader
@@ -104,19 +97,18 @@ class Crawler(object):
         if isinstance(storage, BaseStorage):
             self.storage = storage
         elif isinstance(storage, dict):
-            if 'backend' not in storage and 'root_dir' in storage:
-                storage['backend'] = 'FileSystem'
+            if "backend" not in storage and "root_dir" in storage:
+                storage["backend"] = "FileSystem"
             try:
-                backend_cls = getattr(storage_package, storage['backend'])
+                backend_cls = getattr(storage_package, storage["backend"])
             except AttributeError:
                 try:
-                    backend_cls = import_module(storage['backend'])
+                    backend_cls = import_module(storage["backend"])
                 except ImportError:
-                    self.logger.error('cannot find backend module %s',
-                                      storage['backend'])
+                    self.logger.error("cannot find backend module %s", storage["backend"])
                     sys.exit()
             kwargs = storage.copy()
-            del kwargs['backend']
+            del kwargs["backend"]
             self.storage = backend_cls(**kwargs)
         else:
             raise TypeError('"storage" must be a storage object or dict')
@@ -140,10 +132,11 @@ class Crawler(object):
         """
         if headers is None:
             headers = {
-                'User-Agent':
-                ('Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-                 ' AppleWebKit/537.36 (KHTML, like Gecko) '
-                 'Chrome/88.0.4324.104 Safari/537.36')
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    " AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/88.0.4324.104 Safari/537.36"
+                )
             }
         elif not isinstance(headers, dict):
             raise TypeError('"headers" must be a dict object')
@@ -151,10 +144,7 @@ class Crawler(object):
         self.session = Session(self.proxy_pool)
         self.session.headers.update(headers)
 
-    def crawl(self,
-              feeder_kwargs=None,
-              parser_kwargs=None,
-              downloader_kwargs=None):
+    def crawl(self, feeder_kwargs=None, parser_kwargs=None, downloader_kwargs=None):
         """Start crawling
 
         This method will start feeder, parser and download and wait
@@ -167,22 +157,19 @@ class Crawler(object):
                 ``downloader.start()``
         """
         self.signal.reset()
-        self.logger.info('start crawling...')
+        self.logger.info("start crawling...")
 
         feeder_kwargs = {} if feeder_kwargs is None else feeder_kwargs
         parser_kwargs = {} if parser_kwargs is None else parser_kwargs
         downloader_kwargs = {} if downloader_kwargs is None else downloader_kwargs
 
-        self.logger.info('starting %d feeder threads...',
-                         self.feeder.thread_num)
+        self.logger.info("starting %d feeder threads...", self.feeder.thread_num)
         self.feeder.start(**feeder_kwargs)
 
-        self.logger.info('starting %d parser threads...',
-                         self.parser.thread_num)
+        self.logger.info("starting %d parser threads...", self.parser.thread_num)
         self.parser.start(**parser_kwargs)
 
-        self.logger.info('starting %d downloader threads...',
-                         self.downloader.thread_num)
+        self.logger.info("starting %d downloader threads...", self.downloader.thread_num)
         self.downloader.start(**downloader_kwargs)
 
         while True:
@@ -201,4 +188,4 @@ class Crawler(object):
         if not self.downloader.in_queue.empty():
             self.downloader.clear_buffer(True)
 
-        self.logger.info('Crawling task done!')
+        self.logger.info("Crawling task done!")

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os.path as osp
 from threading import current_thread
 
@@ -26,8 +24,7 @@ class Feeder(ThreadPool):
 
     def __init__(self, thread_num, signal, session):
         """Init Feeder with some shared variables."""
-        super(Feeder, self).__init__(
-            thread_num=thread_num, in_queue=None, name='feeder')
+        super().__init__(thread_num=thread_num, in_queue=None, name="feeder")
         self.signal = signal
         self.session = session
 
@@ -41,10 +38,10 @@ class Feeder(ThreadPool):
     def worker_exec(self, **kwargs):
         """Target function of workers"""
         self.feed(**kwargs)
-        self.logger.info('thread {} exit'.format(current_thread().name))
+        self.logger.info(f"thread {current_thread().name} exit")
 
     def __exit__(self):
-        self.logger.info('all feeder threads exited')
+        self.logger.info("all feeder threads exited")
 
 
 class UrlListFeeder(Feeder):
@@ -53,10 +50,10 @@ class UrlListFeeder(Feeder):
     def feed(self, url_list, offset=0, max_num=0):
         if isinstance(url_list, str):
             if osp.isfile(url_list):
-                with open(url_list, 'r') as fin:
-                    url_list = [line.rstrip('\n') for line in fin]
+                with open(url_list) as fin:
+                    url_list = [line.rstrip("\n") for line in fin]
             else:
-                raise IOError('url list file {} not found'.format(url_list))
+                raise OSError(f"url list file {url_list} not found")
         elif not isinstance(url_list, list):
             raise TypeError('"url_list" can only be a filename or a str list')
 
@@ -70,7 +67,7 @@ class UrlListFeeder(Feeder):
             for i in range(offset, end_idx):
                 url = url_list[i]
                 self.out_queue.put(url)
-                self.logger.debug('put url to url_queue: {}'.format(url))
+                self.logger.debug(f"put url to url_queue: {url}")
 
 
 class SimpleSEFeeder(Feeder):
@@ -89,4 +86,4 @@ class SimpleSEFeeder(Feeder):
         for i in range(offset, offset + max_num, page_step):
             url = url_template.format(keyword, i)
             self.out_queue.put(url)
-            self.logger.debug('put url to url_queue: {}'.format(url))
+            self.logger.debug(f"put url to url_queue: {url}")
