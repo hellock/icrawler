@@ -1,7 +1,7 @@
 import os.path as osp
 from threading import current_thread
 
-from icrawler.utils import ThreadPool
+from .utils import ThreadPool
 
 
 class Feeder(ThreadPool):

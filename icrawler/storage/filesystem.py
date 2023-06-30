@@ -3,7 +3,7 @@ import os.path as osp
 
 import six
 
-from icrawler.storage import BaseStorage
+from .base import BaseStorage
 
 
 class FileSystem(BaseStorage):

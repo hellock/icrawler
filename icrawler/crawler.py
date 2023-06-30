@@ -5,10 +5,12 @@ import sys
 import time
 from importlib import import_module
 
-from icrawler import Downloader, Feeder, Parser
-from icrawler import storage as storage_package
-from icrawler.storage import BaseStorage
-from icrawler.utils import ProxyPool, Session, Signal
+from . import storage as storage_package
+from .downloader import Downloader
+from .feeder import Feeder
+from .parser import Parser
+from .storage import BaseStorage
+from .utils import ProxyPool, Session, Signal
 
 
 class Crawler:

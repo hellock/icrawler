@@ -5,8 +5,8 @@ from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
 
-from icrawler import Crawler, Feeder, ImageDownloader, Parser
-from icrawler.builtin.filter import Filter
+from .. import Crawler, Feeder, ImageDownloader, Parser
+from .filter import Filter
 
 
 class GoogleFeeder(Feeder):
