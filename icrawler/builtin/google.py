@@ -163,6 +163,16 @@ class GoogleParser(Parser):
             uris = re.findall(r"http[^\[]*?\.(?:jpg|png|bmp)", txt)
             return [{"file_url": uri} for uri in uris]
 
+    # https://github.com/hellock/icrawler/compare/master...simonmcnair:icrawler:master
+    def parseAlternate(self, response):
+        soup = BeautifulSoup(
+            response.content.decode('utf-8', 'ignore'), 'lxml')
+        images = soup.find_all(name='img')
+        uris = []
+        for img in images:
+            if img.has_attr('src'):
+                uris.append(img['src'])
+        return [{'file_url': uri} for uri in uris]
 
 class GoogleImageCrawler(Crawler):
     def __init__(
