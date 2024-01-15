@@ -13,14 +13,51 @@ from icrawler.builtin import (
     UrlListCrawler,
 )
 
+# for non-frame app
+class MainApplication:
+    def __init__(self, master, *args, **kwargs):
+        self.master = master
+        self.frame = tk.Frame(master)
+        # master.title("iCrawler")
+        # master.geometry("{}x{}".format(460, 350))
+        
+        root.grid_rowconfigure(2, weight=1)
+        root.grid_columnconfigure(1, weight=1)
 
-class start_window(tk.Frame):
-    def __init__(self, parent=None):
-        tk.Frame.__init__(self, parent)
-        tk.Frame.pack(self)
-        greeting = tk.Label(text="iCrawler Options")
-        greeting.pack()
+        greeting = tk.Label(master, text="iCrawler Options")
+        greeting.grid(row=0, columnspan=2)
 
+        label_search_string = tk.Label(master, text="Search For: ")
+        label_search_string.grid(row=1, column=0)
+        
+        # TODO: use a Text box and search each line as a keyword?
+        entry_search_string = tk.Entry(master)
+        entry_search_string.grid(row=1, column=1)
+
+        label_crawlers = tk.Label(master, text="Crawlers: ")
+        label_crawlers.grid(row=2, column=0)
+
+
+# for frame app
+# class MainApplication(tk.Frame):
+    # def __init__(self, parent, *args, **kwargs):
+        # self.frame = tk.Frame.__init__(self, parent, *args, **kwargs)
+        # self.parent = parent
+        # parent.title("iCrawler")
+        # parent.geometry("{}x{}".format(460, 350))
+        
+        # greeting = tk.Label(self, text="iCrawler Options")
+        # greeting.pack()
+
+        # label_search_string = tk.Label(self, text="Search For: ")
+        # label_search_string.pack()
+        
+        # # TODO: use a Text box and search each line as a keyword?
+        # entry_search_string = tk.Entry(self)
+        # entry_search_string.pack()
+
+        # label_crawlers = tk.Label(self, text="Crawlers: ")
+        # label_crawlers.pack()
 
 def start_download(max_number, search_string, threads):
 
@@ -112,8 +149,9 @@ def main():
 
 
 if __name__ == "__main__":
-    window = tk.Tk()
-    window.title("iCrawler")
-    # window.geometry("500x400")
-    app = start_window(window)
-    window.mainloop()
+    root = tk.Tk()
+    # for frame-based app
+    # MainApplication(root).pack(side="top", fill="both", expand=True)
+    # for tk-based app (non-frame)
+    app = MainApplication(root)
+    root.mainloop()
