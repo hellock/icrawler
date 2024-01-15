@@ -36,6 +36,17 @@ class MainApplication:
 
         label_crawlers = tk.Label(master, text="Crawlers: ")
         label_crawlers.grid(row=2, column=0)
+        
+        crawlers_frame = tk.Frame(master)
+        crawlers_frame.grid(row=2, column=1)
+        
+        crawlers_google = tk.BooleanVar()
+        tk.Checkbutton(crawlers_frame, text="Google", variable=crawlers_google).pack(anchor=tk.W)
+        crawlers_bing = tk.BooleanVar()
+        tk.Checkbutton(crawlers_frame, text="Bing", variable=crawlers_bing).pack(anchor=tk.W)
+        crawlers_baidu = tk.BooleanVar()
+        tk.Checkbutton(crawlers_frame, text="Baidu", variable=crawlers_baidu).pack(anchor=tk.W)
+        
 
 
 # for frame app
