@@ -12,6 +12,7 @@ from icrawler.builtin import (
     GreedyImageCrawler,
     UrlListCrawler,
 )
+import re
 
 # for non-frame app
 class MainApplication:
@@ -21,24 +22,26 @@ class MainApplication:
         # master.title("iCrawler")
         # master.geometry("{}x{}".format(460, 350))
         
+        padding_size=7
+        
         root.grid_rowconfigure(2, weight=1)
         root.grid_columnconfigure(1, weight=1)
 
         greeting = tk.Label(master, text="iCrawler Options")
-        greeting.grid(row=0, columnspan=2)
+        greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
 
         label_search_string = tk.Label(master, text="Search For: ")
-        label_search_string.grid(row=1, column=0)
+        label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
         
         # TODO: use a Text box and search each line as a keyword?
         entry_search_string = tk.Entry(master)
-        entry_search_string.grid(row=1, column=1)
+        entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
 
         label_crawlers = tk.Label(master, text="Crawlers: ")
-        label_crawlers.grid(row=2, column=0)
+        label_crawlers.grid(row=2, column=0, padx=padding_size, pady=padding_size)
         
         crawlers_frame = tk.Frame(master)
-        crawlers_frame.grid(row=2, column=1)
+        crawlers_frame.grid(row=2, column=1, padx=padding_size, pady=padding_size)
         
         crawlers_google = tk.BooleanVar()
         tk.Checkbutton(crawlers_frame, text="Google", variable=crawlers_google).pack(anchor=tk.W)
@@ -48,6 +51,8 @@ class MainApplication:
         tk.Checkbutton(crawlers_frame, text="Baidu", variable=crawlers_baidu).pack(anchor=tk.W)
         
 
+        crawl_button = tk.Button(master, text="Go")
+        crawl_button.grid(row=3, columnspan=2, padx=padding_size, pady=padding_size)
 
 # for frame app
 # class MainApplication(tk.Frame):
@@ -78,13 +83,14 @@ def start_download(max_number, search_string, threads):
     test_google = True
     test_greedy = False
     test_urllist = False
-    search_string = "Lucy Hale best"
+    search_string = "TODO"
+    search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_string)
 
 
     if test_google:
         print("start testing GoogleImageCrawler")
         google_crawler = GoogleImageCrawler(
-            downloader_threads=threads, storage={"root_dir": "images/google"}, log_level=logging.INFO
+            downloader_threads=threads, storage={"root_dir": search_folder_name + "/google"}, log_level=logging.INFO
         )
         # search_filters = dict(size="large", date=(None, (2019, 1, 1)))
         search_filters = dict(size="large")
@@ -96,7 +102,7 @@ def start_download(max_number, search_string, threads):
 
     if  test_bing:
         print("start testing BingImageCrawler")
-        bing_crawler = BingImageCrawler(downloader_threads=threads, storage={"root_dir": "images/bing"}, log_level=logging.INFO)
+        bing_crawler = BingImageCrawler(downloader_threads=threads, storage={"root_dir": search_folder_name + "/bing"}, log_level=logging.INFO)
     #   search_filters = dict(type="photo", license="commercial", layout="wide", size="large", date="pastmonth")
         search_filters = dict(size="extralarge")
         bing_crawler.crawl(search_string, filters = search_filters, max_num=max_number)
@@ -105,19 +111,19 @@ def start_download(max_number, search_string, threads):
     if test_baidu:
         print("start testing BaiduImageCrawler")
         search_filters = dict(size="large", color="blue")
-        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage={"root_dir": "images/baidu"})
+        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage={"root_dir": search_folder_name + "/baidu"})
         baidu_crawler.crawl(search_string, max_num=max_number)
 
 
     if test_greedy:
         print("start testing GreedyImageCrawler")
-        greedy_crawler = GreedyImageCrawler(parser_threads=4, storage={"root_dir": "images/greedy"})
+        greedy_crawler = GreedyImageCrawler(parser_threads=4, storage={"root_dir": search_folder_name + "/greedy"})
         greedy_crawler.crawl("http://www.bbc.com/news", max_num=10, min_size=(100, 100))
 
 
     if test_urllist:
         print("start testing UrlListCrawler")
-        urllist_crawler = UrlListCrawler(downloader_threads=3, storage={"root_dir": "images/urllist"})
+        urllist_crawler = UrlListCrawler(downloader_threads=3, storage={"root_dir": search_folder_name + "/urllist"})
         filelist = osp.join(osp.dirname(__file__), "filelist_demo.txt")
         urllist_crawler.crawl(filelist)
 
