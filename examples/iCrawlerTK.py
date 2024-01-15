@@ -95,8 +95,6 @@ def start_download(max_number, search_string, threads):
         # search_filters = dict(size="large", date=(None, (2019, 1, 1)))
         search_filters = dict(size="large")
         # search_filters = dict(size="=1600x1200")
-        # if "keeley" in search_string:
-        #     search_filters = dict(size="=1920x1440")
         google_crawler.crawl(search_string, filters=search_filters, max_num=max_number)
 
 
