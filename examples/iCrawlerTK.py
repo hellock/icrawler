@@ -21,16 +21,14 @@ class MainApplication:
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.frame = tk.Frame(master)
-        # master.title("iCrawler")
-        # master.geometry("{}x{}".format(460, 350))
         
         padding_size=10
         
         root.grid_rowconfigure(2, weight=1)
         root.grid_columnconfigure(1, weight=1)
 
-        greeting = tk.Label(master, text="iCrawler Options")
-        greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
+        self.greeting = tk.Label(master, text="iCrawler Options")
+        self.greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
 
         label_search_string = tk.Label(master, text="Search For: ")
         label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
@@ -53,12 +51,14 @@ class MainApplication:
         tk.Checkbutton(crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
         
 
-        crawl_button = tk.Button(master, command=self.go_clicked, text="Go")
+        self.crawl_button_text=tk.StringVar(root)
+        self.crawl_button_text.set("Go")
+        crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
         crawl_button.grid(row=3, columnspan=2, padx=padding_size, pady=padding_size)
 
     def go_clicked(self):
 
-        max_number=1000
+        max_number=10
         threads=10
 
         search_string   =self.search_string.get()
@@ -66,7 +66,10 @@ class MainApplication:
         crawlers_baidu  =self.crawlers_baidu.get()
         crawlers_google =self.crawlers_google.get()
 
+        gText=self.crawl_button_text.get()
+        self.crawl_button_text.set("Searching...")
         start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads)
+        self.crawl_button_text.set(gText)
 
 
 def start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads):
