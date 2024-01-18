@@ -1,9 +1,11 @@
 # non-tk code is mostly from from iCrawler example(s)
 # https://github.com/hellock/icrawler/
+
 import tkinter as tk
+from tkinter import messagebox
+
 import logging
-import os.path as osp
-from argparse import ArgumentParser
+
 from icrawler.builtin import (
     BaiduImageCrawler,
     BingImageCrawler,
@@ -14,9 +16,7 @@ from icrawler.builtin import (
 )
 import re
 
-# for non-frame app
 class MainApplication:
-
 
     def __init__(self, master, *args, **kwargs):
         self.master = master
@@ -68,7 +68,7 @@ class MainApplication:
 
     def go_clicked(self):
 
-        max_number=10
+        max_number=100
         threads=10
 
         search_string   =self.search_string.get()
@@ -79,15 +79,20 @@ class MainApplication:
         gText=self.crawl_button_text.get()
         self.crawl_button_text.set("Searching...")
         self.crawl_button.update_idletasks()
+
+        print("\nSearch started: {} threads, maximum {} results, searching for '{}'\n".format(threads, max_number, search_string))
+
         start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads)
+
         self.crawl_button_text.set(gText)
+
+        tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
 def start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads):
 
     search_string = search_string.replace(" ", "_")
     search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_string)
-
 
     if crawlers_google:
         print("start testing GoogleImageCrawler")
@@ -113,43 +118,6 @@ def start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string
         search_filters = dict(size="large", color="blue")
         baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage={"root_dir": search_folder_name + "/baidu"})
         baidu_crawler.crawl(search_string, max_num=max_number)
-
-
-def main():
-    parser = ArgumentParser(description="Test built-in crawlers")
-
-    parser.add_argument(
-        "--crawler",
-        nargs="+",
-        default=["google", "bing", "baidu"],
-        help="which crawlers to run",
-    )
-    parser.add_argument(
-        "--search_string",
-        nargs=1,
-        default="Lucy Hale Hot & Sexy (19 Photos)",
-        help="what to find",
-    )
-    parser.add_argument(
-        "--max_number",
-        nargs=1,
-        default=1000,
-        help="max results",
-    )
-    parser.add_argument(
-        "--threads",
-        nargs=1,
-        default=9,
-        help="number of threads",
-    )
-
-    args = parser.parse_args()
-
-    print("max: {}\nsearch:{}\n".format(args.max_number, args.search_string))
-        
-    for crawler in args.crawler:
-        eval(f"test_{crawler}({args.max_number}, \"{args.search_string}\", args.threads)")
-        print("\n")
 
 
 if __name__ == "__main__":
