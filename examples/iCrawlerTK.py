@@ -24,8 +24,8 @@ class MainApplication:
         
         padding_size=10
         
-        root.grid_rowconfigure(3, weight=1)
-        root.grid_columnconfigure(1, weight=1)
+        #root.grid_rowconfigure(3, weight=1)
+        #root.grid_columnconfigure(1, weight=1)
 
         self.greeting = tk.Label(master, text="iCrawler Options")
         self.greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
@@ -37,11 +37,23 @@ class MainApplication:
         self.search_string =tk.StringVar(root)
         entry_search_string = tk.Entry(master, textvariable=self.search_string)
         entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
+
+
+        label_results = tk.Label(master, text="Results: ")
+        label_results.grid(row=2, column=0, padx=padding_size, pady=padding_size)
+        RESULTS_OPTIONS = ["10", "50", "100", "500", "1000"]
+        self.results_value = tk.StringVar(master)
+        self.results_value.set(RESULTS_OPTIONS[0]) # default value
+        self.results_options = tk.OptionMenu(master, self.results_value, *RESULTS_OPTIONS)
+        self.results_options.grid(row=2, column=1)
+        self.results_options.config(takefocus=1)
+
+
         label_crawlers = tk.Label(master, text="Crawlers: ")
-        label_crawlers.grid(row=2, column=0, padx=padding_size, pady=padding_size)
+        label_crawlers.grid(row=3, column=0, padx=padding_size, pady=padding_size)
         
         crawlers_frame = tk.Frame(master)
-        crawlers_frame.grid(row=2, column=1, padx=padding_size, pady=padding_size)
+        crawlers_frame.grid(row=3, column=1, padx=padding_size, pady=padding_size)
         
         self.crawlers_google = tk.BooleanVar()
         tk.Checkbutton(crawlers_frame, text="Google", variable=self.crawlers_google).pack(anchor=tk.W)
@@ -53,25 +65,26 @@ class MainApplication:
         tk.Checkbutton(crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
 
         label_size = tk.Label(master, text="Size: ")
-        label_size.grid(row=3, column=0, padx=padding_size, pady=padding_size)
+        label_size.grid(row=4, column=0, padx=padding_size, pady=padding_size)
         # TODO: =WxH
         # TODO: >WxH (does baidu do this?  Or fix Baidu's error message?
         SIZE_OPTIONS = ["          ", "extralarge", "large", "medium", "small"]
         self.size_value = tk.StringVar(master)
         self.size_value.set(SIZE_OPTIONS[0]) # default value
         self.size_options = tk.OptionMenu(master, self.size_value, *SIZE_OPTIONS)
-        self.size_options.grid(row=3, column=1)
+        self.size_options.grid(row=4, column=1)
         self.size_options.config(takefocus=1)
 
         self.crawl_button_text=tk.StringVar(root)
         self.crawl_button_text.set("Go")
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
-        self.crawl_button.grid(row=4, columnspan=2, padx=padding_size, pady=padding_size)
+        self.crawl_button.grid(row=5, columnspan=2, padx=padding_size, pady=padding_size)
 
     def go_clicked(self):
 
-        max_number=100
         threads=10 # TODO: set based on processor cores? 1/2 or 1/4 of available cores?
+
+        max_number = int(self.results_value.get())
 
         search_string   =self.search_string.get()
 
