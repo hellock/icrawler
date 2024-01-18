@@ -49,6 +49,8 @@ class MainApplication:
         tk.Checkbutton(crawlers_frame, text="Bing", variable=self.crawlers_bing).pack(anchor=tk.W)
         self.crawlers_baidu = tk.BooleanVar()
         tk.Checkbutton(crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
+        self.crawlers_flickr = tk.BooleanVar()
+        tk.Checkbutton(crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
 
         label_size = tk.Label(master, text="Size: ")
         label_size.grid(row=3, column=0, padx=padding_size, pady=padding_size)
@@ -69,56 +71,95 @@ class MainApplication:
     def go_clicked(self):
 
         max_number=100
-        threads=10
+        threads=10 # TODO: set based on processor cores? 1/2 or 1/4 of available cores?
 
         search_string   =self.search_string.get()
-        crawlers_bing   =self.crawlers_bing.get()
+
         crawlers_baidu  =self.crawlers_baidu.get()
+        crawlers_bing   =self.crawlers_bing.get()
+        crawlers_flickr =self.crawlers_flickr.get()
         crawlers_google =self.crawlers_google.get()
+
+        size = self.size_value.get()
+
+        search_filters = {}
+
+        if len(size.strip()) > 0:
+            search_filters["size"]=size
+
+        # TODO: colors search_filters["color"]=color
+        # "red"
+        # "orange"
+        # "yellow"
+        # "green"
+        # "purple"
+        # "pink"
+        # "teal"
+        # "blue"
+        # "brown"
+        # "white"
+        # "black"
+        # "blackandwhite"
+
+        if len(search_filters) < 1:
+            search_filters = None
 
         gText=self.crawl_button_text.get()
         self.crawl_button_text.set("Searching...")
         self.crawl_button.update_idletasks()
 
-        print("\nSearch started: {} threads, maximum {} results, searching for '{}'\n".format(threads, max_number, search_string))
+        print("\nSearch started: {} threads, maximum {} results, searching for '{}'".format(threads, max_number, search_string))
+        print("\nFilters: {}\n".format(search_filters))
 
-        start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads)
+        # examples
+        # search_filters = dict(size="large", date=(None, (2019, 1, 1)))
+        # search_filters = dict(size="large")
+        # search_filters = dict(type="photo", license="commercial", layout="wide", size="large", date="pastmonth")
+        # search_filters = dict(size="large", color="blue")
+        # search_filters = dict(size="extralarge")
+        # search_filters = dict(size="=1600x1200")
+
+        start_download(crawlers_baidu, crawlers_bing, crawlers_flickr, crawlers_google, search_string, max_number, threads, search_filters)
 
         self.crawl_button_text.set(gText)
 
         tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
-def start_download(crawlers_bing, crawlers_baidu, crawlers_google, search_string, max_number, threads):
+# TODO: crawlers could be a string array
+def start_download(crawlers_baidu, crawlers_bing, crawlers_flickr, crawlers_google, search_string, max_number, threads, search_filters):
 
-    search_string = search_string.replace(" ", "_")
+    search_folder_name = search_string.replace(" ", "_")
     search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_string)
+
 
     if crawlers_google:
         print("start testing GoogleImageCrawler")
-        google_crawler = GoogleImageCrawler(
-            downloader_threads=threads, storage={"root_dir": search_folder_name + "/google"}, log_level=logging.INFO
-        )
-        # search_filters = dict(size="large", date=(None, (2019, 1, 1)))
-        search_filters = dict(size="large")
-        # search_filters = dict(size="=1600x1200")
-        google_crawler.crawl(search_string, filters=search_filters, max_num=max_number)
+        storage={"root_dir": search_folder_name + "/google"}
+        google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        google_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
     if  crawlers_bing:
         print("start testing BingImageCrawler")
-        bing_crawler = BingImageCrawler(downloader_threads=threads, storage={"root_dir": search_folder_name + "/bing"}, log_level=logging.INFO)
-    #   search_filters = dict(type="photo", license="commercial", layout="wide", size="large", date="pastmonth")
-        search_filters = dict(size="extralarge")
-        bing_crawler.crawl(search_string, filters = search_filters, max_num=max_number)
+        storage={"root_dir": search_folder_name + "/bing"}
+        bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
     if crawlers_baidu:
         print("start testing BaiduImageCrawler")
-        search_filters = dict(size="large", color="blue")
-        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage={"root_dir": search_folder_name + "/baidu"})
-        baidu_crawler.crawl(search_string, max_num=max_number)
+        storage={"root_dir": search_folder_name + "/baidu"}
+        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
+
+    # flickr crawler will error if there is no API key set
+    if crawlers_flickr:
+        print("start testing FlickrImageCrawler")
+        storage={"root_dir": search_folder_name + "/flickr"}
+        flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 if __name__ == "__main__":
     root = tk.Tk()
