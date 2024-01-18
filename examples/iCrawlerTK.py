@@ -93,6 +93,18 @@ class MainApplication:
         crawlers_flickr =self.crawlers_flickr.get()
         crawlers_google =self.crawlers_google.get()
 
+        search_crawlers = []
+        if crawlers_baidu:
+            search_crawlers.append("baidu")
+        if crawlers_bing:
+            search_crawlers.append("bing")
+        if crawlers_google:
+            search_crawlers.append("google")
+        if crawlers_flickr:
+            search_crawlers.append("flickr")
+
+        # TODO: verify len(search_crawlers) >= 1
+
         size = self.size_value.get()
 
         search_filters = {}
@@ -122,6 +134,7 @@ class MainApplication:
         self.crawl_button.update_idletasks()
 
         print("\nSearch started: {} threads, maximum {} results, searching for '{}'".format(threads, max_number, search_string))
+        print("\nCrawlers: {}".format(search_crawlers))
         print("\nFilters: {}\n".format(search_filters))
 
         # examples
@@ -132,44 +145,43 @@ class MainApplication:
         # search_filters = dict(size="extralarge")
         # search_filters = dict(size="=1600x1200")
 
-        start_download(crawlers_baidu, crawlers_bing, crawlers_flickr, crawlers_google, search_string, max_number, threads, search_filters)
+        start_download(search_crawlers, search_string, max_number, threads, search_filters)
 
         self.crawl_button_text.set(gText)
 
         tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
-# TODO: crawlers could be a string array
-def start_download(crawlers_baidu, crawlers_bing, crawlers_flickr, crawlers_google, search_string, max_number, threads, search_filters):
+def start_download(search_crawlers, search_string, max_number, threads, search_filters):
 
     search_folder_name = search_string.replace(" ", "_")
-    search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_string)
+    search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_folder_name)
 
 
-    if crawlers_google:
-        print("start testing GoogleImageCrawler")
+    if "google" in search_crawlers:
+        print("\nstart GoogleImageCrawler")
         storage={"root_dir": search_folder_name + "/google"}
         google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
         google_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
-    if  crawlers_bing:
-        print("start testing BingImageCrawler")
+    if  "bing" in search_crawlers:
+        print("\nstart BingImageCrawler")
         storage={"root_dir": search_folder_name + "/bing"}
         bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
         bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
-    if crawlers_baidu:
-        print("start testing BaiduImageCrawler")
+    if "baidu" in search_crawlers:
+        print("\nstart BaiduImageCrawler")
         storage={"root_dir": search_folder_name + "/baidu"}
         baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
         baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
     # flickr crawler will error if there is no API key set
-    if crawlers_flickr:
-        print("start testing FlickrImageCrawler")
+    if "flickr" in search_crawlers:
+        print("\nstart FlickrImageCrawler")
         storage={"root_dir": search_folder_name + "/flickr"}
         flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
         flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
