@@ -23,9 +23,6 @@ class MainApplication:
         self.frame = tk.Frame(master)
         
         padding_size=10
-        
-        #root.grid_rowconfigure(3, weight=1)
-        #root.grid_columnconfigure(1, weight=1)
 
         self.greeting = tk.Label(master, text="iCrawler Options")
         self.greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
@@ -75,10 +72,19 @@ class MainApplication:
         self.size_options.grid(row=4, column=1)
         self.size_options.config(takefocus=1)
 
+        label_safe_mode = tk.Label(master, text="Safe Mode: ")
+        label_safe_mode.grid(row=5, column=0, padx=padding_size, pady=padding_size)
+        safe_mode_frame = tk.Frame(master)
+        safe_mode_frame.grid(row=5, column=1, padx=padding_size, pady=padding_size)
+        self.safe_mode = tk.IntVar()
+        tk.Radiobutton(safe_mode_frame, text="On", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
+        tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
+        tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=0).pack(anchor=tk.W)
+
         self.crawl_button_text=tk.StringVar(root)
         self.crawl_button_text.set("Go")
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
-        self.crawl_button.grid(row=5, columnspan=2, padx=padding_size, pady=padding_size)
+        self.crawl_button.grid(row=6, columnspan=2, padx=padding_size, pady=padding_size)
 
     def go_clicked(self):
 
@@ -108,6 +114,16 @@ class MainApplication:
         size = self.size_value.get()
 
         search_filters = {}
+
+        safe_mode = self.safe_mode.get()
+        
+        # if safe_mode == 0:     # no bits
+        #     search_filters["safe"]="off"
+        if safe_mode == 43690: # every other bit
+            search_filters["safe"]="moderate"
+        if safe_mode == 65535: # all bits
+            search_filters["safe"]="on"
+
 
         if len(size.strip()) > 0:
             search_filters["size"]=size
@@ -154,6 +170,7 @@ class MainApplication:
 
 def start_download(search_crawlers, search_string, max_number, threads, search_filters):
 
+    return
     search_folder_name = search_string.replace(" ", "_")
     search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_folder_name)
 
