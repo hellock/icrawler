@@ -5,16 +5,23 @@ import tkinter as tk
 from tkinter import messagebox
 
 import logging
+import re
+from FilenameDownloader import FilenameDownloader
+
+from yaml import load, dump, safe_load
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 from icrawler.builtin import (
     BaiduImageCrawler,
     BingImageCrawler,
     FlickrImageCrawler,
     GoogleImageCrawler,
-    GreedyImageCrawler,
-    UrlListCrawler,
+    # GreedyImageCrawler,
+    # UrlListCrawler,
 )
-import re
 
 class MainApplication:
 
@@ -77,14 +84,29 @@ class MainApplication:
         safe_mode_frame = tk.Frame(master)
         safe_mode_frame.grid(row=5, column=1, padx=padding_size, pady=padding_size)
         self.safe_mode = tk.IntVar()
-        tk.Radiobutton(safe_mode_frame, text="On", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
+        tk.Radiobutton(safe_mode_frame, text="On", variable=self.safe_mode, value=0).pack(anchor=tk.W)
         tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
-        tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=0).pack(anchor=tk.W)
+        tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
 
         self.crawl_button_text=tk.StringVar(root)
         self.crawl_button_text.set("Go")
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
         self.crawl_button.grid(row=6, columnspan=2, padx=padding_size, pady=padding_size)
+
+        with open("iCrawlerTK.yaml") as fconfig:
+            config = safe_load(fconfig)
+
+        print(config)
+        self.search_string.set(config["search_string"])
+
+        if config["safe_mode"] == "On":
+            self.safe_mode.set(0)
+        elif config["safe_mode"] == "Moderate":
+            self.safe_mode.set(43690)
+        elif config["safe_mode"] == "Off":
+            self.safe_mode.set(65535)
+
+        self.results_value.set(config["results"])
 
     def go_clicked(self):
 
@@ -117,11 +139,11 @@ class MainApplication:
 
         safe_mode = self.safe_mode.get()
         
-        # if safe_mode == 0:     # no bits
-        #     search_filters["safe"]="off"
+        if safe_mode == 65535: # all bits
+            search_filters["safe"]="off"
         if safe_mode == 43690: # every other bit
             search_filters["safe"]="moderate"
-        if safe_mode == 65535: # all bits
+        if safe_mode == 0:     # no bits
             search_filters["safe"]="on"
 
 
@@ -161,38 +183,41 @@ class MainApplication:
         # search_filters = dict(size="extralarge")
         # search_filters = dict(size="=1600x1200")
 
-        start_download(search_crawlers, search_string, max_number, threads, search_filters)
+        start_download(search_crawlers, search_string, max_number, threads, search_filters, logging.DEBUG)
 
         self.crawl_button_text.set(gText)
 
         tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
-def start_download(search_crawlers, search_string, max_number, threads, search_filters):
+def start_download(search_crawlers, search_string, max_number, threads, search_filters, log_level):
 
-    return
+    # silence pillow extraneous info
+    if log_level == logging.DEBUG:
+        logging.getLogger('PIL').setLevel(logging.WARNING)
+
     search_folder_name = search_string.replace(" ", "_")
-    search_folder_name = re.sub('[^a-zA-Z0-9_]', '', search_folder_name)
+    search_folder_name = re.sub('[^a-zA-Z0-9_.]', '', search_folder_name)
 
 
     if "google" in search_crawlers:
         print("\nstart GoogleImageCrawler")
         storage={"root_dir": search_folder_name + "/google"}
-        google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         google_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
     if  "bing" in search_crawlers:
         print("\nstart BingImageCrawler")
         storage={"root_dir": search_folder_name + "/bing"}
-        bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
     if "baidu" in search_crawlers:
         print("\nstart BaiduImageCrawler")
         storage={"root_dir": search_folder_name + "/baidu"}
-        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 
@@ -200,7 +225,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
     if "flickr" in search_crawlers:
         print("\nstart FlickrImageCrawler")
         storage={"root_dir": search_folder_name + "/flickr"}
-        flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=logging.INFO)
+        flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level)
         flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
 
 if __name__ == "__main__":
