@@ -93,20 +93,33 @@ class MainApplication:
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
         self.crawl_button.grid(row=6, columnspan=2, padx=padding_size, pady=padding_size)
 
+
         with open("iCrawlerTK.yaml") as fconfig:
             config = safe_load(fconfig)
 
         print(config)
-        self.search_string.set(config["search_string"])
+        if "search_string" in config:
+            self.search_string.set(config["search_string"])
 
-        if config["safe_mode"] == "On":
-            self.safe_mode.set(0)
-        elif config["safe_mode"] == "Moderate":
-            self.safe_mode.set(43690)
-        elif config["safe_mode"] == "Off":
-            self.safe_mode.set(65535)
+        if "results" in config:
+            self.results_value.set(config["results"])
 
-        self.results_value.set(config["results"])
+        if "crawlers" in config:
+            if "Google" in config["crawlers"] : self.crawlers_google.set(True)
+            if "Bing" in config["crawlers"] : self.crawlers_bing.set(True)
+            if "Baidu" in config["crawlers"] : self.crawlers_baidu.set(True)
+            if "Flickr" in config["crawlers"] : self.crawlers_flickr.set(True)
+
+        if "size" in config:
+            self.size_value.set(config["size"])
+
+        if "safe_mode" in config:
+            if config["safe_mode"] == "On":
+                self.safe_mode.set(0)
+            elif config["safe_mode"] == "Moderate":
+                self.safe_mode.set(43690)
+            elif config["safe_mode"] == "Off":
+                self.safe_mode.set(65535)
 
     def go_clicked(self):
 
