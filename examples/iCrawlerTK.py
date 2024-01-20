@@ -5,7 +5,9 @@ import tkinter as tk
 from tkinter import messagebox
 
 import logging
+from logging import config
 import re
+
 from FilenameDownloader import FilenameDownloader
 
 from yaml import load, dump, safe_load
@@ -21,7 +23,11 @@ from icrawler.builtin import (
     GoogleImageCrawler,
     # GreedyImageCrawler,
     # UrlListCrawler,
+    Crawler,
 )
+
+from icrawler.utils import Session
+
 
 class MainApplication:
 
@@ -29,12 +35,6 @@ class MainApplication:
         self.master = master
         self.frame = tk.Frame(master)
 
-        # TODO: crawlers create a logger, which changes these settings.  Override set_logger()
-        # def set_logger(self, log_level):
-        #    logging.basicConfig(
-        #        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=log_level, stream=sys.stderr
-        #    )
-        #    self.logger = logging.getLogger(__name__)
         logging.config.fileConfig("logging.conf")
 
         padding_size=10
@@ -130,6 +130,7 @@ class MainApplication:
             elif config["safe_mode"] == "Off":
                 self.safe_mode.set(65535)
 
+
     def go_clicked(self):
 
         threads=10 # TODO: set based on processor cores? 1/2 or 1/4 of available cores?
@@ -222,6 +223,35 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
 
     search_folder_name = search_string.replace(" ", "_")
     search_folder_name = re.sub('[^a-zA-Z0-9_.]', '', search_folder_name)
+
+
+    # MonkeyPatch
+    # https://web.archive.org/web/20120730014107/http://wiki.zope.org/zope2/MonkeyPatch
+    def sub_set_session(self, headers=None):
+        if headers is None:
+            headers = {
+                'Accept-Language': 'en-US,en;q=0.5, *;q=0.4',
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    " AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/88.0.4324.104 Safari/537.36"
+                )
+            }
+        elif not isinstance(headers, dict):
+            raise TypeError('"headers" must be a dict object')
+
+        self.session = Session(self.proxy_pool)
+        self.session.headers.update(headers)
+
+    Crawler.set_session = sub_set_session
+
+    def sub_set_logger(self, log_level=logging.INFO):
+        logging.config.fileConfig("logging.conf")
+        self.logger = logging.getLogger(__name__)
+        logging.getLogger("requests").setLevel(logging.WARNING)
+
+    Crawler.set_logger = sub_set_logger
+    # MonkeyPatch
 
 
     if "google" in search_crawlers:
