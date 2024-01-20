@@ -28,7 +28,15 @@ class MainApplication:
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.frame = tk.Frame(master)
-        
+
+        # TODO: crawlers create a logger, which changes these settings.  Override set_logger()
+        # def set_logger(self, log_level):
+        #    logging.basicConfig(
+        #        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=log_level, stream=sys.stderr
+        #    )
+        #    self.logger = logging.getLogger(__name__)
+        logging.config.fileConfig("logging.conf")
+
         padding_size=10
 
         self.greeting = tk.Label(master, text="iCrawler Options")
@@ -98,6 +106,7 @@ class MainApplication:
             config = safe_load(fconfig)
 
         print(config)
+
         if "search_string" in config:
             self.search_string.set(config["search_string"])
 
@@ -144,7 +153,9 @@ class MainApplication:
         if crawlers_flickr:
             search_crawlers.append("flickr")
 
-        # TODO: verify len(search_crawlers) >= 1
+        if len(search_crawlers) < 1:
+            tk.messagebox.showerror(title="iCrawler", message="No crawlers selected")
+            return
 
         size = self.size_value.get()
 
