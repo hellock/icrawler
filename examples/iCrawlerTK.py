@@ -7,14 +7,7 @@ from tkinter import messagebox
 import logging
 from logging import config
 import re
-
-from FilenameDownloader import FilenameDownloader
-
-from yaml import load, dump, safe_load
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
+from yaml import safe_load
 
 from icrawler.builtin import (
     BaiduImageCrawler,
@@ -28,12 +21,62 @@ from icrawler.builtin import (
 
 from icrawler.utils import Session
 
+from FilenameDownloader import FilenameDownloader
+
 
 class MainApplication:
+
+    def load_config(self):
+        try:
+            with open(self.config_file) as fconfig:
+                config = safe_load(fconfig)
+            print(self.config_file + ":")
+            print(config)
+
+            if "search_string" in config:
+                self.search_string.set(config["search_string"])
+
+            if "results" in config:
+                self.results_value.set(config["results"])
+
+            if "crawlers" in config:
+                if "Google" in config["crawlers"] : self.crawlers_google.set(True)
+                if "Bing" in config["crawlers"] : self.crawlers_bing.set(True)
+                if "Baidu" in config["crawlers"] : self.crawlers_baidu.set(True)
+                if "Flickr" in config["crawlers"] : self.crawlers_flickr.set(True)
+
+            if "size" in config:
+                self.size_value.set(config["size"])
+
+            if "safe_mode" in config:
+                if config["safe_mode"] == "On":
+                    self.safe_mode.set(0)
+                elif config["safe_mode"] == "Moderate":
+                    self.safe_mode.set(43690)
+                elif config["safe_mode"] == "Off":
+                    self.safe_mode.set(65535)
+
+        except Exception as e:
+            self.logger.error(
+                "Exception caught when loading config from %s, " "error: %s",
+                self.config_file,
+                e,
+            )
+
 
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.frame = tk.Frame(master)
+
+        self.config_file = "iCrawlerTK.yaml"
+
+        # add a VERBOSE logging option
+        # https://stackoverflow.com/questions/9042919/python-logging-is-there-something-below-debug
+        # logging.VERBOSE = int(logging.DEBUG / 2)
+        # logging.addLevelName(logging.VERBOSE, "VERBOSE")
+        # logging.Logger.verbose = lambda inst, msg, *args, **kwargs: inst.log(logging.VERBOSE, msg, *args, **kwargs)
+        # logging.verbose = lambda msg, *args, **kwargs: logging.log(logging.VERBOSE, msg, *args, **kwargs)
+        # add a VERBOSE logging option
 
         logging.config.fileConfig("logging.conf")
 
@@ -101,35 +144,9 @@ class MainApplication:
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
         self.crawl_button.grid(row=6, columnspan=2, padx=padding_size, pady=padding_size)
 
+        self.load_config()
 
-        with open("iCrawlerTK.yaml") as fconfig:
-            config = safe_load(fconfig)
-
-        print(config)
-
-        if "search_string" in config:
-            self.search_string.set(config["search_string"])
-
-        if "results" in config:
-            self.results_value.set(config["results"])
-
-        if "crawlers" in config:
-            if "Google" in config["crawlers"] : self.crawlers_google.set(True)
-            if "Bing" in config["crawlers"] : self.crawlers_bing.set(True)
-            if "Baidu" in config["crawlers"] : self.crawlers_baidu.set(True)
-            if "Flickr" in config["crawlers"] : self.crawlers_flickr.set(True)
-
-        if "size" in config:
-            self.size_value.set(config["size"])
-
-        if "safe_mode" in config:
-            if config["safe_mode"] == "On":
-                self.safe_mode.set(0)
-            elif config["safe_mode"] == "Moderate":
-                self.safe_mode.set(43690)
-            elif config["safe_mode"] == "Off":
-                self.safe_mode.set(65535)
-
+        #end
 
     def go_clicked(self):
 
@@ -245,12 +262,12 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
 
     Crawler.set_session = sub_set_session
 
-    def sub_set_logger(self, log_level=logging.INFO):
-        logging.config.fileConfig("logging.conf")
-        self.logger = logging.getLogger(__name__)
-        logging.getLogger("requests").setLevel(logging.WARNING)
+    # def sub_set_logger(self, log_level=logging.INFO):
+        # logging.config.fileConfig("logging.conf")
+        # self.logger = logging.getLogger(__name__)
+        # logging.getLogger("requests").setLevel(logging.WARNING)
 
-    Crawler.set_logger = sub_set_logger
+    # Crawler.set_logger = sub_set_logger
     # MonkeyPatch
 
 
@@ -259,6 +276,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
         storage={"root_dir": search_folder_name + "/google"}
         google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         google_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+        print("\nfinished GoogleImageCrawler\n")
 
 
     if  "bing" in search_crawlers:
@@ -266,6 +284,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
         storage={"root_dir": search_folder_name + "/bing"}
         bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+        print("\nfinished BingImageCrawler\n")
 
 
     if "baidu" in search_crawlers:
@@ -273,6 +292,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
         storage={"root_dir": search_folder_name + "/baidu"}
         baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
         baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+        print("\nfinished BaiduImageCrawler\n")
 
 
     # flickr crawler will error if there is no API key set
@@ -281,6 +301,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
         storage={"root_dir": search_folder_name + "/flickr"}
         flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level)
         flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+        print("\nfinished FlickrImageCrawler")
 
 if __name__ == "__main__":
     root = tk.Tk()
