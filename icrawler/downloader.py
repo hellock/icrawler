@@ -135,19 +135,18 @@ class Downloader(ThreadPool):
                 with self.lock:
                     self.fetched_num += 1
                     filename = self.get_filename(task, default_ext)
-                self.logger.info("image #%s\t%s\t%s", self.fetched_num, filename, file_url)
+                self.logger.info("image #%s\t%s %s", self.fetched_num, filename, file_url)
 
                 try:
+                    task["filename"] = filename # may be zero bytes if OSError happened during write()
                     self.storage.write(filename, response.content)
                     task["success"] = True
                 except OSError as o:
-                    self.signal.set(exceed_storage_space=True)
-                    task["success"] = False
-                else:
-                    task["success"] = False
-                    raise
-                finally:
-                    task["filename"] = filename # may be zero bytes if OSError happened during write()
+                    if o.errno == errno.ENOSPC:
+                        self.signal.set(exceed_storage_space=True)
+                        task["success"] = False
+                    else:
+                        raise
                 break
             finally:
                 retry -= 1
