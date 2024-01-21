@@ -96,8 +96,14 @@ class Parser(ThreadPool):
                     )
                 else:
                     self.logger.info(f"parsing result page {url}")
-                    for task in self.parse(response, **kwargs):
-                        while not self.signal.get("reach_max_num"):
+                    task_list = self.parse(response, **kwargs)
+                    if not task_list:
+                        self.logger.debug("self.parse() returned no tasks")
+                        with open("task_list_error.log", 'ab') as f:
+                            f.write(response.content)
+                        
+                    for task in task_list:
+                        while not self.signal.get("reach_max_num") and not self.signal.get("exceed_storage_space"):
                             try:
                                 if isinstance(task, dict):
                                     self.output(task, timeout=1)

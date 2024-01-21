@@ -100,6 +100,19 @@ class BingFeeder(Feeder):
         date_choices = list(date_minutes.keys())
         search_filter.add_rule("date", format_date, date_choices)
 
+        safe_code = {
+            "on": "on,safeui:on",
+            "off": "OFF",
+            "moderate": "moderate",
+        }
+
+        # safe search filter
+        def format_safe(safe):
+            return "safe:" + safe_code[safe]
+
+        safe_choices = list(safe_code.keys())
+        search_filter.add_rule("safe", format_safe, safe_choices)
+
         return search_filter
 
     def feed(self, keyword, offset, max_num, filters=None):

@@ -126,17 +126,36 @@ class GoogleFeeder(Feeder):
 
         search_filter.add_rule("date", format_date)
 
+
         return search_filter
 
     def feed(self, keyword, offset, max_num, language=None, filters=None):
         base_url = "https://www.google.com/search?"
         self.filter = self.get_filter()
+        
+        #special handling for Google safe search filter
+        self.safe_search = False
+        if "safe" in filters:
+            safe_code = {
+                "on": "on&safeui=on",
+                "off": "off&safeui=off",
+                "moderate": "moderate&safeui=images",
+            }
+            self.safe_search = "&safe=" + safe_code[filters["safe"]]
+            del filters["safe"]
+        #special handling for Google safe search filter
+
         filter_str = self.filter.apply(filters, sep=",")
+
         for i in range(offset, offset + max_num, 100):
             params = dict(q=keyword, ijn=int(i / 100), start=i, tbs=filter_str, tbm="isch")
             if language:
                 params["lr"] = "lang_" + language
             url = base_url + urlencode(params)
+            #special handling for Google safe search filter
+            if self.safe_search:
+                url = url + self.safe_search
+            #special handling for Google safe search filter
             self.out_queue.put(url)
             self.logger.debug(f"put url to url_queue: {url}")
 
