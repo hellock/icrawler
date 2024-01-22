@@ -1,4 +1,5 @@
 import queue
+import errno
 from io import BytesIO
 from threading import current_thread
 from urllib.parse import urlparse
@@ -143,6 +144,7 @@ class Downloader(ThreadPool):
                     self.storage.write(filename, response.content)
                     task["success"] = True
                 except OSError as o:
+                    # errno.EINVAL -- name too long
                     if o.errno == errno.ENOSPC:
                         self.signal.set(exceed_storage_space=True)
                     else:
