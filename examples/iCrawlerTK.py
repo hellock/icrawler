@@ -22,7 +22,7 @@ from icrawler.builtin import (
 from icrawler.utils import Session
 
 from FilenameDownloader import FilenameDownloader
-
+import LanguageOptions as lo
 
 class MainApplication:
 
@@ -47,6 +47,9 @@ class MainApplication:
 
             if "size" in config:
                 self.size_value.set(config["size"])
+
+            if "language" in config:
+                self.language_value.set(config["language"])
 
             if "safe_mode" in config:
                 if config["safe_mode"] == "On":
@@ -139,10 +142,19 @@ class MainApplication:
         tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
         tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
 
+        label_language_value = tk.Label(master, text="Results Language: ")
+        label_language_value.grid(row=6, column=0, padx=padding_size, pady=padding_size)
+        LANGUAGE_OPTIONS = lo.language_dict.keys()
+        self.language_value = tk.StringVar(master)
+        self.language_value.set(None) # default value
+        self.language_options = tk.OptionMenu(master, self.language_value, *LANGUAGE_OPTIONS )
+        self.language_options.grid(row=6, column=1)
+        self.language_options.config(takefocus=1)
+
         self.crawl_button_text=tk.StringVar(root)
         self.crawl_button_text.set("Go")
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
-        self.crawl_button.grid(row=6, columnspan=2, padx=padding_size, pady=padding_size)
+        self.crawl_button.grid(row=7, columnspan=2, padx=padding_size, pady=padding_size)
 
         self.load_config()
 
@@ -160,6 +172,11 @@ class MainApplication:
         crawlers_bing   =self.crawlers_bing.get()
         crawlers_flickr =self.crawlers_flickr.get()
         crawlers_google =self.crawlers_google.get()
+
+        # two char language or None
+        language_result = self.language_value.get()
+        print(language_result)
+        return
 
         search_crawlers = []
         if crawlers_baidu:
@@ -225,14 +242,14 @@ class MainApplication:
         # search_filters = dict(size="extralarge")
         # search_filters = dict(size="=1600x1200")
 
-        start_download(search_crawlers, search_string, max_number, threads, search_filters, logging.DEBUG)
+        start_download(search_crawlers, search_string, max_number, threads, language, search_filters, logging.DEBUG)
 
         self.crawl_button_text.set(gText)
 
         tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
-def start_download(search_crawlers, search_string, max_number, threads, search_filters, log_level):
+def start_download(search_crawlers, search_string, max_number, threads, language, search_filters, log_level):
 
     # silence pillow extraneous info
     if log_level == logging.DEBUG:
@@ -275,7 +292,7 @@ def start_download(search_crawlers, search_string, max_number, threads, search_f
         print("\nstart GoogleImageCrawler")
         storage={"root_dir": search_folder_name + "/google"}
         google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
-        google_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+        google_crawler.crawl(search_string, max_num=max_number, filters=search_filters, language=language)
         print("\nfinished GoogleImageCrawler\n")
 
 
