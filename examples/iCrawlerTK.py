@@ -22,7 +22,7 @@ from icrawler.builtin import (
 from icrawler.utils import Session
 
 from FilenameDownloader import FilenameDownloader
-import LanguageOptions as lo
+import GoogleLanguageOptions as lo
 
 class MainApplication:
 
@@ -49,7 +49,7 @@ class MainApplication:
                 self.size_value.set(config["size"])
 
             if "language" in config:
-                self.language_value.set(config["language"])
+                self.language.set(config["language"])
 
             if "safe_mode" in config:
                 if config["safe_mode"] == "On":
@@ -70,6 +70,7 @@ class MainApplication:
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.frame = tk.Frame(master)
+        # master.title="iCrawlerTK"
 
         self.config_file = "iCrawlerTK.yaml"
 
@@ -85,7 +86,7 @@ class MainApplication:
 
         padding_size=10
 
-        self.greeting = tk.Label(master, text="iCrawler Options")
+        self.greeting = tk.Label(master, text="icrawler Options")
         self.greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
 
         label_search_string = tk.Label(master, text="Search For: ")
@@ -95,6 +96,7 @@ class MainApplication:
         self.search_string =tk.StringVar(root)
         entry_search_string = tk.Entry(master, textvariable=self.search_string)
         entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
+        entry_search_string.focus_set()
 
 
         label_results = tk.Label(master, text="Results: ")
@@ -142,11 +144,11 @@ class MainApplication:
         tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
         tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
 
-        label_language_value = tk.Label(master, text="Results Language: ")
+        label_language_value = tk.Label(master, text="Request/Results Language: ")
         label_language_value.grid(row=6, column=0, padx=padding_size, pady=padding_size)
-        LANGUAGE_OPTIONS = lo.language_dict.keys()
+        LANGUAGE_OPTIONS = lo.google_language_dict.keys()
         self.language_value = tk.StringVar(master)
-        self.language_value.set(None) # default value
+        self.language_value.set("          ") # default value
         self.language_options = tk.OptionMenu(master, self.language_value, *LANGUAGE_OPTIONS )
         self.language_options.grid(row=6, column=1)
         self.language_options.config(takefocus=1)
@@ -173,10 +175,7 @@ class MainApplication:
         crawlers_flickr =self.crawlers_flickr.get()
         crawlers_google =self.crawlers_google.get()
 
-        # two char language or None
-        language_result = self.language_value.get()
-        print(language_result)
-        return
+        language = self.language_value.get().strip()
 
         search_crawlers = []
         if crawlers_baidu:
@@ -205,6 +204,9 @@ class MainApplication:
         if safe_mode == 0:     # no bits
             search_filters["safe"]="on"
 
+        #temp removal
+        if "safe" in search_filters:
+            del search_filters["safe"]
 
         if len(size.strip()) > 0:
             search_filters["size"]=size
@@ -231,8 +233,9 @@ class MainApplication:
         self.crawl_button.update_idletasks()
 
         print("\nSearch started: {} threads, maximum {} results, searching for '{}'".format(threads, max_number, search_string))
-        print("\nCrawlers: {}".format(search_crawlers))
-        print("\nFilters: {}\n".format(search_filters))
+        print("Crawlers: {}".format(search_crawlers))
+        print("Filters: {}\n".format(search_filters))
+        print("Language: {}\n".format(language))
 
         # examples
         # search_filters = dict(size="large", date=(None, (2019, 1, 1)))
@@ -263,8 +266,14 @@ def start_download(search_crawlers, search_string, max_number, threads, language
     # https://web.archive.org/web/20120730014107/http://wiki.zope.org/zope2/MonkeyPatch
     def sub_set_session(self, headers=None):
         if headers is None:
+            if language:
+                accept_language="{};q=0.5, *;q=0.4".format(language)
+            else:
+                accept_language="*;q=0.4"
+
             headers = {
-                'Accept-Language': 'en-US,en;q=0.5, *;q=0.4',
+#               "Accept-Language": language, # 'en-US,en;q=0.5, *;q=0.4',
+               "Accept-Language": accept_language,
                 "User-Agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                     " AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -289,6 +298,13 @@ def start_download(search_crawlers, search_string, max_number, threads, language
 
 
     if "google" in search_crawlers:
+
+        # two char language or None
+        if language in lo.google_language_dict:
+            language=lo.google_language_dict[language]
+        elif len(language) < 1:
+            language=None
+
         print("\nstart GoogleImageCrawler")
         storage={"root_dir": search_folder_name + "/google"}
         google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
@@ -322,6 +338,7 @@ def start_download(search_crawlers, search_string, max_number, threads, language
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.title="iCrawlerTK"
     root.eval('tk::PlaceWindow . center') # roughly accurate
     app = MainApplication(root)
     root.mainloop()
