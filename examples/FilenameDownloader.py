@@ -25,21 +25,25 @@ def overrides(interface_class):
 class FilenameDownloader(ImageDownloader):
 
     @overrides(ImageDownloader)
+    def __init__(self, thread_num, signal, session, storage):
+        super().__init__(thread_num, signal, session, storage)
+        self.filename_list = []
+
+    @overrides(ImageDownloader)
     def keep_file(self, task, response, min_size=None, max_size=None):
 
-        if not super().keep_file(task, response, min_size, max_size):
-            return False
+        #if not super().keep_file(task, response, min_size, max_size):
+        #    return False
 
         h = response.content[:32]
         extension = FileTypes.get_filetype(h)
-
-        self.logger.warn(response.headers)
+        if extension is None:
+            extension = "unk" # TODO: find these
 
         #  save filename from Content-Disposition if possible, otherwise from get_filename()
         disposition_magic = "Content-Disposition"
         if disposition_magic in response.headers:
             disposition = response.headers[disposition_magic]
-            self.logger.warn("disposition: {}".format(disposition))
             filename = disposition.split("filename=")[-1]
             # ex: "disposition: inline; filename="Kentucky2015.jpg"; filename*=UTF-8''Kentucky2015.jpg"
             filename = filename.split(";")[0]
@@ -48,9 +52,17 @@ class FilenameDownloader(ImageDownloader):
         else:
             filename = self.get_filename(task, extension)
 
-        self.logger.warn("filename: {}".format(filename))
-
         (filename, ext) = path.splitext(filename)
+
+        # this is not thread safe, it's at least a little better tho
+        tempname = filename
+        for ix in range(1000):
+            if tempname + "." + extension not in self.filename_list:
+                filename = tempname
+                break
+            tempname = f"{filename}{ix:03d}"
+
+        self.filename_list.append(filename + "." + extension)
 
         task["filename"] = filename
         task["filetype"] = extension
@@ -81,7 +93,5 @@ class FilenameDownloader(ImageDownloader):
             if len(filename) > max_length:
                 (filename, ext) = path.splitext(filename)
                 filename = filename[:max_length-1-len(ext)] + "." + ext
-
-        self.logger.warn("get_filename: {}".format(filename))
 
         return filename
