@@ -39,6 +39,11 @@ class MainApplication:
             if "results" in config:
                 self.results_value.set(config["results"])
 
+            if "search_string_separator" in config:
+                self.search_string_separator_value.set(config["search_string_separator"])
+            else:
+                self.search_string_separator_value.set(None)
+
             if "crawlers" in config:
                 if "Google" in config["crawlers"] : self.crawlers_google.set(True)
                 if "Bing" in config["crawlers"] : self.crawlers_bing.set(True)
@@ -92,10 +97,9 @@ class MainApplication:
         label_search_string = tk.Label(master, text="Search For: ")
         label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
         
-        # TODO: use a Text box and search each line as a keyword?
         self.search_string = tk.StringVar(root)
 
-        def search_string_callback(var, index, mode):
+        def search_string_callback():
             # remove extra whitespace
             # search = " ".join(self.search_string.get().split())
             # alternate - also remove duplicate words
@@ -105,8 +109,9 @@ class MainApplication:
                 self.search_string.set(search)
             return True
 
-        self.search_string.trace_add("write", search_string_callback)
-        entry_search_string = tk.Entry(master, textvariable=self.search_string)
+        # self.search_string.trace_add("write", search_string_callback)
+        # entry_search_string = tk.Entry(master, textvariable=self.search_string)
+        entry_search_string = tk.Entry(master, textvariable=self.search_string, validate="focusout", validatecommand=search_string_callback)
         entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
         entry_search_string.focus_set()
 
@@ -169,6 +174,9 @@ class MainApplication:
         self.crawl_button_text.set("Go")
         self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
         self.crawl_button.grid(row=7, columnspan=2, padx=padding_size, pady=padding_size)
+
+        # options with config but no UI (yet)
+        self.search_string_separator_value = tk.StringVar(master)
 
         self.load_config()
 
@@ -240,6 +248,9 @@ class MainApplication:
         if len(search_filters) < 1:
             search_filters = None
 
+        if len(language) < 1:
+            language = None
+
         print("\nSearch started: {} threads, maximum {} results, searching for '{}'".format(threads, max_number, search_string))
         print("Crawlers: {}".format(search_crawlers))
         print("Filters: {}\n".format(search_filters))
@@ -257,24 +268,26 @@ class MainApplication:
         self.crawl_button_text.set("Searching...")
         self.crawl_button.update_idletasks()
 
-        start_download(search_crawlers, search_string, max_number, threads, language, search_filters, logging.DEBUG)
+        search_terms = []
+        if self.search_string_separator_value.get():
+            search_terms = search_string.split(self.search_string_separator_value.get())
+        else:
+            search_terms.add(search_string)
+
+        start_download(search_crawlers, search_terms, max_number, threads, language, search_filters, logging.DEBUG)
 
         self.crawl_button_text.set(gText)
 
         tk.messagebox.showinfo(title="iCrawler", message="Finished crawling.")
 
 
-def start_download(search_crawlers, search_string, max_number, threads, language, search_filters, log_level):
+def start_download(search_crawlers, search_terms, max_number, threads, language, search_filters, log_level):
 
     # silence pillow extraneous info
     if log_level == logging.DEBUG:
         logging.getLogger('PIL').setLevel(logging.WARNING)
 
-    search_folder_name = search_string.replace(" ", "_")
-    search_folder_name = re.sub('[^a-zA-Z0-9_.]', '', search_folder_name)
-
-
-    # MonkeyPatch
+    # MonkeyPatch TODO: this should be before clicks happen, but it needs access to language.  Refactor this
     # https://web.archive.org/web/20120730014107/http://wiki.zope.org/zope2/MonkeyPatch
     def sub_set_session(self, headers=None):
         if headers is None:
@@ -314,45 +327,48 @@ def start_download(search_crawlers, search_string, max_number, threads, language
     # Crawler.set_logger = sub_set_logger
     # MonkeyPatch
 
+    for search_string in search_terms:
+        search_folder_name = search_string.replace(" ", "_")
+        search_folder_name = re.sub('[^a-zA-Z0-9_.]', '', search_folder_name)
 
-    if "google" in search_crawlers:
+        if "google" in search_crawlers:
 
-        # two char language or None
-        if language in lo.google_language_dict:
-            language=lo.google_language_dict[language]
-        elif len(language) < 1:
-            language=None
+            # two char language or None
+            if language in lo.google_language_dict:
+                language=lo.google_language_dict[language]
+            else:
+                language=None
 
-        print("\nstart GoogleImageCrawler")
-        storage={"root_dir": search_folder_name + "/google"}
-        google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
-        google_crawler.crawl(search_string, max_num=max_number, filters=search_filters, language=language)
-        print("\nfinished GoogleImageCrawler\n")
-
-
-    if  "bing" in search_crawlers:
-        print("\nstart BingImageCrawler")
-        storage={"root_dir": search_folder_name + "/bing"}
-        bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
-        bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
-        print("\nfinished BingImageCrawler\n")
+            print("\nstart GoogleImageCrawler")
+            storage={"root_dir": search_folder_name + "/google"}
+            google_crawler = GoogleImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
+            google_crawler.crawl(search_string, max_num=max_number, filters=search_filters, language=language)
+            print("\nfinished GoogleImageCrawler\n")
 
 
-    if "baidu" in search_crawlers:
-        print("\nstart BaiduImageCrawler")
-        storage={"root_dir": search_folder_name + "/baidu"}
-        baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
-        baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
-        print("\nfinished BaiduImageCrawler\n")
+        if  "bing" in search_crawlers:
+            print("\nstart BingImageCrawler")
+            storage={"root_dir": search_folder_name + "/bing"}
+            bing_crawler = BingImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
+            bing_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+            print("\nfinished BingImageCrawler\n")
 
 
-    # flickr crawler will error if there is no API key set
-    if "flickr" in search_crawlers:
-        print("\nstart FlickrImageCrawler")
-        storage={"root_dir": search_folder_name + "/flickr"}
-        flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level)
-        flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
-        print("\nfinished FlickrImageCrawler")
+        if "baidu" in search_crawlers:
+            print("\nstart BaiduImageCrawler")
+            storage={"root_dir": search_folder_name + "/baidu"}
+            baidu_crawler = BaiduImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
+            baidu_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+            print("\nfinished BaiduImageCrawler\n")
+
+
+        # flickr crawler will error if there is no API key set
+        if "flickr" in search_crawlers:
+            print("\nstart FlickrImageCrawler")
+            storage={"root_dir": search_folder_name + "/flickr"}
+            flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level)
+            flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
+            print("\nfinished FlickrImageCrawler")
 
 if __name__ == "__main__":
     root = tk.Tk()

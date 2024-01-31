@@ -1,10 +1,19 @@
-# 
+# iCrawlerTK YML config
+
 # search_string: "bucket"
+
+# for multiple keywords, separate with this character
+# search_string_separator: "|"
+
 # 10, 50, 100, 500, or 1000
 results: 1000
+
 # Bing, Google, Baidu, or (if you have an API key) Flickr
 crawlers: ["Bing", "Google"]
+
 # blank, "extralarge", "large", "medium", "small"
 # size: "extralarge"
+
 # On, Moderate, Off - Baidu does not have Safe Search AFAIK
+# Note: this is still a work in progress 
 safe_mode: "Off"
