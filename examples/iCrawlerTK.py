@@ -93,7 +93,19 @@ class MainApplication:
         label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
         
         # TODO: use a Text box and search each line as a keyword?
-        self.search_string =tk.StringVar(root)
+        self.search_string = tk.StringVar(root)
+
+        def search_string_callback(var, index, mode):
+            # remove extra whitespace
+            # search = " ".join(self.search_string.get().split())
+            # alternate - also remove duplicate words
+            search = " ".join(list(dict.fromkeys(self.search_string.get().split())))
+            print(search)
+            if self.search_string.get() != search:
+                self.search_string.set(search)
+            return True
+
+        self.search_string.trace_add("write", search_string_callback)
         entry_search_string = tk.Entry(master, textvariable=self.search_string)
         entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
         entry_search_string.focus_set()
@@ -144,7 +156,7 @@ class MainApplication:
         tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
         tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
 
-        label_language_value = tk.Label(master, text="Request/Results Language: ")
+        label_language_value = tk.Label(master, text="Results Language: ")
         label_language_value.grid(row=6, column=0, padx=padding_size, pady=padding_size)
         LANGUAGE_OPTIONS = lo.google_language_dict.keys()
         self.language_value = tk.StringVar(master)
@@ -228,10 +240,6 @@ class MainApplication:
         if len(search_filters) < 1:
             search_filters = None
 
-        gText=self.crawl_button_text.get()
-        self.crawl_button_text.set("Searching...")
-        self.crawl_button.update_idletasks()
-
         print("\nSearch started: {} threads, maximum {} results, searching for '{}'".format(threads, max_number, search_string))
         print("Crawlers: {}".format(search_crawlers))
         print("Filters: {}\n".format(search_filters))
@@ -244,6 +252,10 @@ class MainApplication:
         # search_filters = dict(size="large", color="blue")
         # search_filters = dict(size="extralarge")
         # search_filters = dict(size="=1600x1200")
+
+        gText=self.crawl_button_text.get()
+        self.crawl_button_text.set("Searching...")
+        self.crawl_button.update_idletasks()
 
         start_download(search_crawlers, search_string, max_number, threads, language, search_filters, logging.DEBUG)
 
@@ -271,9 +283,15 @@ def start_download(search_crawlers, search_string, max_number, threads, language
             else:
                 accept_language="*;q=0.4"
 
+            # headers: google seems to like at least an accept-language, 
+            #          and/or Accept-Encoding
+            #          note: Brotli ("br") can be added to Accept-Encoding
+            #          if you want to get a brotli package, but it adds 
+            #          basically nothing.  I recommend not to, but also
+            #          don't copy an example that has "deflate, gzip, br"
             headers = {
-#               "Accept-Language": language, # 'en-US,en;q=0.5, *;q=0.4',
                "Accept-Language": accept_language,
+               "Accept-Encoding": "deflate, gzip",
                 "User-Agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                     " AppleWebKit/537.36 (KHTML, like Gecko) "

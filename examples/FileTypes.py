@@ -34,11 +34,13 @@ def get_filetype(h):
     if h.startswith(b'RIFF') and h[8:12] == b'WEBP':
         return "webp"
 
-    if h[0] == ord(b'P') and h[1] in b'25' and h[2] in b' \t\n\r':
-        return "pgm"
-
-    if h[0] == ord(b'P') and h[1] in b'36' and h[2] in b' \t\n\r':
-        return "ppm"
+    if len(h) > 2 and h[0] == ord(b'P'):
+        if h[1] in b'14' and h[2] in b' \t\n\r':
+            return "ppm"
+        if h[1] in b'25' and h[2] in b' \t\n\r':
+            return "pgm"
+        if h[1] in b'36' and h[2] in b' \t\n\r':
+            return "ppm"
 
     if b"<html" in h:
         return "html"
@@ -53,3 +55,5 @@ def get_filetype(h):
         return "xml"
     if b"<?xml " in h:
         return "xml"
+
+    return None
