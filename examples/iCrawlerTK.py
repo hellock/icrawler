@@ -328,8 +328,9 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
     # MonkeyPatch
 
     for search_string in search_terms:
+        # TODO: share this with FilenameDownloader and make it a config item
         search_folder_name = search_string.replace(" ", "_")
-        search_folder_name = re.sub('[^a-zA-Z0-9_.]', '', search_folder_name)
+        search_folder_name = re.sub('[^a-zA-Z0-9_.-]', '', search_folder_name)
 
         if "google" in search_crawlers:
 

@@ -37,8 +37,10 @@ class FilenameDownloader(ImageDownloader):
 
         h = response.content[:32]
         extension = FileTypes.get_filetype(h)
+        # TODO: identify these
+        # TODO: use the original extension and log these at WARN or DEBUG level
         if extension is None:
-            extension = "unk" # TODO: find these
+            extension = "unk" 
 
         #  save filename from Content-Disposition if possible, otherwise from get_filename()
         disposition_magic = "Content-Disposition"
@@ -88,7 +90,7 @@ class FilenameDownloader(ImageDownloader):
                 filename = filename[:max_length-1-len(default_ext)] + "." + default_ext
 
             filename = filename.replace(" ", "_")
-            filename = re.sub('[^a-zA-Z0-9_.]', '', filename)
+            filename = re.sub("[^a-zA-Z0-9_.-]", "", filename)
 
             if len(filename) > max_length:
                 (filename, ext) = path.splitext(filename)
