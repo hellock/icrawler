@@ -26,6 +26,8 @@ import GoogleLanguageOptions as lo
 
 class MainApplication:
 
+    global search_string # so the Enter() updates?
+
     def load_config(self):
         try:
             with open(self.config_file) as fconfig:
@@ -97,24 +99,24 @@ class MainApplication:
         label_search_string = tk.Label(master, text="Search For: ")
         label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
         
-        self.search_string = tk.StringVar(root)
+        self.search_string = tk.StringVar()
 
-        def search_string_callback():
+        def search_string_callback(e):
             # remove extra whitespace
             # search = " ".join(self.search_string.get().split())
             # alternate - also remove duplicate words
-            search = " ".join(list(dict.fromkeys(self.search_string.get().split())))
-            print(search)
-            if self.search_string.get() != search:
-                self.search_string.set(search)
-            return True
+            search_string_t = " ".join(list(dict.fromkeys(self.search_string.get().split())))
+            search_string_t = search_string_t.strip()
+            if self.search_string.get() != search_string_t:
+                self.search_string.set(search_string_t)
+                print(search_string_t)
 
         # self.search_string.trace_add("write", search_string_callback)
         # entry_search_string = tk.Entry(master, textvariable=self.search_string)
-        entry_search_string = tk.Entry(master, textvariable=self.search_string, validate="focusout", validatecommand=search_string_callback)
+        entry_search_string = tk.Entry(master, textvariable=self.search_string)
         entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
         entry_search_string.focus_set()
-
+        entry_search_string.bind("<FocusOut>", search_string_callback)
 
         label_results = tk.Label(master, text="Results: ")
         label_results.grid(row=2, column=0, padx=padding_size, pady=padding_size)
