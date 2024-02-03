@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+import logging
 from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
@@ -126,72 +127,50 @@ class GoogleFeeder(Feeder):
 
         search_filter.add_rule("date", format_date)
 
-
         return search_filter
 
     def feed(self, keyword, offset, max_num, language=None, filters=None):
         base_url = "https://www.google.com/search?"
         self.filter = self.get_filter()
-        
-        #special handling for Google safe search filter
-        self.safe_search = False
-        if "safe" in filters:
-            safe_code = {
-                "on": "on&safeui=on",
-                "off": "off&safeui=off",
-                "moderate": "moderate&safeui=images",
-            }
-            self.safe_search = "&safe=" + safe_code[filters["safe"]]
-            del filters["safe"]
-        #special handling for Google safe search filter
-
         filter_str = self.filter.apply(filters, sep=",")
-
         for i in range(offset, offset + max_num, 100):
             params = dict(q=keyword, ijn=int(i / 100), start=i, tbs=filter_str, tbm="isch")
             if language:
                 params["lr"] = "lang_" + language
             url = base_url + urlencode(params)
-            #special handling for Google safe search filter
-            if self.safe_search:
-                url = url + self.safe_search
-            #special handling for Google safe search filter
             self.out_queue.put(url)
             self.logger.debug(f"put url to url_queue: {url}")
 
 
 class GoogleParser(Parser):
+    def save_results(self, soup):
+        if self.logger.isEnabledFor(logging.DEBUG):
+            with open('google_log.txt', 'a') as google_log:
+                google_log.write("=== Google log\n")
+                google_log.write(soup.prettify())
+                google_log.write("\n=== Google log\n")
+
+    # Looking for <script> tags containing "AF_initDataCallback" and "ds:1"
+    # unwanted example:
+    #     AF_initDataCallback({key: 'ds:0', hash: '1', data:[], sideChannel: {}});
+    # desired example:
+    #     AF_initDataCallback({key: 'ds:1', hash: '2', data:[null,[null,null,nu...
+    # 
     def parse(self, response):
         soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), "lxml")
-        # image_divs = soup.find_all('script')
         image_divs = soup.find_all(name="script")
         for div in image_divs:
-            # txt = div.text
             txt = str(div)
-            # if not txt.startswith('AF_initDataCallback'):
             if "AF_initDataCallback" not in txt:
                 continue
             if "ds:0" in txt or "ds:1" not in txt:
                 continue
-            # txt = re.sub(r"^AF_initDataCallback\({.*key: 'ds:(\d)'.+data:function\(\){return (.+)}}\);?$",
-            #             "\\2", txt, 0, re.DOTALL)
-            # meta = json.loads(txt)
-            # data = meta[31][0][12][2]
-            # uris = [img[1][3][0] for img in data if img[0] == 1]
 
             uris = re.findall(r"http[^\[]*?\.(?:jpg|png|bmp)", txt)
+            if len(uris) < 1:
+                self.save_results(soup)
             return [{"file_url": uri} for uri in uris]
 
-    # https://github.com/hellock/icrawler/compare/master...simonmcnair:icrawler:master
-    def parseAlternate(self, response):
-        soup = BeautifulSoup(
-            response.content.decode('utf-8', 'ignore'), 'lxml')
-        images = soup.find_all(name='img')
-        uris = []
-        for img in images:
-            if img.has_attr('src'):
-                uris.append(img['src'])
-        return [{'file_url': uri} for uri in uris]
 
 class GoogleImageCrawler(Crawler):
     def __init__(
