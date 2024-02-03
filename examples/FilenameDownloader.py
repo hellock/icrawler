@@ -90,7 +90,8 @@ class FilenameDownloader(ImageDownloader):
                 filename = filename[:max_length-1-len(default_ext)] + "." + default_ext
 
             filename = filename.replace(" ", "_")
-            filename = re.sub("[^a-zA-Z0-9_.-]", "", filename)
+            #  POSIX "Fully portable filenames" lists these: "[^a-zA-Z0-9._-]"
+            filename = re.sub("[^a-zA-Z0-9@,_.-]", "", filename)
 
             if len(filename) > max_length:
                 (filename, ext) = path.splitext(filename)

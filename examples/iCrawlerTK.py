@@ -77,29 +77,94 @@ class MainApplication:
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.frame = tk.Frame(master)
-        # master.title="iCrawlerTK"
-
         self.config_file = "iCrawlerTK.yaml"
+        logging.config.fileConfig("logging.conf")
+        self.padding_size=10
 
         # add a VERBOSE logging option
-        # https://stackoverflow.com/questions/9042919/python-logging-is-there-something-below-debug
+        # TODO: https://stackoverflow.com/questions/9042919/python-logging-is-there-something-below-debug
         # logging.VERBOSE = int(logging.DEBUG / 2)
         # logging.addLevelName(logging.VERBOSE, "VERBOSE")
         # logging.Logger.verbose = lambda inst, msg, *args, **kwargs: inst.log(logging.VERBOSE, msg, *args, **kwargs)
         # logging.verbose = lambda msg, *args, **kwargs: logging.log(logging.VERBOSE, msg, *args, **kwargs)
         # add a VERBOSE logging option
 
-        logging.config.fileConfig("logging.conf")
+        SIZE_OPTIONS = ["          ", "extralarge", "large", "medium", "small"]
+        RESULTS_OPTIONS = ["10", "50", "100", "500", "1000"]
+        LANGUAGE_OPTIONS = lo.google_language_dict.keys()
 
-        padding_size=10
-
-        self.greeting = tk.Label(master, text="icrawler Options")
-        self.greeting.grid(row=0, columnspan=2, padx=padding_size, pady=padding_size)
-
-        label_search_string = tk.Label(master, text="Search For: ")
-        label_search_string.grid(row=1, column=0, padx=padding_size, pady=padding_size)
-        
+        self.crawlers_google = tk.BooleanVar()
+        self.crawlers_bing = tk.BooleanVar()
+        self.crawlers_baidu = tk.BooleanVar()
+        self.crawlers_flickr = tk.BooleanVar()
         self.search_string = tk.StringVar()
+        self.results_value = tk.StringVar(master)
+        self.language_value = tk.StringVar(master)
+        self.crawl_button_text=tk.StringVar(master)
+        self.safe_mode = tk.IntVar()
+
+        self.main_label = tk.Label(master, text="icrawler Options")
+        self.search_string_label = tk.Label(master, text="Search For: ")
+        self.search_string_entry = tk.Entry(master, textvariable=self.search_string)
+        self.results_label = tk.Label(master, text="Results: ")
+        self.size_value = tk.StringVar(master)
+        self.crawlers_label = tk.Label(master, text="Crawlers: ")
+        self.size_label = tk.Label(master, text="Size: ")
+        self.language_label = tk.Label(master, text="Results Language: ")
+        self.safe_mode_label = tk.Label(master, text="Safe Mode: ")
+
+        self.results_options = tk.OptionMenu(master, self.results_value, *RESULTS_OPTIONS)
+        self.results_options.config(takefocus=1)
+
+        self.crawlers_frame = tk.Frame(master)
+        tk.Checkbutton(self.crawlers_frame, text="Google", variable=self.crawlers_google).pack(anchor=tk.W)
+        tk.Checkbutton(self.crawlers_frame, text="Bing", variable=self.crawlers_bing).pack(anchor=tk.W)
+        tk.Checkbutton(self.crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
+        tk.Checkbutton(self.crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
+
+        self.size_options = tk.OptionMenu(master, self.size_value, *SIZE_OPTIONS)
+
+        self.safe_mode_frame = tk.Frame(master)
+        tk.Radiobutton(self.safe_mode_frame, text="On", variable=self.safe_mode, value=0).pack(anchor=tk.W)
+        tk.Radiobutton(self.safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
+        tk.Radiobutton(self.safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
+
+        self.results_value.set(RESULTS_OPTIONS[0])
+        self.size_value.set(SIZE_OPTIONS[0])
+
+        self.main_label.grid(row=0, columnspan=2, padx=self.padding_size, pady=self.padding_size)
+
+        self.search_string_label.grid(row=1, column=0, padx=self.padding_size, pady=self.padding_size)
+        self.search_string_entry.grid(row=1, column=1, padx=self.padding_size, pady=self.padding_size)
+
+        self.results_label.grid(row=2, column=0, padx=self.padding_size, pady=self.padding_size)
+        self.results_options.config(takefocus=1)
+        self.results_options.grid(row=2, column=1)
+
+        self.crawlers_label.grid(row=3, column=0, padx=self.padding_size, pady=self.padding_size)
+        self.crawlers_frame.grid(row=3, column=1, padx=self.padding_size, pady=self.padding_size)
+        self.size_label.grid(row=4, column=0, padx=self.padding_size, pady=self.padding_size)
+
+        self.size_options.grid(row=4, column=1)
+        self.size_options.config(takefocus=1)
+
+        self.safe_mode_label.grid(row=5, column=0, padx=self.padding_size, pady=self.padding_size)
+        self.safe_mode_frame.grid(row=5, column=1, padx=self.padding_size, pady=self.padding_size)
+        self.language_label.grid(row=6, column=0, padx=self.padding_size, pady=self.padding_size)
+
+        self.language_value.set("          ") # default value
+        self.language_options = tk.OptionMenu(master, self.language_value, *LANGUAGE_OPTIONS )
+        self.language_options.grid(row=6, column=1)
+        self.language_options.config(takefocus=1)
+
+        self.crawl_button_text.set("Go")
+        self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
+        self.crawl_button.grid(row=7, columnspan=2, padx=self.padding_size, pady=self.padding_size)
+
+        # options with config but no UI (yet)
+        self.search_string_separator_value = tk.StringVar(master)
+
+        self.load_config()
 
         def search_string_callback(e):
             # remove extra whitespace
@@ -111,76 +176,8 @@ class MainApplication:
                 self.search_string.set(search_string_t)
                 print(search_string_t)
 
-        # self.search_string.trace_add("write", search_string_callback)
-        # entry_search_string = tk.Entry(master, textvariable=self.search_string)
-        entry_search_string = tk.Entry(master, textvariable=self.search_string)
-        entry_search_string.grid(row=1, column=1, padx=padding_size, pady=padding_size)
-        entry_search_string.focus_set()
-        entry_search_string.bind("<FocusOut>", search_string_callback)
-
-        label_results = tk.Label(master, text="Results: ")
-        label_results.grid(row=2, column=0, padx=padding_size, pady=padding_size)
-        RESULTS_OPTIONS = ["10", "50", "100", "500", "1000"]
-        self.results_value = tk.StringVar(master)
-        self.results_value.set(RESULTS_OPTIONS[0]) # default value
-        self.results_options = tk.OptionMenu(master, self.results_value, *RESULTS_OPTIONS)
-        self.results_options.grid(row=2, column=1)
-        self.results_options.config(takefocus=1)
-
-
-        label_crawlers = tk.Label(master, text="Crawlers: ")
-        label_crawlers.grid(row=3, column=0, padx=padding_size, pady=padding_size)
-        
-        crawlers_frame = tk.Frame(master)
-        crawlers_frame.grid(row=3, column=1, padx=padding_size, pady=padding_size)
-        
-        self.crawlers_google = tk.BooleanVar()
-        tk.Checkbutton(crawlers_frame, text="Google", variable=self.crawlers_google).pack(anchor=tk.W)
-        self.crawlers_bing = tk.BooleanVar()
-        tk.Checkbutton(crawlers_frame, text="Bing", variable=self.crawlers_bing).pack(anchor=tk.W)
-        self.crawlers_baidu = tk.BooleanVar()
-        tk.Checkbutton(crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
-        self.crawlers_flickr = tk.BooleanVar()
-        tk.Checkbutton(crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
-
-        label_size = tk.Label(master, text="Size: ")
-        label_size.grid(row=4, column=0, padx=padding_size, pady=padding_size)
-        # TODO: =WxH
-        # TODO: >WxH (does baidu do this?  Or fix Baidu's error message?
-        SIZE_OPTIONS = ["          ", "extralarge", "large", "medium", "small"]
-        self.size_value = tk.StringVar(master)
-        self.size_value.set(SIZE_OPTIONS[0]) # default value
-        self.size_options = tk.OptionMenu(master, self.size_value, *SIZE_OPTIONS)
-        self.size_options.grid(row=4, column=1)
-        self.size_options.config(takefocus=1)
-
-        label_safe_mode = tk.Label(master, text="Safe Mode: ")
-        label_safe_mode.grid(row=5, column=0, padx=padding_size, pady=padding_size)
-        safe_mode_frame = tk.Frame(master)
-        safe_mode_frame.grid(row=5, column=1, padx=padding_size, pady=padding_size)
-        self.safe_mode = tk.IntVar()
-        tk.Radiobutton(safe_mode_frame, text="On", variable=self.safe_mode, value=0).pack(anchor=tk.W)
-        tk.Radiobutton(safe_mode_frame, text="Medium", variable=self.safe_mode, value=43690).pack(anchor=tk.W)
-        tk.Radiobutton(safe_mode_frame, text="Off", variable=self.safe_mode, value=65535).pack(anchor=tk.W)
-
-        label_language_value = tk.Label(master, text="Results Language: ")
-        label_language_value.grid(row=6, column=0, padx=padding_size, pady=padding_size)
-        LANGUAGE_OPTIONS = lo.google_language_dict.keys()
-        self.language_value = tk.StringVar(master)
-        self.language_value.set("          ") # default value
-        self.language_options = tk.OptionMenu(master, self.language_value, *LANGUAGE_OPTIONS )
-        self.language_options.grid(row=6, column=1)
-        self.language_options.config(takefocus=1)
-
-        self.crawl_button_text=tk.StringVar(root)
-        self.crawl_button_text.set("Go")
-        self.crawl_button = tk.Button(master, command=self.go_clicked, textvariable=self.crawl_button_text)
-        self.crawl_button.grid(row=7, columnspan=2, padx=padding_size, pady=padding_size)
-
-        # options with config but no UI (yet)
-        self.search_string_separator_value = tk.StringVar(master)
-
-        self.load_config()
+        self.search_string_entry.bind("<FocusOut>", search_string_callback)
+        self.search_string_entry.focus_set()
 
         #end
 
@@ -373,9 +370,12 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
             print("\nfinished FlickrImageCrawler")
 
-if __name__ == "__main__":
+def main():
     root = tk.Tk()
-    root.title="iCrawlerTK"
+    root.title("iCrawlerTK")
     root.eval('tk::PlaceWindow . center') # roughly accurate
     app = MainApplication(root)
     root.mainloop()
+
+if __name__ == "__main__":
+    main()
