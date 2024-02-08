@@ -56,7 +56,7 @@ class MainApplication:
                 self.size_value.set(config["size"])
 
             if "language" in config:
-                self.language.set(config["language"])
+                self.language_value.set(config["language"])
 
             if "safe_mode" in config:
                 if config["safe_mode"] == "On":
@@ -152,7 +152,7 @@ class MainApplication:
         self.safe_mode_frame.grid(row=5, column=1, padx=self.padding_size, pady=self.padding_size)
         self.language_label.grid(row=6, column=0, padx=self.padding_size, pady=self.padding_size)
 
-        self.language_value.set("          ") # default value
+        # self.language_value.set("          ") # default value
         self.language_options = tk.OptionMenu(master, self.language_value, *LANGUAGE_OPTIONS )
         self.language_options.grid(row=6, column=1)
         self.language_options.config(takefocus=1)
@@ -297,13 +297,11 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
 
             # headers: google seems to like at least an accept-language, 
             #          and/or Accept-Encoding
-            #          note: Brotli ("br") can be added to Accept-Encoding
-            #          if you want to get a brotli package, but it adds 
-            #          basically nothing.  I recommend not to, but also
-            #          don't copy an example that has "deflate, gzip, br"
+            #          Baidu likes Brotli ("br"), which urllib3 supports
+
             headers = {
                "Accept-Language": accept_language,
-               "Accept-Encoding": "deflate, gzip",
+               "Accept-Encoding": "deflate, gzip, br",
                 "User-Agent": (
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                     " AppleWebKit/537.36 (KHTML, like Gecko) "

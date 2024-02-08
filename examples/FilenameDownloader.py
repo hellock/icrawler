@@ -8,6 +8,7 @@
 # task["img_size"] = img.size
 
 from icrawler import ImageDownloader
+from icrawler.builtin import GreedyImageCrawler
 from six.moves.urllib.parse import urlparse
 from os import path
 import re

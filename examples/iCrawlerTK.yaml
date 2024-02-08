@@ -17,3 +17,7 @@ crawlers: ["Bing", "Google"]
 # On, Moderate, Off - Baidu does not have Safe Search AFAIK
 # Note: this is still a work in progress 
 safe_mode: "Off"
+
+# values from GoogleLanguageOptions.py
+# Baidu and Google seem to require it
+language: "English"
