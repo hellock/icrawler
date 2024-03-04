@@ -1,6 +1,9 @@
 # non-tk code is mostly from from iCrawler example(s)
 # https://github.com/hellock/icrawler/
 
+import os
+import os.path as osp
+
 import tkinter as tk
 from tkinter import messagebox
 
@@ -14,8 +17,8 @@ from icrawler.builtin import (
     BingImageCrawler,
     FlickrImageCrawler,
     GoogleImageCrawler,
-    # GreedyImageCrawler,
-    # UrlListCrawler,
+    GreedyImageCrawler,
+    UrlListCrawler,
     Crawler,
 )
 
@@ -51,6 +54,7 @@ class MainApplication:
                 if "Bing" in config["crawlers"] : self.crawlers_bing.set(True)
                 if "Baidu" in config["crawlers"] : self.crawlers_baidu.set(True)
                 if "Flickr" in config["crawlers"] : self.crawlers_flickr.set(True)
+                if "urllist" in config["crawlers"] : self.crawlers_urllist.set(True)
 
             if "size" in config:
                 self.size_value.set(config["size"])
@@ -97,6 +101,8 @@ class MainApplication:
         self.crawlers_bing = tk.BooleanVar()
         self.crawlers_baidu = tk.BooleanVar()
         self.crawlers_flickr = tk.BooleanVar()
+        self.crawlers_urllist = tk.BooleanVar()
+
         self.search_string = tk.StringVar()
         self.results_value = tk.StringVar(master)
         self.language_value = tk.StringVar(master)
@@ -121,6 +127,7 @@ class MainApplication:
         tk.Checkbutton(self.crawlers_frame, text="Bing", variable=self.crawlers_bing).pack(anchor=tk.W)
         tk.Checkbutton(self.crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
         tk.Checkbutton(self.crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
+        tk.Checkbutton(self.crawlers_frame, text="source_urls.txt", variable=self.crawlers_urllist).pack(anchor=tk.W)
 
         self.size_options = tk.OptionMenu(master, self.size_value, *SIZE_OPTIONS)
 
@@ -189,10 +196,11 @@ class MainApplication:
 
         search_string   =self.search_string.get()
 
-        crawlers_baidu  =self.crawlers_baidu.get()
-        crawlers_bing   =self.crawlers_bing.get()
-        crawlers_flickr =self.crawlers_flickr.get()
-        crawlers_google =self.crawlers_google.get()
+        crawlers_baidu   =self.crawlers_baidu.get()
+        crawlers_bing    =self.crawlers_bing.get()
+        crawlers_flickr  =self.crawlers_flickr.get()
+        crawlers_google  =self.crawlers_google.get()
+        crawlers_urllist = self.crawlers_urllist.get()
 
         language = self.language_value.get().strip()
 
@@ -205,6 +213,8 @@ class MainApplication:
             search_crawlers.append("google")
         if crawlers_flickr:
             search_crawlers.append("flickr")
+        if crawlers_urllist:
+            search_crawlers.append("urllist")
 
         if len(search_crawlers) < 1:
             tk.messagebox.showerror(title="iCrawler", message="No crawlers selected")
@@ -243,6 +253,8 @@ class MainApplication:
         # "white"
         # "black"
         # "blackandwhite"
+
+        # search_filters ["date"]=((2023, 1, 1), (2023, 12, 1))
 
         if len(search_filters) < 1:
             search_filters = None
@@ -368,10 +380,36 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
             print("\nfinished FlickrImageCrawler")
 
+
+        if "urllist" in search_crawlers:
+            sourcefile = "source_urls.txt"
+            print("start testing GreedyImageCrawler")
+            greedy_crawler = GreedyImageCrawler(downloader_threads=3, storage={"root_dir": "images/greedylist"})
+            filename = osp.join(osp.dirname(__file__), sourcefile)
+            with open(filename) as fin:
+                filelist = [line.rstrip("\n") for line in fin]
+            try:
+                # make list unique, unordered
+                # filelist = list(set(filelist))
+                # python 3.7+
+                filelist = list(dict.fromkeys(filelist))
+
+                greedy_crawler.crawl(filelist)
+                print("finished testing GreedyImageCrawler")
+            except Exception as e:
+                logging.getLogger().logger.error(
+                    "GreedyImageCrawler exception: %s",
+                    e
+                )
+            else:
+                os.remove(sourcefile)
+
+
+
 def main():
     root = tk.Tk()
     root.title("iCrawlerTK")
-    root.eval('tk::PlaceWindow . center') # roughly accurate
+    root.eval('tk::PlaceWindow . center')
     app = MainApplication(root)
     root.mainloop()
 
