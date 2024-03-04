@@ -130,5 +130,12 @@ class Parser(ThreadPool):
                     retry -= 1
         self.logger.info(f"thread {current_thread().name} exit")
 
+    def save_results(self, name, soup):
+        if self.logger.isEnabledFor(logging.DEBUG):
+            with open(f"{name}_log.txt", "a") as log:
+                log.write(f"=== {name} log\n")
+                log.write(soup.prettify())
+                log.write(f"\n=== {name} log\n")
+
     def __exit__(self):
         logging.info("all parser threads exited")

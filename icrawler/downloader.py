@@ -109,10 +109,12 @@ class Downloader(ThreadPool):
             with self.lock:
                 self.fetched_num += 1
                 filename = self.get_filename(task, default_ext)
-                if self.storage.exists(filename):
-                    self.logger.info("skip downloading file %s", filename)
-                    return
-                self.fetched_num -= 1
+                while self.storage.exists(filename):
+                    filename = "0" + filename
+                # if self.storage.exists(filename):
+                    # self.logger.info("skip downloading file %s", filename)
+                    # return
+                # self.fetched_num -= 1
 
         while retry > 0 and not self.signal.get("reach_max_num") and not self.signal.get("exceed_storage_space"):
             try:
@@ -140,6 +142,8 @@ class Downloader(ThreadPool):
 
                 task["success"] = False
                 try:
+                    while self.storage.exists(filename):
+                        filename = "a" + filename
                     task["filename"] = filename # may be zero bytes if OSError happened during write()
                     self.storage.write(filename, response.content)
                     task["success"] = True
