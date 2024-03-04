@@ -1,5 +1,6 @@
 import os
 import os.path as osp
+import tempfile
 
 import six
 
@@ -24,8 +25,11 @@ class FileSystem(BaseStorage):
             except OSError:
                 pass
         mode = "w" if isinstance(data, str) else "wb"
-        with open(filepath, mode) as fout:
+        #with open(filepath, mode) as fout:
+         #   fout.write(data)
+        with tempfile.NamedTemporaryFile(mode, suffix="tmp", dir=folder, delete_on_close=False) as fout:
             fout.write(data)
+        os.rename(fout.name, filepath)
 
     def exists(self, id):
         return osp.exists(osp.join(self.root_dir, id))
