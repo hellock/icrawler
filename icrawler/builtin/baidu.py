@@ -128,10 +128,6 @@ class BaiduParser(Parser):
 
     def parse(self, response):
 
-        baiduJson = open('baiduJson.txt', 'a')
-        baiduJson.write(response.text)
-        baiduJson.close()
-        
         try:
             content = response.content.decode("utf-8", "ignore").replace("\\'", "'")
             content = json.loads(content, strict=False)
@@ -140,6 +136,7 @@ class BaiduParser(Parser):
             return
         if not content.get("data"):
             self.logger.error("No data returned")
+            self.logger.error(response.request.headers)
             self.logger.error(content)
             return
         for item in content["data"]:

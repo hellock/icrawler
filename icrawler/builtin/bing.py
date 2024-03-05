@@ -1,5 +1,7 @@
-import html
+import datetime
+import json
 import re
+import html
 
 import six
 from bs4 import BeautifulSoup
@@ -9,6 +11,7 @@ from .filter import Filter
 
 
 class BingFeeder(Feeder):
+
     def get_filter(self):
         search_filter = Filter()
 
@@ -91,14 +94,29 @@ class BingFeeder(Feeder):
         people_choices = ["face", "portrait"]
         search_filter.add_rule("people", lambda x: "+filterui:face-" + x, people_choices)
 
-        # date filter
+          # date filter
         date_minutes = {"pastday": 1440, "pastweek": 10080, "pastmonth": 43200, "pastyear": 525600}
 
         def format_date(date):
-            return "+filterui:age-lt" + str(date_minutes[date])
+            if isinstance(date, tuple):
+                assert len(date) == 2
+                date_range = []
+                for date_ in date:
+                    if date_ is None:
+                        date_str = ""
+                    elif isinstance(date_, (tuple, datetime.date)):
+                        date_ = datetime.date(*date_) if isinstance(date_, tuple) else date_
+                        date_str = (date.fromisoformat(date_) - datetime.date(1970,1,1)).days
+                    else:
+                        raise TypeError("date must be a tuple or datetime.date object")
+                    date_range.append(date_str)
+                return "filters=ex1:\"ez5_{}_{}\"".format(*date_range)
+            else:
+                return "+filterui:age-lt" + str(date_minutes[date])
 
         date_choices = list(date_minutes.keys())
-        search_filter.add_rule("date", format_date, date_choices)
+        # search_filter.add_rule("date", format_date, date_choices)
+        search_filter.add_rule("date", format_date)
 
         safe_code = {
             "on": "on,safeui:on",
@@ -128,9 +146,29 @@ class BingFeeder(Feeder):
 
 
 class BingParser(Parser):
+
     def parse(self, response):
         soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), "lxml")
+        self.save_results("Bing", soup)
         image_divs = soup.find_all("div", class_="imgpt")
+
+        try:
+            for div in image_divs:
+                js = (div.a["m"])
+                j=json.loads(js)
+                img_src = j['purl']
+                file_url = j['murl']
+                with open("source_urls.txt", "a") as myfile:
+                    myfile.write(j['purl'])
+                    myfile.write("\n")
+
+                yield dict(file_url=file_url, img_src=img_src)
+
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error(div)
+            pass
+
         pattern = re.compile(r"murl\":\"(.*?)\.jpg")
         for div in image_divs:
             try:

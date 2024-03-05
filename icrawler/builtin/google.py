@@ -1,5 +1,8 @@
+import sys
+import os
 import datetime
 import json
+import hjson
 import re
 import logging
 from urllib.parse import urlencode
@@ -11,6 +14,7 @@ from .filter import Filter
 
 
 class GoogleFeeder(Feeder):
+
     def get_filter(self):
         search_filter = Filter()
 
@@ -85,14 +89,12 @@ class GoogleFeeder(Feeder):
 
         # licence filter
         license_code = {
-            "noncommercial": "f",
-            "commercial": "fc",
-            "noncommercial,modify": "fm",
-            "commercial,modify": "fmc",
+            "Commercial & other licenses": "ol",
+            "Creative Commons licenses": "cl",
         }
 
         def format_license(license):
-            return "sur:" + license_code[license]
+            return "il:" + license_code[license]
 
         license_choices = list(license_code.keys())
         search_filter.add_rule("license", format_license, license_choices)
@@ -143,12 +145,6 @@ class GoogleFeeder(Feeder):
 
 
 class GoogleParser(Parser):
-    def save_results(self, soup):
-        if self.logger.isEnabledFor(logging.DEBUG):
-            with open('google_log.txt', 'a') as google_log:
-                google_log.write("=== Google log\n")
-                google_log.write(soup.prettify())
-                google_log.write("\n=== Google log\n")
 
     # Looking for <script> tags containing "AF_initDataCallback" and "ds:1"
     # unwanted example:
@@ -156,8 +152,12 @@ class GoogleParser(Parser):
     # desired example:
     #     AF_initDataCallback({key: 'ds:1', hash: '2', data:[null,[null,null,nu...
     # 
+
+    google_magic = "444383007" # "pDC"??? "D80"???
+
     def parse(self, response):
         soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), "lxml")
+        self.save_results("Google", soup)
         image_divs = soup.find_all(name="script")
         for div in image_divs:
             txt = str(div)
@@ -165,6 +165,32 @@ class GoogleParser(Parser):
                 continue
             if "ds:0" in txt or "ds:1" not in txt:
                 continue
+
+            try:
+                results = []
+                start=txt.index("{")
+                end = txt.index(");</script>", start)
+                # hjson.loads is less strict than json.loads
+                j = hjson.loads(txt[start:end])
+                for i in j["data"][56][1][0][0][1][0]:
+                    
+                    n = i[0][0][self.google_magic][1]
+                    img_src=n[25]["2003"][2]
+
+                    self.logger.info("{}\n{}x{}".format(n[3][0], n[3][2], n[3][1]))
+                    self.logger.info(img_src)
+                    results.append(dict(file_url=n[3][0], img_src=img_src))
+                    with open("source_urls.txt", "a") as myfile:
+                        myfile.write(img_src)
+                        myfile.write("\n")
+                return results
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error(txt[start:end])
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                self.logger.error("%s\n%s\n%s", exc_type, fname, exc_tb.tb_lineno)
+                pass
 
             uris = re.findall(r"http[^\[]*?\.(?:jpg|png|bmp)", txt)
             if len(uris) < 1:

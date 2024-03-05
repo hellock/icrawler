@@ -1,4 +1,5 @@
 import logging
+import traceback
 from threading import Lock, Thread
 
 from .cached_queue import CachedQueue
@@ -46,6 +47,7 @@ class ThreadPool:
         self.workers = []
         self.lock = Lock()
         self.logger = logging.getLogger(self.name)
+        self.keys = set()
 
     def init_workers(self, *args, **kwargs):
         self.workers = []
@@ -63,9 +65,32 @@ class ThreadPool:
         if self.in_queue is not None:
             self.in_queue.put(task, block, timeout)
 
-    def output(self, task, block=True, timeout=None):
-        if self.out_queue is not None:
-            self.out_queue.put(task, block, timeout)
+    def output(self, task, block=True, timeout=None, key=None, unique=False):
+        try:
+            if self.out_queue is not None:
+                if unique:
+                    task_key = ""
+                    if isinstance(task, dict) and key and key in task:
+                        task_key = task[key]
+                    elif isinstance(task, str):
+                        task_key = task
+                    else:
+                        unique = False
+                        self.logger.warning("task type unknown, %s", type(task))
+
+                    if unique and task_key in self.keys:
+                        self.logger.info("duplicate task key %s rejected", task_key)
+                    else:
+                        self.keys.add(task_key)
+                        self.out_queue.put(task, block, timeout)
+                else:
+                        self.out_queue.put(task, block, timeout)
+                #if not unique or task_key not in self.keys:
+                #    self.keys.add(task_key)
+                #    self.out_queue.put(task, block, timeout)
+        except Exception as e:
+            self.logger.error(e)
+            print(traceback.format_exc())
 
     def clear_buffer(self, clear_out=False):
         self.in_queue.queue.clear()

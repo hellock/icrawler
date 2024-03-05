@@ -118,6 +118,7 @@ class Parser(ThreadPool):
                                 self.logger.error(
                                     "Exception caught when put task %s into " "queue, error: %s", task, url
                                 )
+                                self.logger.error(e)
                             else:
                                 break
                         if self.signal.get("reach_max_num"):

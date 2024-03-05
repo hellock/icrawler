@@ -10,14 +10,14 @@ from .. import Crawler, Feeder, ImageDownloader, Parser
 class GreedyFeeder(Feeder):
     def feed(self, domains):
         for domain in domains:
-            self.output(domain)
+            self.output(domain, key="file_url", unique=True)
         while not self.signal.get("reach_max_num"):
             time.sleep(1)
 
 
 class GreedyParser(Parser):
     def __init__(self, *args, **kwargs):
-        self.pattern = re.compile(r"(http|\/\/)(.*)\.(jpg|jpeg|png|bmp|gif|tiff)")
+        self.pattern = re.compile(r"(http|\/\/)(.*)\.(jpg|jpeg|png|bmp|gif|tiff|webp)")
         super().__init__(*args, **kwargs)
 
     def is_in_domain(self, url, domains):
@@ -85,7 +85,7 @@ class GreedyImageCrawler(Crawler):
         for i in range(len(domains)):
             if not domains[i].startswith("http"):
                 domains[i] = "http://" + domains[i]
-            domains[i] = domains[i].rstrip("/")
+            #domains[i] = domains[i].rstrip("/")
         super().crawl(
             feeder_kwargs={"domains": domains},
             parser_kwargs={"domains": domains},

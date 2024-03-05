@@ -25,8 +25,6 @@ class FileSystem(BaseStorage):
             except OSError:
                 pass
         mode = "w" if isinstance(data, str) else "wb"
-        #with open(filepath, mode) as fout:
-         #   fout.write(data)
         with tempfile.NamedTemporaryFile(mode, suffix="tmp", dir=folder, delete=False) as fout:
             fout.write(data)
         os.rename(fout.name, filepath)
