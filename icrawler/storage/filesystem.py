@@ -27,7 +27,7 @@ class FileSystem(BaseStorage):
         mode = "w" if isinstance(data, str) else "wb"
         #with open(filepath, mode) as fout:
          #   fout.write(data)
-        with tempfile.NamedTemporaryFile(mode, suffix="tmp", dir=folder, delete_on_close=False) as fout:
+        with tempfile.NamedTemporaryFile(mode, suffix="tmp", dir=folder, delete=False) as fout:
             fout.write(data)
         os.rename(fout.name, filepath)
 
