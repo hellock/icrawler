@@ -174,15 +174,23 @@ class GoogleParser(Parser):
                 j = hjson.loads(txt[start:end])
                 for i in j["data"][56][1][0][0][1][0]:
                     
-                    n = i[0][0][self.google_magic][1]
-                    img_src=n[25]["2003"][2]
+                    if i[0][0][self.google_magic][0] == 1:
+                        n = i[0][0][self.google_magic][1]
+                        # if not n: might be an ad
+                        if n:
+                            img_src=n[25]["2003"][2]
 
-                    self.logger.info("{}\n{}x{}".format(n[3][0], n[3][2], n[3][1]))
-                    self.logger.info(img_src)
-                    results.append(dict(file_url=n[3][0], img_src=img_src))
-                    with open("source_urls.txt", "a") as myfile:
-                        myfile.write(img_src)
-                        myfile.write("\n")
+                            self.logger.info("{}\n{}x{}".format(n[3][0], n[3][2], n[3][1]))
+                            self.logger.info(img_src)
+                            results.append(dict(file_url=n[3][0], img_src=img_src))
+                            with open("source_urls.txt", "a") as myfile:
+                                myfile.write(img_src)
+                                myfile.write("\n")
+                    elif i[0][0][self.google_magic][0] == 19:
+                        self.logger.info("google magic {}{}".format(i[0][0][self.google_magic][0], i))
+                    else:
+                        self.logger.info("google magic unknown {}{}".format(i[0][0][self.google_magic][0], i))
+
                 return results
             except Exception as e:
                 self.logger.error(e)
