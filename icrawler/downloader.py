@@ -130,8 +130,13 @@ class Downloader(ThreadPool):
                 if self.reach_max_num():
                     self.signal.set(reach_max_num=True)
                     break
+                elif response.status_code in (400, 401, 403, 404, 500):
+                    # don't retry these
+                    self.logger.warning("Response status code %d, file %s", response.status_code, file_url)
+                    retry = 0
+                    break
                 elif response.status_code != 200:
-                    self.logger.error("Response status code %d, file %s", response.status_code, file_url)
+                    self.logger.warning("Response status code %d, file %s", response.status_code, file_url)
                     break
                 elif not self.keep_file(task, response, **kwargs):
                     break
