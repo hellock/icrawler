@@ -183,7 +183,7 @@ class GoogleParser(Parser):
                             self.logger.info("{}\n{}x{}".format(n[3][0], n[3][2], n[3][1]))
                             self.logger.info(img_src)
                             results.append(dict(file_url=n[3][0], img_src=img_src))
-                            with open("source_urls.txt", "a") as myfile:
+                            with open("refeed_source_urls.txt", "a") as myfile:
                                 myfile.write(img_src)
                                 myfile.write("\n")
                     elif i[0][0][self.google_magic][0] == 19:

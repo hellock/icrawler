@@ -25,9 +25,17 @@ class FileSystem(BaseStorage):
             except OSError:
                 pass
         mode = "w" if isinstance(data, str) else "wb"
+        # make sure file is saved, and try to name it correctly if possible
+        # this avoids a race condition where the filename is available,
+        # but another thread creates a file with the same name first.
         with tempfile.NamedTemporaryFile(mode, suffix="tmp", dir=folder, delete=False) as fout:
             fout.write(data)
-        os.rename(fout.name, filepath)
+        try:
+            os.rename(fout.name, filepath)
+        except:
+            # possibly try to add characters to make a unique filename
+            # until rename() succeeds
+            pass
 
     def exists(self, id):
         return osp.exists(osp.join(self.root_dir, id))

@@ -158,7 +158,7 @@ class BingParser(Parser):
                 j=json.loads(js)
                 img_src = j['purl']
                 file_url = j['murl']
-                with open("source_urls.txt", "a") as myfile:
+                with open("refeed_source_urls.txt", "a") as myfile:
                     myfile.write(j['purl'])
                     myfile.write("\n")
 

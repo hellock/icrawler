@@ -3,9 +3,11 @@
 
 import os
 import os.path as osp
+import tempfile
 
 import tkinter as tk
 from tkinter import messagebox
+from tkinter.messagebox import askyesno
 
 import logging
 from logging import config
@@ -55,6 +57,7 @@ class MainApplication:
                 if "Baidu" in config["crawlers"] : self.crawlers_baidu.set(True)
                 if "Flickr" in config["crawlers"] : self.crawlers_flickr.set(True)
                 if "urllist" in config["crawlers"] : self.crawlers_urllist.set(True)
+                if "refeed" in config["crawlers"] : self.crawlers_refeed.set(True)
 
             if "size" in config:
                 self.size_value.set(config["size"])
@@ -102,6 +105,8 @@ class MainApplication:
         self.crawlers_baidu = tk.BooleanVar()
         self.crawlers_flickr = tk.BooleanVar()
         self.crawlers_urllist = tk.BooleanVar()
+        self.crawlers_refeed = tk.BooleanVar()
+        
 
         self.search_string = tk.StringVar()
         self.results_value = tk.StringVar(master)
@@ -128,6 +133,7 @@ class MainApplication:
         tk.Checkbutton(self.crawlers_frame, text="Baidu", variable=self.crawlers_baidu).pack(anchor=tk.W)
         tk.Checkbutton(self.crawlers_frame, text="Flickr", variable=self.crawlers_flickr).pack(anchor=tk.W)
         tk.Checkbutton(self.crawlers_frame, text="source_urls.txt", variable=self.crawlers_urllist).pack(anchor=tk.W)
+        tk.Checkbutton(self.crawlers_frame, text="Re-feed source pages", variable=self.crawlers_refeed).pack(anchor=tk.W)
 
         self.size_options = tk.OptionMenu(master, self.size_value, *SIZE_OPTIONS)
 
@@ -201,6 +207,7 @@ class MainApplication:
         crawlers_flickr  =self.crawlers_flickr.get()
         crawlers_google  =self.crawlers_google.get()
         crawlers_urllist = self.crawlers_urllist.get()
+        crawlers_refeed = self.crawlers_refeed.get()
 
         language = self.language_value.get().strip()
 
@@ -215,6 +222,8 @@ class MainApplication:
             search_crawlers.append("flickr")
         if crawlers_urllist:
             search_crawlers.append("urllist")
+        if crawlers_refeed:
+            search_crawlers.append("refeed")
 
         if len(search_crawlers) < 1:
             tk.messagebox.showerror(title="iCrawler", message="No crawlers selected")
@@ -341,6 +350,24 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
         search_folder_name = search_string.replace(" ", "_")
         search_folder_name = re.sub('[^a-zA-Z0-9_.-]', '', search_folder_name)
 
+
+        #TODO: 
+        #refeed_sourcefile = None
+        #if "refeed" in search_crawlers:
+        #    refeed_sourcefile = tempfile.NamedTemporaryFile("w", suffix="tmp", delete=False).name
+        #this is a hack, creating GreedyImageCrawler so it calls set_storage()
+        if "refeed" in search_crawlers:
+            sourcefile = "refeed_source_urls.txt"
+            if len(search_folder_name) < 1:
+                search_folder_name = "RefeedUrls"
+            storage={"root_dir": search_folder_name + "/refeed"}
+            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/refeed"})
+            if greedy_crawler.storage.exists(sourcefile):
+                answer = askyesno(title='Confirmation', message='Overwrite source file refeed_source_urls.txt?')
+                if answer != True:
+                    tk.messagebox.showerror(title="iCrawler", message="Please delete refeed_source_urls.txt")
+                    return
+
         if "google" in search_crawlers:
 
             # two char language or None
@@ -380,11 +407,13 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
             print("\nfinished FlickrImageCrawler")
 
-
+            
         if "urllist" in search_crawlers:
             sourcefile = "source_urls.txt"
-            print("start testing GreedyImageCrawler")
-            greedy_crawler = GreedyImageCrawler(downloader_threads=3, storage={"root_dir": "images/greedylist"})
+            if len(search_folder_name) < 1:
+                search_folder_name = "SourceUrls"
+            print("start GreedyImageCrawler")
+            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/greedylist"})
             filename = osp.join(osp.dirname(__file__), sourcefile)
             with open(filename) as fin:
                 filelist = [line.rstrip("\n") for line in fin]
@@ -392,10 +421,13 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
                 # make list unique, unordered
                 # filelist = list(set(filelist))
                 # python 3.7+
+                count_before = len(filelist)
                 filelist = list(dict.fromkeys(filelist))
+                count_after = len(filelist)
 
+                print("GreedyImageCrawler loaded {} urls, {} unique".format(count_before, count_after))
                 greedy_crawler.crawl(filelist)
-                print("finished testing GreedyImageCrawler")
+                print("\nfinished GreedyImageCrawler")
             except Exception as e:
                 logging.getLogger().logger.error(
                     "GreedyImageCrawler exception: %s",
@@ -404,6 +436,34 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             else:
                 os.remove(sourcefile)
 
+
+        if "refeed" in search_crawlers:
+            sourcefile = "refeed_source_urls.txt"
+            if len(search_folder_name) < 1:
+                search_folder_name = "RefeedUrls"
+            print("start GreedyImageCrawler")
+            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/refeed"})
+            filename = osp.join(osp.dirname(__file__), sourcefile)
+            with open(filename) as fin:
+                filelist = [line.rstrip("\n") for line in fin]
+            try:
+                # make list unique, unordered
+                # filelist = list(set(filelist))
+                # python 3.7+
+                count_before = len(filelist)
+                filelist = list(dict.fromkeys(filelist))
+                count_after = len(filelist)
+
+                print("GreedyImageCrawler loaded {} urls, {} unique".format(count_before, count_after))
+                greedy_crawler.crawl(filelist)
+                print("\nfinished GreedyImageCrawler")
+            except Exception as e:
+                logging.getLogger().logger.error(
+                    "GreedyImageCrawler exception: %s",
+                    e
+                )
+            else:
+                os.remove(sourcefile)
 
 
 def main():
