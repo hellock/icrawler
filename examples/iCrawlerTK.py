@@ -351,11 +351,11 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
         search_folder_name = re.sub('[^a-zA-Z0-9_.-]', '', search_folder_name)
 
 
-        #TODO: 
-        #refeed_sourcefile = None
-        #if "refeed" in search_crawlers:
-        #    refeed_sourcefile = tempfile.NamedTemporaryFile("w", suffix="tmp", delete=False).name
-        #this is a hack, creating GreedyImageCrawler so it calls set_storage()
+        # TODO: 
+        # refeed_sourcefile = None
+        # if "refeed" in search_crawlers:
+        #     refeed_sourcefile = tempfile.NamedTemporaryFile("w", suffix="tmp", delete=False).name
+        # this is a hack, creating GreedyImageCrawler so it calls set_storage()
         if "refeed" in search_crawlers:
             sourcefile = "refeed_source_urls.txt"
             if len(search_folder_name) < 1:
@@ -367,6 +367,10 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
                 if answer != True:
                     tk.messagebox.showerror(title="iCrawler", message="Please delete refeed_source_urls.txt")
                     return
+            # make sure file is empty, later calls will append
+            filename = osp.join(osp.dirname(__file__), sourcefile)
+            with open(filename, "w") as fin:
+                pass
 
         if "google" in search_crawlers:
 
@@ -403,7 +407,7 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
         if "flickr" in search_crawlers:
             print("\nstart FlickrImageCrawler")
             storage={"root_dir": search_folder_name + "/flickr"}
-            flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level)
+            flickr_crawler = FlickrImageCrawler(downloader_threads=threads, storage=storage, log_level=log_level, downloader_cls=FilenameDownloader)
             flickr_crawler.crawl(search_string, max_num=max_number, filters=search_filters)
             print("\nfinished FlickrImageCrawler")
 
@@ -413,7 +417,7 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             if len(search_folder_name) < 1:
                 search_folder_name = "SourceUrls"
             print("start GreedyImageCrawler")
-            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/greedylist"})
+            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/greedylist"}, downloader_cls=FilenameDownloader)
             filename = osp.join(osp.dirname(__file__), sourcefile)
             with open(filename) as fin:
                 filelist = [line.rstrip("\n") for line in fin]
@@ -442,7 +446,7 @@ def start_download(search_crawlers, search_terms, max_number, threads, language,
             if len(search_folder_name) < 1:
                 search_folder_name = "RefeedUrls"
             print("start GreedyImageCrawler")
-            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/refeed"})
+            greedy_crawler = GreedyImageCrawler(downloader_threads=5, storage={"root_dir": search_folder_name + "/refeed"}, downloader_cls=FilenameDownloader)
             filename = osp.join(osp.dirname(__file__), sourcefile)
             with open(filename) as fin:
                 filelist = [line.rstrip("\n") for line in fin]
