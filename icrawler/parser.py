@@ -1,3 +1,4 @@
+import datetime
 import logging
 import queue
 import time
@@ -100,7 +101,9 @@ class Parser(ThreadPool):
                     if not task_list:
                         self.logger.debug("self.parse() returned no tasks")
                         with open("task_list_error.log", 'ab') as f:
+                            f.write("\n------------- {}\n".format(datetime.datetime.now()))
                             f.write(response.content)
+                        task_list = {}
                         
                     for task in task_list:
                         while not self.signal.get("reach_max_num") and not self.signal.get("exceed_storage_space"):
