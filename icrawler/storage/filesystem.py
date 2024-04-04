@@ -5,12 +5,57 @@ import six
 
 from .base import BaseStorage
 
+from PIL import Image
+from PIL.ExifTags import TAGS
+import piexif
+
+
+def read_EXIF(image_path):
+    try:
+        image = Image.open(image_path)
+        exif_data = image.getexif()
+        exif = ''
+        for tag_id, value in exif_data.items():
+            tag_description = TAGS.get(tag_id, tag_id)
+            if isinstance(value, bytes):
+                value = value.decode(errors='replace')
+            exif += f"{tag_description:20}: {value}\n"
+        return exif
+
+    except Exception as e:
+        return e
+
 
 class FileSystem(BaseStorage):
     """Use filesystem as storage backend.
 
     The id is filename and data is stored as text files or binary files.
     """
+
+    def PIL_image_save(self, id, data):
+        """
+        For download images with metadata
+        image title - original image name
+        author - image url
+        """
+        image = Image.open(BytesIO(data.content))
+        exif_dict = image.info.get('exif')
+        if exif_dict:
+            exif_dict = piexif.load(exif_dict)
+        else:
+            exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "Interop": {}, "1st": {}, "thumbnail": None}
+        exif_dict['0th'][piexif.ImageIFD.Artist] = data.url.encode('utf-8')
+        exif_dict['0th'][piexif.ImageIFD.ImageDescription] = data.url.split('/')[-1].encode('utf-8')
+        exif_bytes = piexif.dump(exif_dict)
+
+        filepath = osp.join(self.root_dir, id)
+        folder = osp.dirname(filepath)
+        if not osp.isdir(folder):
+            try:
+                os.makedirs(folder)
+            except OSError:
+                pass
+        image.save(filepath, exif=exif_bytes)
 
     def __init__(self, root_dir):
         self.root_dir = root_dir
