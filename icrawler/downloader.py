@@ -136,7 +136,10 @@ class Downloader(ThreadPool):
                     self.fetched_num += 1
                     filename = self.get_filename(task, default_ext)
                 self.logger.info("image #%s\t%s", self.fetched_num, file_url)
-                self.storage.write(filename, response.content)
+
+                # self.storage.write(filename, response.content)
+                self.storage.PIL_image_save(filename, response)
+
                 task["success"] = True
                 task["filename"] = filename
                 break
