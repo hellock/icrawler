@@ -161,12 +161,11 @@ class GoogleParser(Parser):
             # uris = [img[1][3][0] for img in data if img[0] == 1]
 
             uris = re.findall(r"http[^\[]*?.(?:jpg|png|bmp)", txt)
+            if not uris:
+                uris = re.findall(r"http[^\[]*?\.(?:jpg|png|bmp)", txt)
             uris = [bytes(uri, "utf-8").decode("unicode-escape") for uri in uris]
             if uris:
                 return [{"file_url": uri} for uri in uris]
-
-            uris = re.findall(r"http[^\[]*?\.(?:jpg|png|bmp)", txt)
-            return [{"file_url": uri} for uri in uris]
 
 
 class GoogleImageCrawler(Crawler):
