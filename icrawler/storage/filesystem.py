@@ -1,3 +1,4 @@
+import logging
 import os
 import os.path as osp
 
@@ -5,6 +6,7 @@ import six
 
 from .base import BaseStorage
 
+from io import BytesIO
 from PIL import Image
 from PIL.ExifTags import TAGS
 import piexif
@@ -32,11 +34,14 @@ class FileSystem(BaseStorage):
     The id is filename and data is stored as text files or binary files.
     """
 
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+
     def PIL_image_save(self, id, data):
         """
         For download images with metadata
-        image title - original image name
-        author - image url
+        Image title (ImageDescription) = original image filename
+        Author (Artist) = image url
         """
         image = Image.open(BytesIO(data.content))
         exif_dict = image.info.get('exif')
@@ -56,9 +61,7 @@ class FileSystem(BaseStorage):
             except OSError:
                 pass
         image.save(filepath, exif=exif_bytes)
-
-    def __init__(self, root_dir):
-        self.root_dir = root_dir
+        print(f"{read_EXIF(filepath)}")
 
     def write(self, id, data):
         filepath = osp.join(self.root_dir, id)
