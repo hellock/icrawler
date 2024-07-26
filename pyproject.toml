@@ -12,14 +12,14 @@ readme = "README.md"
 keywords = [
   "Crawler",
 ]
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 maintainers = [
-    {name = "Kai Chen", email = "chenkaidev@gmail.com"},
-    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+  { name = "Kai Chen", email = "chenkaidev@gmail.com" },
+  { name = "Zhiyuan Chen", email = "this@zyc.ai" },
 ]
 authors = [
-    {name = "Kai Chen", email = "chenkaidev@gmail.com"},
-    {name = "Zhiyuan Chen", email = "this@zyc.ai"},
+  { name = "Kai Chen", email = "chenkaidev@gmail.com" },
+  { name = "Zhiyuan Chen", email = "this@zyc.ai" },
 ]
 requires-python = ">=3.7"
 classifiers = [
@@ -35,6 +35,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Internet :: WWW/HTTP",
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Topic :: Utilities",
@@ -43,15 +44,22 @@ dynamic = [
   "version",
 ]
 dependencies = [
+  "beautifulsoup4",
+  "bs4",
+  "lxml",
+  "pillow",
   "pyyaml",
+  "requests",
+  "six",
 ]
-[project.urls]
-documentation = "https://icrawler.readthedocs.io/"
-homepage = "https://icrawler.readthedocs.io/"
-repository = "https://github.com/hellock/icrawler"
+urls.documentation = "https://icrawler.readthedocs.io/"
+urls.homepage = "https://icrawler.readthedocs.io/"
+urls.repository = "https://github.com/hellock/icrawler"
 
 [tool.setuptools]
-packages = ["icrawler"]
+packages = [
+  "icrawler",
+]
 
 [tool.setuptools_scm]
 write_to = "icrawler/version.py"
@@ -65,28 +73,6 @@ profile = "black"
 
 [tool.flake8]
 max-line-length = 120
-
-[tool.pytest.ini_options]
-addopts = "--doctest-modules --cov"
-
-[tool.coverage.run]
-branch = true
-omit = ["tests/*", "setup.py"]
-
-[tool.coverage.paths]
-source = ["icrawler"]
-
-[tool.coverage.xml]
-output = "coverage.xml"
-
-[tool.coverage.json]
-output = "coverage.json"
-
-[tool.coverage.report]
-show_missing = true
-
-[tool.mypy]
-ignore_missing_imports = true
 
 [tool.pylint.format]
 max-line-length = 120
@@ -104,3 +90,30 @@ output-format = "colorized"
 
 [tool.pylint.main]
 fail-under = 9.8
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --cov"
+
+[tool.coverage.run]
+branch = true
+omit = [
+  "tests/*",
+  "setup.py",
+]
+
+[tool.coverage.paths]
+source = [
+  "icrawler",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.mypy]
+ignore_missing_imports = true
