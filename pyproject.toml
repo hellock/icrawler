@@ -47,6 +47,7 @@ dependencies = [
   "beautifulsoup4",
   "bs4",
   "lxml",
+  "piexif",
   "pillow",
   "pyyaml",
   "requests",
