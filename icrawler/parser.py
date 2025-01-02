@@ -68,9 +68,8 @@ class Parser(ThreadPool):
                 if self.signal.get("feeder_exited"):
                     self.logger.info("no more page urls for thread %s to parse", current_thread().name)
                     break
-                else:
-                    self.logger.info("%s is waiting for new page urls", current_thread().name)
-                    continue
+                self.logger.info("%s is waiting for new page urls", current_thread().name)
+                continue
             except:
                 self.logger.error("exception in thread %s", current_thread().name)
                 continue
@@ -117,5 +116,5 @@ class Parser(ThreadPool):
                     retry -= 1
         self.logger.info(f"thread {current_thread().name} exit")
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         logging.info("all parser threads exited")

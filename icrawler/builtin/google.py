@@ -185,12 +185,11 @@ class GoogleImageCrawler(Crawler):
         language=None,
         file_idx_offset=0,
         overwrite=False,
+        max_idle_time=None,
     ):
         if offset + max_num > 1000:
             if offset > 1000:
-                self.logger.error(
-                    '"Offset" cannot exceed 1000, otherwise you will get ' "duplicated searching results."
-                )
+                self.logger.error("Offset cannot exceed 1000, otherwise you " "will get duplicated searching results.")
                 return
             elif max_num > 1000:
                 max_num = 1000 - offset
@@ -201,9 +200,13 @@ class GoogleImageCrawler(Crawler):
                     "can specify different date ranges.",
                     1000 - offset,
                 )
-
         feeder_kwargs = dict(keyword=keyword, offset=offset, max_num=max_num, language=language, filters=filters)
         downloader_kwargs = dict(
-            max_num=max_num, min_size=min_size, max_size=max_size, file_idx_offset=file_idx_offset, overwrite=overwrite
+            max_num=max_num,
+            min_size=min_size,
+            max_size=max_size,
+            file_idx_offset=file_idx_offset,
+            overwrite=overwrite,
+            max_idle_time=max_idle_time,
         )
         super().crawl(feeder_kwargs=feeder_kwargs, downloader_kwargs=downloader_kwargs)

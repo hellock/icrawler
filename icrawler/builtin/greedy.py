@@ -77,7 +77,7 @@ class GreedyImageCrawler(Crawler):
     ):
         super().__init__(feeder_cls, parser_cls, downloader_cls, *args, **kwargs)
 
-    def crawl(self, domains, max_num=0, min_size=None, max_size=None, file_idx_offset=0):
+    def crawl(self, domains, max_num=0, min_size=None, max_size=None, file_idx_offset=0, max_idle_time=None):
         if isinstance(domains, str):
             domains = [domains]
         elif not isinstance(domains, list):
@@ -90,6 +90,10 @@ class GreedyImageCrawler(Crawler):
             feeder_kwargs={"domains": domains},
             parser_kwargs={"domains": domains},
             downloader_kwargs=dict(
-                max_num=max_num, min_size=min_size, max_size=max_size, file_idx_offset=file_idx_offset
+                max_num=max_num,
+                min_size=min_size,
+                max_size=max_size,
+                file_idx_offset=file_idx_offset,
+                max_idle_time=max_idle_time,
             ),
         )

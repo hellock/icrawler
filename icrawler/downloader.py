@@ -1,4 +1,5 @@
 import queue
+import time
 from io import BytesIO
 from threading import current_thread
 from urllib.parse import urlparse
@@ -163,7 +164,7 @@ class Downloader(ThreadPool):
             worker.start()
             self.logger.debug("thread %s started", worker.name)
 
-    def worker_exec(self, max_num, default_ext="", queue_timeout=5, req_timeout=5, **kwargs):
+    def worker_exec(self, max_num, default_ext="", queue_timeout=5, req_timeout=5, max_idle_time=None, **kwargs):
         """Target method of workers.
 
         Get task from ``task_queue`` and then download files and process meta
@@ -171,34 +172,49 @@ class Downloader(ThreadPool):
 
         1. All parser threads have exited and the task_queue is empty.
         2. Downloaded image number has reached required number(max_num).
+        3. No new downloads for max_idle_time seconds.
 
         Args:
+            max_num (int): Maximum number of images to download
             queue_timeout (int): Timeout of getting tasks from ``task_queue``.
             req_timeout (int): Timeout of making requests for downloading pages.
+            max_idle_time (int): Maximum time (in seconds) to wait without receiving new images
             **kwargs: Arguments passed to the :func:`download` method.
         """
         self.max_num = max_num
+        last_download_time = time.time()
+
         while True:
             if self.signal.get("reach_max_num"):
-                self.logger.info(
-                    "downloaded images reach max num, thread %s" " is ready to exit", current_thread().name
-                )
+                self.logger.info("downloaded images reach max num, thread %s is ready to exit", current_thread().name)
                 break
+
+            current_time = time.time()
+            if max_idle_time is not None and current_time - last_download_time > max_idle_time and self.fetched_num > 0:
+                self.logger.info("no new images for %d seconds, thread %s exit", max_idle_time, current_thread().name)
+                break
+
             try:
                 task = self.in_queue.get(timeout=queue_timeout)
             except queue.Empty:
                 if self.signal.get("parser_exited"):
                     self.logger.info("no more download task for thread %s", current_thread().name)
                     break
-                else:
+                elif self.fetched_num == 0:
                     self.logger.info("%s is waiting for new download tasks", current_thread().name)
+                else:
+                    self.logger.info("no more images available, thread %s exit", current_thread().name)
+                    break
             except:
                 self.logger.error("exception in thread %s", current_thread().name)
             else:
-                self.download(task, default_ext, req_timeout, **kwargs)
+                success = self.download(task, default_ext, req_timeout, **kwargs)
+                if success:
+                    last_download_time = time.time()
                 self.process_meta(task)
                 self.in_queue.task_done()
-        self.logger.info(f"thread {current_thread().name} exit")
+
+        self.logger.info("thread %s exit", current_thread().name)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.logger.info("all downloader threads exited")
@@ -247,5 +263,5 @@ class ImageDownloader(Downloader):
         file_idx = self.fetched_num + self.file_idx_offset
         return f"{file_idx:06d}.{extension}"
 
-    def worker_exec(self, max_num, default_ext="jpg", queue_timeout=5, req_timeout=5, **kwargs):
-        super().worker_exec(max_num, default_ext, queue_timeout, req_timeout, **kwargs)
+    def worker_exec(self, max_num, default_ext="jpg", queue_timeout=5, req_timeout=5, max_idle_time=None, **kwargs):
+        super().worker_exec(max_num, default_ext, queue_timeout, req_timeout, max_idle_time, **kwargs)
