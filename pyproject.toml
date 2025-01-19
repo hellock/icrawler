@@ -8,7 +8,7 @@ requires = [
 [project]
 name = "icrawler"
 description = "A multi-thread crawler framework with many builtin image crawlers provided."
-readme = "README.md"
+readme = "README.rst"
 keywords = [
   "Crawler",
 ]
