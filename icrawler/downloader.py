@@ -1,3 +1,4 @@
+import errno
 import queue
 import time
 from io import BytesIO
@@ -114,7 +115,7 @@ class Downloader(ThreadPool):
                     return
                 self.fetched_num -= 1
 
-        while retry > 0 and not self.signal.get("reach_max_num"):
+        while retry > 0 and not self.signal.get("reach_max_num") and not self.signal.get("exceed_storage_space"):
             try:
                 response = self.session.get(file_url, timeout=timeout)
             except Exception as e:
@@ -136,10 +137,19 @@ class Downloader(ThreadPool):
                 with self.lock:
                     self.fetched_num += 1
                     filename = self.get_filename(task, default_ext)
-                self.logger.info("image #%s\t%s", self.fetched_num, file_url)
-                self.storage.write(filename, response.content)
-                task["success"] = True
-                task["filename"] = filename
+                self.logger.info("image #%s\t%s %s", self.fetched_num, filename, file_url)
+
+                task["success"] = False
+                try:
+                    task["filename"] = filename  # may be zero bytes if OSError happened during write()
+                    self.storage.write(filename, response.content)
+                    task["success"] = True
+                except OSError as o:
+                    # errno.EINVAL -- name too long
+                    if o.errno == errno.ENOSPC:
+                        self.signal.set(exceed_storage_space=True)
+                    else:
+                        raise
                 break
             finally:
                 retry -= 1

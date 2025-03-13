@@ -82,11 +82,11 @@ class Crawler:
     def init_signal(self):
         """Init signal
 
-        3 signals are added: ``feeder_exited``, ``parser_exited`` and
-        ``reach_max_num``.
+        4 signals are added: ``feeder_exited``, ``parser_exited``,
+        ``reach_max_num`` and ``exceed_storage_space``.
         """
         self.signal = Signal()
-        self.signal.set(feeder_exited=False, parser_exited=False, reach_max_num=False)
+        self.signal.set(feeder_exited=False, parser_exited=False, reach_max_num=False, exceed_storage_space=False)
 
     def set_storage(self, storage):
         """Set storage backend for downloader

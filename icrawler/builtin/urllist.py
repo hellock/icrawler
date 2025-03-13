@@ -10,6 +10,11 @@ class PseudoParser(Parser):
             if self.signal.get("reach_max_num"):
                 self.logger.info("downloaded image reached max num, thread %s" " exit", threading.current_thread().name)
                 break
+            if self.signal.get("exceed_storage_space"):
+                self.logger.info(
+                    "downloaded image reached max storage space, thread %s" " exit", threading.current_thread().name
+                )
+                break
             try:
                 url = self.in_queue.get(timeout=queue_timeout)
             except queue.Empty:
