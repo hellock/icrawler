@@ -1,42 +1,59 @@
+from __future__ import annotations
+
+import logging
+from collections.abc import Mapping
 from urllib.parse import urlsplit
 
 import requests
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_random_exponential
+
+from .. import defaults
+from .proxy_pool import ProxyPool
 
 
 class Session(requests.Session):
-    def __init__(self, proxy_pool):
+    def __init__(
+        self, proxy_pool: ProxyPool | None = None, headers: Mapping | None = None, cookies: Mapping | None = None
+    ):
         super().__init__()
+        self.logger = logging.getLogger("cscholars.connection")
         self.proxy_pool = proxy_pool
+        if headers is not None:
+            self.headers.update(headers)
+        if cookies is not None:
+            self.cookies.update(cookies)
 
     def _url_scheme(self, url):
         return urlsplit(url).scheme
 
-    def get(self, url, **kwargs):
-        proxy = self.proxy_pool.get_next(protocol=self._url_scheme(url))
-        if proxy is None:
-            return super().get(url, **kwargs)
-        try:
-            response = super().get(url, proxies=proxy.format(), **kwargs)
-        except requests.exceptions.ConnectionError:
-            self.proxy_pool.decrease_weight(proxy)
-            raise
-        except:
-            raise
-        else:
-            self.proxy_pool.increase_weight(proxy)
-            return response
+    @retry(
+        stop=stop_after_attempt(defaults.MAX_RETRIES),
+        wait=wait_random_exponential(exp_base=defaults.BACKOFF_BASE),
+        retry=retry_if_exception_type((requests.RequestException, requests.HTTPError, requests.ConnectionError)),
+    )
+    def request(self, method, url, *args, **kwargs):
+        message = f"{method}ing {url}"
+        if args and kwargs:
+            message += f" with {args} and {kwargs}"
+        elif args:
+            message += f" with {args}"
+        elif kwargs:
+            message += f" with {kwargs}"
+        self.logger.debug(message)
 
-    def post(self, url, data=None, json=None, **kwargs):
-        proxy = self.proxy_pool.get_next(protocol=self._url_scheme(url))
-        if proxy is None:
-            return super().get(url, data, json, **kwargs)
-        try:
-            response = super().post(url, data, json, proxies=proxy.format(), **kwargs)
-        except requests.exceptions.ConnectionError:
-            self.proxy_pool.decrease_weight(proxy)
-            raise
-        except:
-            raise
+        if self.proxy_pool is not None:
+            proxy = self.proxy_pool.get_next(protocol=self._url_scheme(url))
+            self.logger.debug(f"Using proxy: {proxy.format()}")
+            try:
+                response = super().request(method, url, *args, proxies=proxy.format(), **kwargs)
+                response.raise_for_status()
+                self.proxy_pool.increase_weight(proxy)
+            except (requests.ConnectionError, requests.HTTPError):
+                self.proxy_pool.decrease_weight(proxy)
+                raise
         else:
-            self.proxy_pool.increase_weight(proxy)
-            return response
+            response = super().request(method, url, *args, **kwargs)
+
+        if "set-cookie" in response.headers:
+            self.cookies.update(response.cookies)
+        return response

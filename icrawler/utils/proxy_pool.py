@@ -1,10 +1,10 @@
-import json
 import logging
 import queue
 import random
 import threading
 import time
 
+import chanfig
 import requests
 from bs4 import BeautifulSoup
 
@@ -44,7 +44,12 @@ class Proxy:
             dict: A dict with four keys: ``addr``, ``protocol``,
                   ``weight`` and ``last_checked``
         """
-        return dict(addr=self.addr, protocol=self.protocol, weight=self.weight, last_checked=self.last_checked)
+        return {
+            "addr": self.addr,
+            "protocol": self.protocol,
+            "weight": self.weight,
+            "last_checked": self.last_checked,
+        }
 
 
 class ProxyPool:
@@ -146,17 +151,15 @@ class ProxyPool:
             for proxy in self.proxies[protocol]:
                 serializable_proxy = self.proxies[protocol][proxy].to_dict()
                 proxies[protocol].append(serializable_proxy)
-        with open(filename, "w") as fout:
-            json.dump(proxies, fout)
+        chanfig.save(proxies, filename)
 
     def load(self, filename):
         """Load proxies from file"""
-        with open(filename) as fin:
-            proxies = json.load(fin)
-        for protocol in proxies:
-            for proxy in proxies[protocol]:
+        proxies = chanfig.load(filename)
+        for protocol, protocol_proxies in proxies.items():
+            for proxy in protocol_proxies:
                 self.proxies[protocol][proxy["addr"]] = Proxy(
-                    proxy["addr"], proxy["protocol"], proxy["weight"], proxy["last_checked"]
+                    proxy["addr"], protocol, proxy.get("weight", 1.0), proxy.get("last_checked")
                 )
                 self.addr_list[protocol].append(proxy["addr"])
 
@@ -215,7 +218,7 @@ class ProxyPool:
             raise
         except requests.exceptions.Timeout:
             return {"valid": False, "msg": "timeout"}
-        except:
+        except BaseException:  # noqa: B036
             return {"valid": False, "msg": "exception"}
         else:
             if r.status_code == 200:
@@ -278,12 +281,12 @@ class ProxyPool:
                 t = threading.Thread(
                     name=f"val-{i + 1:0>2d}",
                     target=self.validate,
-                    kwargs=dict(
-                        proxy_scanner=proxy_scanner,
-                        expected_num=expected_num,
-                        queue_timeout=queue_timeout,
-                        val_timeout=val_timeout,
-                    ),
+                    kwargs={
+                        "proxy_scanner": proxy_scanner,
+                        "expected_num": expected_num,
+                        "queue_timeout": queue_timeout,
+                        "val_timeout": val_timeout,
+                    },
                 )
                 t.daemon = True
                 val_threads.append(t)
@@ -291,7 +294,7 @@ class ProxyPool:
             for t in val_threads:
                 t.join()
             self.logger.info("Proxy scanning done!")
-        except:
+        except BaseException:
             raise
         finally:
             if out_file is not None:
@@ -466,18 +469,14 @@ class ProxyScanner:
     def scan_file(self, src_file):
         """Scan candidate proxies from an existing file"""
         self.logger.info(f"start scanning file {src_file} for proxy list...")
-        with open(src_file) as fin:
-            proxies = json.load(fin)
+        proxies = chanfig.load(src_file)
         for protocol in proxies.keys():
             for proxy in proxies[protocol]:
                 self.proxy_queue.put({"addr": proxy["addr"], "protocol": protocol})
 
     def is_scanning(self):
         """Return whether at least one scanning thread is alive"""
-        for t in self.scan_threads:
-            if t.is_alive():
-                return True
-        return False
+        return any(t.is_alive() for t in self.scan_threads)
 
     def scan(self):
         """Start a thread for each registered scan function to scan proxy lists"""

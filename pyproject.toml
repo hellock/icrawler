@@ -46,11 +46,12 @@ dynamic = [
 dependencies = [
   "beautifulsoup4",
   "bs4",
+  "chanfig",
   "lxml",
   "pillow",
-  "pyyaml",
   "requests",
   "six",
+  "tenacity",
 ]
 urls.documentation = "https://icrawler.readthedocs.io/"
 urls.homepage = "https://icrawler.readthedocs.io/"
