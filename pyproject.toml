@@ -46,9 +46,9 @@ dynamic = [
 dependencies = [
   "beautifulsoup4",
   "bs4",
+  "chanfig",
   "lxml",
   "pillow",
-  "pyyaml",
   "requests",
   "six",
 ]

@@ -5,13 +5,13 @@ import sys
 import time
 from importlib import import_module
 
+from . import defaults
 from . import storage as storage_package
 from .downloader import Downloader
 from .feeder import Feeder
 from .parser import Parser
 from .storage import BaseStorage
 from .utils import ProxyPool, Session, Signal
-from . import defaults
 
 
 class Crawler:
