@@ -5,6 +5,7 @@ import sys
 import time
 from importlib import import_module
 
+from . import defaults
 from . import storage as storage_package
 from .downloader import Downloader
 from .feeder import Feeder
@@ -133,13 +134,7 @@ class Crawler:
                      header to init the session)
         """
         if headers is None:
-            headers = {
-                "User-Agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                    " AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/88.0.4324.104 Safari/537.36"
-                )
-            }
+            headers = defaults.DEFAULT_HEADERS
         elif not isinstance(headers, dict):
             raise TypeError('"headers" must be a dict object')
 

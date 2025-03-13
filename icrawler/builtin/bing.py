@@ -145,6 +145,7 @@ class BingImageCrawler(Crawler):
         max_size=None,
         file_idx_offset=0,
         overwrite=False,
+        max_idle_time=None,
     ):
         if offset + max_num > 1000:
             if offset > 1000:
@@ -160,6 +161,11 @@ class BingImageCrawler(Crawler):
                 )
         feeder_kwargs = dict(keyword=keyword, offset=offset, max_num=max_num, filters=filters)
         downloader_kwargs = dict(
-            max_num=max_num, min_size=min_size, max_size=max_size, file_idx_offset=file_idx_offset, overwrite=overwrite
+            max_num=max_num,
+            min_size=min_size,
+            max_size=max_size,
+            file_idx_offset=file_idx_offset,
+            overwrite=overwrite,
+            max_idle_time=max_idle_time,
         )
         super().crawl(feeder_kwargs=feeder_kwargs, downloader_kwargs=downloader_kwargs)

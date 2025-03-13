@@ -22,9 +22,9 @@ class Parser(ThreadPool):
         lock: A threading.Lock object.
     """
 
-    def __init__(self, thread_num, signal, session):
+    def __init__(self, thread_num, signal, session, in_queue=None, out_queue=None, name="parser"):
         """Init Parser with some shared variables."""
-        super().__init__(thread_num, name="parser")
+        super().__init__(thread_num, in_queue=in_queue, out_queue=out_queue, name=name)
         self.signal = signal
         self.session = session
 
@@ -73,9 +73,8 @@ class Parser(ThreadPool):
                 if self.signal.get("feeder_exited"):
                     self.logger.info("no more page urls for thread %s to parse", current_thread().name)
                     break
-                else:
-                    self.logger.info("%s is waiting for new page urls", current_thread().name)
-                    continue
+                self.logger.info("%s is waiting for new page urls", current_thread().name)
+                continue
             except:
                 self.logger.error("exception in thread %s", current_thread().name)
                 continue
@@ -130,5 +129,5 @@ class Parser(ThreadPool):
                     retry -= 1
         self.logger.info(f"thread {current_thread().name} exit")
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         logging.info("all parser threads exited")
