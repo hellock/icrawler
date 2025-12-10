@@ -52,7 +52,7 @@ Using built-in crawlers is very simple. A minimal example is shown as follows.
     google_crawler = GoogleImageCrawler(storage={'root_dir': 'your_image_dir'})
     google_crawler.crawl(keyword='cat', max_num=100)
 
-You can also configurate number of threads and apply advanced search options.
+You can also configure number of threads and apply advanced search options.
 (Note: compatible with 0.6.0 and later versions)
 
 .. code:: python
